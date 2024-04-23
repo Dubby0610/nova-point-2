@@ -1,0 +1,135 @@
+export type NetworkKey = string;
+export default () => {
+  const {
+    PORT,
+    BLOCKCHAIN_RPC_URL,
+    DATA_FETCHER_URL,
+    DATA_FETCHER_REQUEST_TIMEOUT,
+    RPC_CALLS_DEFAULT_RETRY_TIMEOUT,
+    RPC_CALLS_QUICK_RETRY_TIMEOUT,
+    RPC_CALLS_CONNECTION_TIMEOUT,
+    RPC_CALLS_CONNECTION_QUICK_TIMEOUT,
+    WAIT_FOR_BLOCKS_INTERVAL,
+    BLOCKS_PROCESSING_BATCH_SIZE,
+    NUMBER_OF_BLOCKS_PER_DB_TRANSACTION,
+    BATCHES_PROCESSING_POLLING_INTERVAL,
+    DELETE_BALANCES_INTERVAL,
+    COUNTERS_PROCESSING_POLLING_INTERVAL,
+    COUNTERS_PROCESSING_RECORDS_BATCH_SIZE,
+    COLLECT_DB_CONNECTION_POOL_METRICS_INTERVAL,
+    COLLECT_BLOCKS_TO_PROCESS_METRIC_INTERVAL,
+    DISABLE_BATCHES_PROCESSING,
+    DISABLE_COUNTERS_PROCESSING,
+    DISABLE_OLD_BALANCES_CLEANER,
+    DISABLE_BLOCKS_REVERT,
+    ENABLE_TOKEN_OFFCHAIN_DATA_SAVER,
+    UPDATE_TOKEN_OFFCHAIN_DATA_INTERVAL,
+    SELECTED_TOKEN_OFFCHAIN_DATA_PROVIDER,
+    FROM_BLOCK,
+    TO_BLOCK,
+    COINGECKO_IS_PRO_PLAN,
+    COINGECKO_API_KEY,
+    BRIDGE_NETWORK_KEYS,
+    DISABLE_DEPOSIT_POINT_SERVICE,
+    DISABLE_HOLD_POINT_SERVICE,
+    DISABLE_TVL_STATISTIC_SERVICE,
+    POINTS_STATISTICAL_PERIOD_SECS,
+    POINTS_PHASE1_START_TIME,
+    POINTS_CANCEL_DEPOSIT_START_TIME,
+    POINTS_EARLY_DEPOSIT_END_TIME,
+    POINTS_PHASE1_END_TIME,
+    POINTS_STATISTICS_TVL_INTERVAL,
+  } = process.env;
+
+  const networkKeys = BRIDGE_NETWORK_KEYS.split(",");
+  const key2L1 = Object.fromEntries(
+    networkKeys.map((key) => {
+      return [key, process.env[`L1_ERC20_BRIDGE_${key.toUpperCase()}`]];
+    })
+  );
+  const key2L2 = Object.fromEntries(
+    networkKeys.map((key) => {
+      return [key, process.env[`L2_ERC20_BRIDGE_${key.toUpperCase()}`]];
+    })
+  );
+  const L12Key = Object.fromEntries(
+    networkKeys.map((key) => {
+      return [(process.env[`L1_ERC20_BRIDGE_${key.toUpperCase()}`] || "").toLowerCase(), key];
+    })
+  );
+  const L22Key = Object.fromEntries(
+    networkKeys.map((key) => {
+      return [(process.env[`L2_ERC20_BRIDGE_${key.toUpperCase()}`] || "").toLowerCase(), key];
+    })
+  );
+
+  return {
+    port: parseInt(PORT, 10) || 3001,
+    blockchain: {
+      rpcUrl: BLOCKCHAIN_RPC_URL || "http://localhost:3050",
+      rpcCallDefaultRetryTimeout: parseInt(RPC_CALLS_DEFAULT_RETRY_TIMEOUT, 10) || 30000,
+      rpcCallQuickRetryTimeout: parseInt(RPC_CALLS_QUICK_RETRY_TIMEOUT, 10) || 500,
+      rpcCallConnectionTimeout: parseInt(RPC_CALLS_CONNECTION_TIMEOUT, 10) || 20000,
+      rpcCallConnectionQuickTimeout: parseInt(RPC_CALLS_CONNECTION_QUICK_TIMEOUT, 10) || 10000,
+    },
+    dataFetcher: {
+      url: DATA_FETCHER_URL || "http://localhost:3040",
+      requestTimeout: parseInt(DATA_FETCHER_REQUEST_TIMEOUT, 10) || 120_000,
+    },
+    blocks: {
+      waitForBlocksInterval: parseInt(WAIT_FOR_BLOCKS_INTERVAL, 10) || 1000,
+      blocksProcessingBatchSize: parseInt(BLOCKS_PROCESSING_BATCH_SIZE, 10) || 50,
+      fromBlock: parseInt(FROM_BLOCK, 10) || 0,
+      toBlock: parseInt(TO_BLOCK, 10) || null,
+      disableBlocksRevert: DISABLE_BLOCKS_REVERT === "true",
+      numberOfBlocksPerDbTransaction: parseInt(NUMBER_OF_BLOCKS_PER_DB_TRANSACTION, 10) || 50,
+    },
+    batches: {
+      batchesProcessingPollingInterval: parseInt(BATCHES_PROCESSING_POLLING_INTERVAL, 10) || 60000,
+      disableBatchesProcessing: DISABLE_BATCHES_PROCESSING === "true",
+    },
+    balances: {
+      deleteBalancesInterval: parseInt(DELETE_BALANCES_INTERVAL, 10) || 300000,
+      disableOldBalancesCleaner: DISABLE_OLD_BALANCES_CLEANER === "true",
+    },
+    counters: {
+      recordsBatchSize: parseInt(COUNTERS_PROCESSING_RECORDS_BATCH_SIZE, 10) || 20000,
+      updateInterval: parseInt(COUNTERS_PROCESSING_POLLING_INTERVAL, 10) || 30000,
+      disableCountersProcessing: DISABLE_COUNTERS_PROCESSING === "true",
+    },
+    tokens: {
+      enableTokenOffChainDataSaver: ENABLE_TOKEN_OFFCHAIN_DATA_SAVER === "true",
+      updateTokenOffChainDataInterval: parseInt(UPDATE_TOKEN_OFFCHAIN_DATA_INTERVAL, 10) || 86_400_000,
+      tokenOffChainDataProviders: ["coingecko", "portalsFi"],
+      selectedTokenOffChainDataProvider: SELECTED_TOKEN_OFFCHAIN_DATA_PROVIDER || "coingecko",
+      coingecko: {
+        isProPlan: COINGECKO_IS_PRO_PLAN === "true",
+        apiKey: COINGECKO_API_KEY,
+      },
+    },
+    metrics: {
+      collectDbConnectionPoolMetricsInterval: parseInt(COLLECT_DB_CONNECTION_POOL_METRICS_INTERVAL, 10) || 10000,
+      collectBlocksToProcessMetricInterval: parseInt(COLLECT_BLOCKS_TO_PROCESS_METRIC_INTERVAL, 10) || 10000,
+    },
+    bridge: {
+      networkKeys,
+      getL1Erc20Bridge: (networkKey: NetworkKey): string | undefined => key2L1[networkKey],
+      getL2Erc20Bridge: (networkKey: NetworkKey): string | undefined => key2L2[networkKey],
+      getNetworkKeyByL1Erc20Bridge: (bridgeAddress: string): NetworkKey | undefined =>
+        L12Key[bridgeAddress.toLowerCase()],
+      getNetworkKeyByL2Erc20Bridge: (bridgeAddress: string): NetworkKey | undefined =>
+        L22Key[bridgeAddress.toLowerCase()],
+    },
+    points: {
+      disableDepositPointService: DISABLE_DEPOSIT_POINT_SERVICE === "true",
+      disableHoldPointService: DISABLE_HOLD_POINT_SERVICE === "true",
+      disableTvlStatisticService: DISABLE_TVL_STATISTIC_SERVICE === "true",
+      pointsStatisticalPeriodSecs: parseInt(POINTS_STATISTICAL_PERIOD_SECS, 10) || 3600,
+      pointsPhase1StartTime: POINTS_PHASE1_START_TIME,
+      pointsCancelDepositStartTime: POINTS_CANCEL_DEPOSIT_START_TIME,
+      pointsPhase1EndTime: POINTS_PHASE1_END_TIME,
+      pointsEarlyDepositEndTime: POINTS_EARLY_DEPOSIT_END_TIME,
+      pointsStatistsTvlInterval: POINTS_STATISTICS_TVL_INTERVAL,
+    },
+  };
+};

@@ -1,0 +1,6 @@
+import { utils } from "ethers";
+
+export const ZERO_HASH_64 = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+export const BLOCKS_REVERT_DETECTED_EVENT = "revert:detected";
+
