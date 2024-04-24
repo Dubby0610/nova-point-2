@@ -23,6 +23,7 @@ import {
   PointsRepository,
   PointsHistoryRepository,
   AddressFirstDepositRepository,
+  ProjectRepository,
 } from "./repositories";
 import {
   Batch,
@@ -47,6 +48,7 @@ import {
   PointsOfLp,
   BlockAddressPointOfLp,
   BalanceOfLp,
+  Project,
 } from "./entities";
 import { typeOrmModuleOptions, typeOrmReferModuleOptions, typeOrmLrtModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
@@ -130,7 +132,7 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
         };
       },
     }),
-    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp], "lrt"),
+    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project], "lrt"),
     EventEmitterModule.forRoot(),
     MetricsModule,
     UnitOfWorkModule,
@@ -178,6 +180,7 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
     BlockAddressPointOfLpRepository,
     AdapterService,
     HoldLpPointService,
+    ProjectRepository,
   ],
 })
 export class AppModule {}

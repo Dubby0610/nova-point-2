@@ -21,11 +21,15 @@ export class CreateTableOfLp1713611500946 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "IDX_46546aeed5740ded71e2cf3f1f" ON "balancesOfLp" ("blockNumber", "balance") `
     );
+    await queryRunner.query(
+      `CREATE TABLE "project" ("name" character varying(50), "pairAddress" bytea NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "unique_project_pairAddress" UNIQUE ("pairAddress"), CONSTRAINT "PK_5893dd931640dcef5cc364e2728" PRIMARY KEY ("pairAddress"))`
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DROP TABLE "balancesOfLp"`);
     await queryRunner.query(`DROP TABLE "blockAddressPointOfLp"`);
     await queryRunner.query(`DROP TABLE "pointsOfLp"`);
+    await queryRunner.query(`DROP TABLE "project"`);
   }
 }

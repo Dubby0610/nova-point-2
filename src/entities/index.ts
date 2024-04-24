@@ -25,3 +25,4 @@ export * from "./invite.entity";
 export * from "./pointsOfLp.entity";
 export * from "./blockAddressPointOfLp.entity";
 export * from "./balanceOfLp.entity";
+export * from "./project.entity";

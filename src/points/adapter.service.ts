@@ -5,7 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { promises as promisesFs, appendFileSync, existsSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
-import { BalanceOfLpRepository, BlockRepository } from "src/repositories";
+import { BalanceOfLpRepository, BlockRepository, ProjectRepository } from "src/repositories";
 import * as csv from "csv-parser";
 import * as fs from "fs";
 
@@ -19,7 +19,8 @@ export class AdapterService extends Worker {
   public constructor(
     private readonly configService: ConfigService,
     private readonly balanceOfLpRepository: BalanceOfLpRepository,
-    private readonly blockRepository: BlockRepository
+    private readonly blockRepository: BlockRepository,
+    private readonly projectRepository: ProjectRepository
   ) {
     super();
     this.logger = new Logger(AdapterService.name);
@@ -136,7 +137,7 @@ export class AdapterService extends Worker {
           }
         }
         if (rowsToInsert.length > 0) {
-          await this.insertDataToDb(rowsToInsert);
+          await this.insertDataToDb(rowsToInsert, dir);
         }
         fs.unlinkSync(outputPath);
         this.logger.log(
@@ -146,14 +147,23 @@ export class AdapterService extends Worker {
   }
 
   // insert into db
-  private async insertDataToDb(rows) {
-    const dataToInsert = rows.map((row) => ({
-      address: row.address,
-      tokenAddress: row.tokenAddress,
-      pairAddress: row.pairAddress,
-      blockNumber: row.blockNumber,
-      balance: row.balance,
-    }));
+  private async insertDataToDb(rows, dir: string) {
+    let pairAddresses: string[] = [];
+    const dataToInsert = rows.map((row) => {
+      if (!pairAddresses.includes(row.pairAddress)) {
+        pairAddresses.push(row.pairAddress);
+      }
+      return {
+        address: row.address,
+        tokenAddress: row.tokenAddress,
+        pairAddress: row.pairAddress,
+        blockNumber: row.blockNumber,
+        balance: row.balance,
+      };
+    });
+    for (const pairAddress of pairAddresses) {
+      this.projectRepository.upsert({ pairAddress, name: dir }, true, ["pairAddress"]);
+    }
     try {
       await this.balanceOfLpRepository.addMany(dataToInsert);
     } catch (e) {
