@@ -57,7 +57,9 @@ getUserBalanceByBlock(Number(blockNumber), Number(blockTimestamp)).then((result)
         undefined === item.balance ||
         typeof item.address !== "string" ||
         typeof item.pairAddress !== "string" ||
-        typeof item.tokenAddress !== "string" 
+        typeof item.tokenAddress !== "string" ||
+        typeof item.blockNumber !== "number" ||
+        typeof item.balance !== "bigint"
       ) {
         console.error("Invalid item, key:", key, ", item:", item);
         console.error("Exiting the process due to invalid item, please fix the issue and try again.");

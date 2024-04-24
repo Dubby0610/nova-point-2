@@ -7,8 +7,8 @@ export type UserBalance = {
     address: string,
     pairAddress: string
     tokenAddress: string
-    blockNumber: string
-    balance: string
+    blockNumber: number
+    balance: BigInt
 }
 
 export type UserPositions = {

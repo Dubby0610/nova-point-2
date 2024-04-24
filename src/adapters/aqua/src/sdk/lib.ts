@@ -43,8 +43,8 @@ export const getUserPositionsAtBlock = async (
           address: userAddress,
           pairAddress: item.pool,
           tokenAddress: item.token,
-          blockNumber: item.blockNumber,
-          balance: formatUnits(item.balance, Number(item.decimal))
+          blockNumber: Number(item.blockNumber),
+          balance: BigInt(item.balance)
         }
       })
 
