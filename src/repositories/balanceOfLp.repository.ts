@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { BalanceOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
@@ -62,6 +62,14 @@ export class BalanceOfLpRepository extends BaseRepository<BalanceOfLp> {
   ): Promise<BalanceOfLp[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     return await transactionManager.query(selectBalancesOfLpByBlockScript, [address, pairAddress, blockNumber]);
+  }
+
+  public async getLastOrderByBlock(): Promise<BalanceOfLp> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    return await transactionManager.findOne<BalanceOfLp>(BalanceOfLp, {
+      where:{},
+      order: { blockNumber: "DESC" },
+    });
   }
 
   public async setBalanceOfLpStatisticalBlockNumber(blockNumber: number): Promise<void> {

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { PointsOfLp } from "../entities";
 
 @Injectable()

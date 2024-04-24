@@ -15,7 +15,6 @@ export class AdapterService extends Worker {
   private readonly outputFileName = "/data/output";
   private readonly logFilePath = join(__dirname, "../../src/adapters/processLogs.log");
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
-  private readonly startBlockNumber = 6706;
 
   public constructor(
     private readonly configService: ConfigService,
@@ -28,22 +27,34 @@ export class AdapterService extends Worker {
 
   protected async runProcess(): Promise<void> {
     this.logger.log(`${AdapterService.name} initialized`);
-    await this.loadLastBlockNumber();
+
+    try {
+      await this.loadLastBlockNumber();
+    } catch (error) {
+      this.logger.error("Failed to adapter balance", error.stack);
+    }
+
+    const adapterInterval = this.configService.get<number>("adapterInterval");
+    await waitFor(() => !this.currentProcessPromise, adapterInterval * 1000, adapterInterval * 1000);
+    if (!this.currentProcessPromise) {
+      return;
+    }
+
+    return this.runProcess();
   }
 
   public async loadLastBlockNumber() {
-    const lastBlockNumber = await this.balanceOfLpRepository.getLastBalanceOfLpStatisticalBlockNumber();
-    const lastStatisticalBlockNumber = Math.max(lastBlockNumber, this.startBlockNumber);
-    const lastDbBlocks = await this.blockRepository.getBlocksByBlockNumber(lastStatisticalBlockNumber, 10);
-    if (lastDbBlocks.length > 0) {
-      await this.balanceOfLpRepository.setBalanceOfLpStatisticalBlockNumber(lastDbBlocks[lastDbBlocks.length-1].number);
-      for (const block of lastDbBlocks) {
-        await this.runCommandsInAllDirectories(block.number, Number(block.timestamp.getTime()/1000));
-      }
-    }else{
-      await waitFor(() => !this.currentProcessPromise, 3 * 1000, 3 * 1000);
+    const lastBlock = await this.blockRepository.getLastBlock({
+      select: { number: true, timestamp: true },
+    });
+    const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
+    if (lastBalanceOfLp && lastBlock.number <= lastBalanceOfLp.blockNumber) {
+      this.logger.log(
+        `Had adapted balance, Last block number: ${lastBlock.number}, Last balance of lp block number: ${lastBalanceOfLp.blockNumber}`
+      );
+      return;
     }
-    await this.loadLastBlockNumber();
+    await this.runCommandsInAllDirectories(lastBlock.number, Number(lastBlock.timestamp.getTime() / 1000));
   }
 
   public async runCommandsInAllDirectories(blockNumber: number, blockTimestamp: number): Promise<void> {
@@ -125,10 +136,12 @@ export class AdapterService extends Worker {
           }
         }
         if (rowsToInsert.length > 0) {
-          this.insertDataToDb(rowsToInsert);
+          await this.insertDataToDb(rowsToInsert);
         }
         fs.unlinkSync(outputPath);
-        this.logger.log(`Adapter:${dir}\tCSV file successfully processed.`);
+        this.logger.log(
+          `Adapter:${dir}\tCSV file successfully processed, ${rowsToInsert.length} rows inserted into db.`
+        );
       });
   }
 
@@ -141,10 +154,10 @@ export class AdapterService extends Worker {
       blockNumber: row.blockNumber,
       balance: row.balance,
     }));
-    try{
-        await this.balanceOfLpRepository.addMany(dataToInsert);
-    }catch(e){
-        this.logger.error(`Error inserting data to db: ${e.stack}`);
+    try {
+      await this.balanceOfLpRepository.addMany(dataToInsert);
+    } catch (e) {
+      this.logger.error(`Error inserting ${rows.length} data to db: ${e.stack}`);
     }
   }
 }

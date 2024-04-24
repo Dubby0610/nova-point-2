@@ -130,3 +130,17 @@ export class ReferralUnitOfWork extends UnitOfWork {
     super(dbCommitDurationMetric, dataSource, entityManager);
   }
 }
+
+@Injectable()
+export class LrtUnitOfWork extends UnitOfWork {
+  public constructor(
+    @InjectMetric(DB_COMMIT_DURATION_METRIC_NAME)
+    readonly dbCommitDurationMetric: Histogram,
+    @InjectDataSource("lrt")
+    readonly dataSource: DataSource,
+    @InjectEntityManager("lrt")
+    readonly entityManager: EntityManager
+  ) {
+    super(dbCommitDurationMetric, dataSource, entityManager);
+  }
+}

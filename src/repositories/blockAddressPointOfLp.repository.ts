@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { BaseRepository } from "./base.repository";
-import { UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BlockAddressPointOfLp, PointsOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 

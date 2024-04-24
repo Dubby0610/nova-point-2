@@ -65,7 +65,8 @@ export class HoldLpPointService extends Worker {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
 
-    await waitFor(() => !this.currentProcessPromise, 30 * 1000, 30 * 1000);
+    const holdLpPointInterval = this.configService.get<number>("holdLpPointInterval");
+    await waitFor(() => !this.currentProcessPromise, holdLpPointInterval * 1000, holdLpPointInterval * 1000);
     if (!this.currentProcessPromise) {
       return;
     }
@@ -74,37 +75,22 @@ export class HoldLpPointService extends Worker {
   }
 
   async handleHoldPoint() {
-    // hold point statistical block number start from 1
-    // query the last hold point statistical block number
-    const lastStatisticalBlockNumber = await this.pointsOfLpRepository.getLastHoldPointStatisticalBlockNumber();
-    const lastStatisticalBlock = await this.blockRepository.getLastBlock({
+    // get last balance of lp statistical block number
+    const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
+    if (!lastBalanceOfLp) {
+      this.logger.log(`No balance of lp found`);
+      return;
+    }
+    const lastStatisticalBlockNumber = lastBalanceOfLp.blockNumber;
+    const currentStatisticalBlock = await this.blockRepository.getLastBlock({
       where: { number: lastStatisticalBlockNumber },
       select: { number: true, timestamp: true },
     });
-    if (!lastStatisticalBlock) {
-      throw new Error(`Last hold point of lp statistical block not found: ${lastStatisticalBlockNumber}`);
-    }
-    // get the last block time.
-    const lastStatisticalTs = lastStatisticalBlock.timestamp;
-    // pointsStatisticalPeriodSecs default 3600
-    const currentStatisticalTs = new Date(lastStatisticalTs.getTime() + this.pointsStatisticalPeriodSecs * 1000);
-    // get the next hold point statistical block
-    const currentStatisticalBlock = await this.blockRepository.getNextHoldPointStatisticalBlock(currentStatisticalTs);
     if (!currentStatisticalBlock) {
-      this.logger.log(`Wait for the next hold point statistical block`);
+      this.logger.log(`No block of lp found, block number : ${lastStatisticalBlockNumber}`);
       return;
     }
-    // const lastDepositStatisticalBlockNumber = await this.pointsOfLpRepository.getLastStatisticalBlockNumber();
-    // if (lastDepositStatisticalBlockNumber < currentStatisticalBlock.number) {
-    //   this.logger.log(`Wait deposit statistic finish`);
-    //   return;
-    // }
 
-    // current timestamp - last timestamp
-    const sinceLastTime = currentStatisticalBlock.timestamp.getTime() - lastStatisticalTs.getTime();
-    this.logger.log(
-      `Statistic hold point at block: ${currentStatisticalBlock.number}, since last: ${sinceLastTime / 1000} seconds`
-    );
     const statisticStartTime = new Date();
     // get the early bird weight
     const earlyBirdMultiplier = this.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
@@ -112,7 +98,7 @@ export class HoldLpPointService extends Worker {
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
     const blockTs = currentStatisticalBlock.timestamp.getTime();
     const addressTvlMap = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
-    const groupTvlMap = await this.getGroupTvlMap(currentStatisticalBlock.number, addressTvlMap);
+    // const groupTvlMap = await this.getGroupTvlMap(currentStatisticalBlock.number, addressTvlMap);
     // loop all address to calculate hold point
     for (const key of addressTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
@@ -129,13 +115,13 @@ export class HoldLpPointService extends Worker {
       let groupBooster = new BigNumber(1);
       // get the last multiplier before the block timestamp
       const addressMultiplier = this.getAddressMultiplier(pairAddress, blockTs);
-      const invite = await this.inviteRepository.getInvite(pairAddress);
-      if (!!invite) {
-        const groupTvl = groupTvlMap.get(invite.groupId);
-        if (!!groupTvl) {
-          groupBooster = groupBooster.plus(this.getGroupBooster(groupTvl));
-        }
-      }
+      // const invite = await this.inviteRepository.getInvite(pairAddress);
+      // if (!!invite) {
+      //   const groupTvl = groupTvlMap.get(invite.groupId);
+      //   if (!!groupTvl) {
+      //     groupBooster = groupBooster.plus(this.getGroupBooster(groupTvl));
+      //   }
+      // }
       let firstDepositTime = this.addressFirstDepositTimeCache.get(pairAddress);
       if (!firstDepositTime) {
         const addressFirstDeposit = await this.addressFirstDepositRepository.getAddressFirstDeposit(pairAddress);
@@ -149,7 +135,7 @@ export class HoldLpPointService extends Worker {
       // NOVA Point = sum_all tokens in activity list (Early_Bird_Multiplier * Token Multiplier * Address Multiplier * Token Amount * Token Price * (1 + Group Booster + Growth Booster) * Loyalty Booster / ETH_Price )
 
       this.logger.log(
-        `pairAddrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}, groupBooster: ${groupBooster}`
+        `pairAddrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}`
       );
       const newHoldPoint = addressTvl.holdBasePoint
         .multipliedBy(earlyBirdMultiplier)

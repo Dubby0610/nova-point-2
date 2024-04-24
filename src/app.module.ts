@@ -48,7 +48,7 @@ import {
   BlockAddressPointOfLp,
   BalanceOfLp,
 } from "./entities";
-import { typeOrmModuleOptions, typeOrmReferModuleOptions } from "./typeorm.config";
+import { typeOrmModuleOptions, typeOrmReferModuleOptions, typeOrmLrtModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
 import { MetricsModule } from "./metrics";
 import { DbMetricsService } from "./dbMetrics.service";
@@ -104,9 +104,6 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
       AddressTokenTvl,
       AddressFirstDeposit,
       GroupTvl,
-      PointsOfLp,
-      BlockAddressPointOfLp,
-      BalanceOfLp,
     ]),
     TypeOrmModule.forRootAsync({
       name: "refer",
@@ -121,6 +118,19 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
       },
     }),
     TypeOrmModule.forFeature([Invite, Referral], "refer"),
+    TypeOrmModule.forRootAsync({
+      name: "lrt",
+      imports: [ConfigModule],
+      useFactory: () => {
+        return {
+          ...typeOrmLrtModuleOptions,
+          autoLoadEntities: true,
+          retryDelay: 3000, // to cover 3 minute DB failover window
+          retryAttempts: 70, // try to reconnect for 3.5 minutes,
+        };
+      },
+    }),
+    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp], "lrt"),
     EventEmitterModule.forRoot(),
     MetricsModule,
     UnitOfWorkModule,
