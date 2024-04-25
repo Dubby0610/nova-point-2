@@ -65,8 +65,7 @@ export class HoldLpPointService extends Worker {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
 
-    const holdLpPointInterval = this.configService.get<number>("holdLpPointInterval");
-    await waitFor(() => !this.currentProcessPromise, holdLpPointInterval * 1000, holdLpPointInterval * 1000);
+    await waitFor(() => !this.currentProcessPromise, 60 * 1000, 60 * 1000);
     if (!this.currentProcessPromise) {
       return;
     }
@@ -75,21 +74,25 @@ export class HoldLpPointService extends Worker {
   }
 
   async handleHoldPoint() {
-    // get last balance of lp statistical block number
-    const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
-    if (!lastBalanceOfLp) {
-      this.logger.log(`No balance of lp found`);
-      return;
-    }
-    const lastStatisticalBlockNumber = lastBalanceOfLp.blockNumber;
-    const currentStatisticalBlock = await this.blockRepository.getLastBlock({
+    const lastStatisticalBlockNumber = await this.pointsOfLpRepository.getLastHoldPointStatisticalBlockNumber();
+    const lastStatisticalBlock = await this.blockRepository.getLastBlock({
       where: { number: lastStatisticalBlockNumber },
       select: { number: true, timestamp: true },
     });
+    if (!lastStatisticalBlock) {
+      throw new Error(`Last hold point statistical block not found: ${lastStatisticalBlockNumber}`);
+    }
+    const lastStatisticalTs = lastStatisticalBlock.timestamp;
+    const currentStatisticalTs = new Date(lastStatisticalTs.getTime() + this.pointsStatisticalPeriodSecs * 1000);
+    const currentStatisticalBlock = await this.blockRepository.getNextHoldPointStatisticalBlock(currentStatisticalTs);
     if (!currentStatisticalBlock) {
-      this.logger.log(`No block of lp found, block number : ${lastStatisticalBlockNumber}`);
+      this.logger.log(`Wait for the next hold point statistical block`);
       return;
     }
+    const sinceLastTime = currentStatisticalBlock.timestamp.getTime() - lastStatisticalTs.getTime();
+    this.logger.log(
+      `Statistic hold point at block: ${currentStatisticalBlock.number}, since last: ${sinceLastTime / 1000} seconds`
+    );
 
     const statisticStartTime = new Date();
     // get the early bird weight
@@ -145,7 +148,7 @@ export class HoldLpPointService extends Worker {
         .multipliedBy(loyaltyBooster);
       await this.updateHoldPoint(currentStatisticalBlock.number, pairAddress, address, newHoldPoint);
     }
-    // await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
+    await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(

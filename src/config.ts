@@ -14,13 +14,11 @@ export default () => {
     POINTS_PHASE1_END_TIME,
     POINTS_STATISTICS_TVL_INTERVAL,
     ADAPTER_INTERVAL,
-    HOLD_LP_POINT_INTERVAL,
   } = process.env;
 
   return {
     port: parseInt(PORT, 10) || 3001,
     adapterInterval: parseInt(ADAPTER_INTERVAL, 10) || 3600,
-    holdLpPointInterval: parseInt(HOLD_LP_POINT_INTERVAL, 10) || 3600,
     tokens: {
       enableTokenOffChainDataSaver: ENABLE_TOKEN_OFFCHAIN_DATA_SAVER === "true",
       updateTokenOffChainDataInterval: parseInt(UPDATE_TOKEN_OFFCHAIN_DATA_INTERVAL, 10) || 86_400_000,

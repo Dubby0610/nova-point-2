@@ -31,7 +31,8 @@ if (!fs.existsSync(indexPath)) {
 const { getUserBalanceByBlock } = require(indexPath);
 
 // Call the getUserTVLByBlock function with desired arguments
-getUserBalanceByBlock(49216, 1711023841).then((result) => {
+let rowSet = [];
+getUserBalanceByBlock(884302, 1711023841).then((result) => {
   if (!result.length) {
     throw new Error("Empty result");
   } else {
@@ -56,7 +57,14 @@ getUserBalanceByBlock(49216, 1711023841).then((result) => {
         error++;
         console.error("Invalid item, key: ", key, ", item: ", item);
       }
+      const kkey = `${item.address}_${item.pairAddress}_${item.tokenAddress}_${item.blockNumber}`;
+      if (rowSet[kkey]) {
+        error++;
+        console.error("Duplicate key: ", kkey);
+      } else {
+        rowSet[kkey] = item;
+      }
     });
-    console.log(`Total items: ${count}, Error items: ${error}, Success items: ${count - error}`);
+    console.log(`Total items: ${count}, Success items: ${count - error}, Error items: ${error}`);
   }
 });
