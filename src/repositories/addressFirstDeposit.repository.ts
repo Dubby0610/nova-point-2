@@ -21,27 +21,27 @@ export class AddressFirstDepositRepository extends BaseRepository<AddressFirstDe
     return await transactionManager.find<AddressFirstDeposit>(AddressFirstDeposit);
   }
 
-  public createDefaultAddressTokenTvl(address: string): AddressFirstDeposit {
-    return {
-      address: address,
-      firstDepositTime: new Date(),
-    };
-  }
+  // public createDefaultAddressTokenTvl(address: string): AddressFirstDeposit {
+  //   return {
+  //     address: address,
+  //     firstDepositTime: new Date(),
+  //   };
+  // }
 
-  public async addMany(records: Partial<AddressFirstDeposit>[]): Promise<void> {
-    if (!records?.length) {
-      return;
-    }
+  // public async addMany(records: Partial<AddressFirstDeposit>[]): Promise<void> {
+  //   if (!records?.length) {
+  //     return;
+  //   }
 
-    const transactionManager = this.unitOfWork.getTransactionManager();
+  //   const transactionManager = this.unitOfWork.getTransactionManager();
 
-    let recordsToAdd = [];
-    for (let i = 0; i < records.length; i++) {
-      recordsToAdd.push(records[i]);
-      if (recordsToAdd.length === 1000 || i === records.length - 1) {
-        await transactionManager.upsert<AddressFirstDeposit>(this.entityTarget, recordsToAdd, ["address"]);
-        recordsToAdd = [];
-      }
-    }
-  }
+  //   let recordsToAdd = [];
+  //   for (let i = 0; i < records.length; i++) {
+  //     recordsToAdd.push(records[i]);
+  //     if (recordsToAdd.length === 1000 || i === records.length - 1) {
+  //       await transactionManager.upsert<AddressFirstDeposit>(this.entityTarget, recordsToAdd, ["address"]);
+  //       recordsToAdd = [];
+  //     }
+  //   }
+  // }
 }

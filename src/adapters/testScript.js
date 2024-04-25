@@ -31,7 +31,7 @@ if (!fs.existsSync(indexPath)) {
 const { getUserBalanceByBlock } = require(indexPath);
 
 // Call the getUserTVLByBlock function with desired arguments
-getUserBalanceByBlock(749216, 1711023841).then((result) => {
+getUserBalanceByBlock(49216, 1711023841).then((result) => {
   if (!result.length) {
     throw new Error("Empty result");
   } else {

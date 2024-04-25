@@ -16,12 +16,12 @@ export class GroupTvlRepository extends BaseRepository<GroupTvl> {
     });
   }
 
-  public createDefaultGroupTvl(groupId: string): GroupTvl {
-    return {
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      groupId: groupId,
-      tvl: 0,
-    };
-  }
+  // public createDefaultGroupTvl(groupId: string): GroupTvl {
+  //   return {
+  //     createdAt: new Date(),
+  //     updatedAt: new Date(),
+  //     groupId: groupId,
+  //     tvl: 0,
+  //   };
+  // }
 }

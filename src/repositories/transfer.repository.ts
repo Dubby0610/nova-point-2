@@ -53,7 +53,7 @@ export class TransferRepository extends BaseRepository<Transfer> {
     return firstDeposit;
   }
 
-  public override async addMany(records: Partial<Transfer>[]): Promise<void> {
-    await super.addMany(records);
-  }
+  // public override async addMany(records: Partial<Transfer>[]): Promise<void> {
+  //   await super.addMany(records);
+  // }
 }

@@ -16,13 +16,13 @@ export class AddressTvlRepository extends BaseRepository<AddressTvl> {
     });
   }
 
-  public createDefaultAddressTvl(address: string): AddressTvl {
-    return {
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      address: address,
-      tvl: 0,
-      referralTvl: 0,
-    };
-  }
+  // public createDefaultAddressTvl(address: string): AddressTvl {
+  //   return {
+  //     createdAt: new Date(),
+  //     updatedAt: new Date(),
+  //     address: address,
+  //     tvl: 0,
+  //     referralTvl: 0,
+  //   };
+  // }
 }

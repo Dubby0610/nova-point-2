@@ -92,15 +92,15 @@ export class BalanceRepository extends BaseRepository<Balance> {
     return await transactionManager.query(selectBalancesByBlockScript, [address, blockNumber]);
   }
 
-  public async deleteOldBalances(fromBlockNumber: number, toBlockNumber: number): Promise<void> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    await transactionManager.query(deleteOldBalancesScript, [fromBlockNumber, toBlockNumber]);
-  }
+  // public async deleteOldBalances(fromBlockNumber: number, toBlockNumber: number): Promise<void> {
+  //   const transactionManager = this.unitOfWork.getTransactionManager();
+  //   await transactionManager.query(deleteOldBalancesScript, [fromBlockNumber, toBlockNumber]);
+  // }
 
-  public async deleteZeroBalances(fromBlockNumber: number, toBlockNumber: number): Promise<void> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    await transactionManager.query(deleteZeroBalancesScript, [fromBlockNumber, toBlockNumber]);
-  }
+  // public async deleteZeroBalances(fromBlockNumber: number, toBlockNumber: number): Promise<void> {
+  //   const transactionManager = this.unitOfWork.getTransactionManager();
+  //   await transactionManager.query(deleteZeroBalancesScript, [fromBlockNumber, toBlockNumber]);
+  // }
 
   public async getDeleteBalancesFromBlockNumber(): Promise<number> {
     const transactionManager = this.unitOfWork.getTransactionManager();
@@ -110,8 +110,8 @@ export class BalanceRepository extends BaseRepository<Balance> {
     return Number(fromBlockNumber.last_value);
   }
 
-  public async setDeleteBalancesFromBlockNumber(fromBlockNumber: number): Promise<void> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    await transactionManager.query(`SELECT setval('"deleteBalances_fromBlockNumber"', $1, false);`, [fromBlockNumber]);
-  }
+  // public async setDeleteBalancesFromBlockNumber(fromBlockNumber: number): Promise<void> {
+  //   const transactionManager = this.unitOfWork.getTransactionManager();
+  //   await transactionManager.query(`SELECT setval('"deleteBalances_fromBlockNumber"', $1, false);`, [fromBlockNumber]);
+  // }
 }

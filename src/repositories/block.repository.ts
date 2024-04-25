@@ -71,8 +71,8 @@ export class BlockRepository {
       .getMany();
   }
 
-  public async delete(where: FindOptionsWhere<Block>): Promise<void> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    await transactionManager.delete<Block>(Block, where);
-  }
+  // public async delete(where: FindOptionsWhere<Block>): Promise<void> {
+  //   const transactionManager = this.unitOfWork.getTransactionManager();
+  //   await transactionManager.delete<Block>(Block, where);
+  // }
 }

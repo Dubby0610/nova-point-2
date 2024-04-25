@@ -145,7 +145,7 @@ export class HoldLpPointService extends Worker {
         .multipliedBy(loyaltyBooster);
       await this.updateHoldPoint(currentStatisticalBlock.number, pairAddress, address, newHoldPoint);
     }
-    await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
+    // await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(

@@ -16,7 +16,7 @@ export class CreateTableOfLp1713611500946 implements MigrationInterface {
       `CREATE INDEX "IDX_35717f61c13aacde581a05ec43" ON "blockAddressPointOfLp" ("pairAddress") `
     );
     await queryRunner.query(
-      `CREATE TABLE "balancesOfLp" ("createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "address" bytea NOT NULL, "tokenAddress" bytea NOT NULL, "pairAddress" bytea NOT NULL, "blockNumber" bigint NOT NULL, "balance" bigint NOT NULL, CONSTRAINT "PK_371b610277783c3f5b8939a0c19" PRIMARY KEY ("address", "tokenAddress", "pairAddress", "blockNumber"))`
+      `CREATE TABLE "balancesOfLp" ("createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "address" bytea NOT NULL, "tokenAddress" bytea NOT NULL, "pairAddress" bytea NOT NULL, "blockNumber" bigint NOT NULL, "balance" character varying(50) NOT NULL, CONSTRAINT "PK_371b610277783c3f5b8939a0c19" PRIMARY KEY ("address", "tokenAddress", "pairAddress", "blockNumber"))`
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_46546aeed5740ded71e2cf3f1f" ON "balancesOfLp" ("blockNumber", "balance") `

@@ -10717,3 +10717,374 @@ Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b7
 Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
 Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
 Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-24 23:37:51
+Adapter:aqua
+Error executing command: Error: Command failed: cd /Users/happybear/Project/nodejs/nova-point-v2/src/adapters && node runScript.js aqua 90780 1711480046
+node:events:492
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: ENOENT: no such file or directory, open 'aqua/data/output.90780.csv'
+Emitted 'error' event on WriteStream instance at:
+    at WriteStream.onerror (node:internal/streams/readable:785:14)
+    at WriteStream.emit (node:events:514:28)
+    at emitErrorNT (node:internal/streams/destroy:151:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:116:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'aqua/data/output.90780.csv'
+}
+
+Node.js v18.17.1
+
+    at ChildProcess.exithandler (node:child_process:419:12)
+    at ChildProcess.emit (node:events:514:28)
+    at maybeClose (node:internal/child_process:1091:16)
+    at Socket.<anonymous> (node:internal/child_process:449:11)
+    at Socket.emit (node:events:514:28)
+    at Pipe.<anonymous> (node:net:323:12)2024-04-24 23:49:31
+Adapter: aqua
+CSV file has been written.
+
+2024-04-24 23:53:32
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:03:18
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:03:20
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 00:07:38
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:07:42
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 00:11:49
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:11:53
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 00:16:50
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:16:54
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 00:21:17
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:21:23
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 00:25:36
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:27:16
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:31:51
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:31:53
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 00:35:45
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 00:35:48
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 10:46:29
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 10:47:21
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 10:48:13
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 10:52:12
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 10:58:06
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 10:58:09
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 11:01:51
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 11:01:53
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 11:05:29
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 11:06:23
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 11:09:08
+Adapter: aqua
+CSV file has been written.
+
+2024-04-25 11:09:10
+Adapter: izumi
+pairAddress: 0xd4b701a553005464292e978efd8abc48252a7722
+pairAddress: 0x28592307d115f883acc87763803c3679c0d42fb1
+pairAddress: 0x25e28398ebd072a2280a2bb5f62d977820be3408
+pairAddress: 0xdbd6010d8aae58b229804d1296a0d245bf828365
+pairAddress: 0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8
+pairAddress: 0x482cf88e25a7a9ee58761033b777d18198c05d84
+pairAddress: 0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f
+totalSupply 17n
+current process:  10
+current process:  20
+CSV file has been written.
+
+Error fetching pool info for poolAddress: 0x5457c04370c447aed563489d9fe0b1d057439e0b
+Error fetching pool info for poolAddress: 0x19142b9d0077eb776d04a4b42a526dd07409b9db
+Error fetching pool info for poolAddress: 0xc2909feb6f46e19f2b40f9288ac63726d7c2612c
+Error fetching pool info for poolAddress: 0x062c027e4736f90bb06ba4bfc8036f133fd99413
+Error fetching pool info for poolAddress: 0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff
+Error fetching pool info for poolAddress: 0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef
+Error fetching pool info for poolAddress: 0xfa38f432429d59ba653d5746cfea4f734f2c251e
+Error fetching pool info for poolAddress: 0x39abf030516e346f6c6779d03b260a4449705ce0
+Error fetching pool info for poolAddress: 0xb40805521e976a41028ae3244a2e0b1bb2b768b1
+Error fetching pool info for poolAddress: 0xbc2a3ff0ce7413c184086b532bc121318117cacb
+Error fetching pool info for poolAddress: 0xf6592fee86407a7fa4c2f05c894edadf25c30f57
+Error fetching pool info for poolAddress: 0x802e9743d3421ce5786bc24aac90bbba404f82dd
+2024-04-25 11:13:38
+Adapter: aqua
+CSV file has been written.
+

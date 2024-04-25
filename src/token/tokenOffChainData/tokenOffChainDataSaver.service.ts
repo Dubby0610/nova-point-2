@@ -25,6 +25,7 @@ export class TokenOffChainDataSaverService extends Worker {
   }
 
   protected async runProcess(): Promise<void> {
+    console.log(`--------------------------------------------------------`);
     let nextUpdateTimeout = this.updateTokenOffChainDataInterval;
     try {
       const lastUpdatedAt = await this.tokenRepository.getOffChainDataLastUpdatedAt();
@@ -37,35 +38,32 @@ export class TokenOffChainDataSaverService extends Worker {
 
       if (!nextUpdateTimeout) {
         // const bridgedTokens = await this.tokenRepository.getBridgedTokens();
-        const tokensToUpdate = await this.tokenOffChainDataProvider.getTokensOffChainData(
-          this.tokenService.getAllSupportTokens()
-        );
-        const updatedAt = new Date();
-
-        let updateTokensTasks = [];
-        for (let i = 0; i < tokensToUpdate.length; i++) {
-          updateTokensTasks.push(
-            this.tokenRepository.updateTokenOffChainData({
-              l1Address: tokensToUpdate[i].l1Address,
-              l2Address: tokensToUpdate[i].l2Address,
-              liquidity: tokensToUpdate[i].liquidity,
-              usdPrice: tokensToUpdate[i].usdPrice,
-              updatedAt,
-              iconURL: tokensToUpdate[i].iconURL,
-              priceId: tokensToUpdate[i].priceId,
-            })
-          );
-          if (updateTokensTasks.length === UPDATE_TOKENS_BATCH_SIZE || i === tokensToUpdate.length - 1) {
-            await Promise.all(updateTokensTasks);
-            updateTokensTasks = [];
-          }
-        }
-
-        this.logger.log("Updated tokens offchain data", {
-          totalTokensUpdated: tokensToUpdate.length,
-        });
-
-        nextUpdateTimeout = this.updateTokenOffChainDataInterval;
+        // const tokensToUpdate = await this.tokenOffChainDataProvider.getTokensOffChainData(
+        //   this.tokenService.getAllSupportTokens()
+        // );
+        // const updatedAt = new Date();
+        // let updateTokensTasks = [];
+        // for (let i = 0; i < tokensToUpdate.length; i++) {
+        //   updateTokensTasks.push(
+        //     this.tokenRepository.updateTokenOffChainData({
+        //       l1Address: tokensToUpdate[i].l1Address,
+        //       l2Address: tokensToUpdate[i].l2Address,
+        //       liquidity: tokensToUpdate[i].liquidity,
+        //       usdPrice: tokensToUpdate[i].usdPrice,
+        //       updatedAt,
+        //       iconURL: tokensToUpdate[i].iconURL,
+        //       priceId: tokensToUpdate[i].priceId,
+        //     })
+        //   );
+        //   if (updateTokensTasks.length === UPDATE_TOKENS_BATCH_SIZE || i === tokensToUpdate.length - 1) {
+        //     await Promise.all(updateTokensTasks);
+        //     updateTokensTasks = [];
+        //   }
+        // }
+        // this.logger.log("Updated tokens offchain data", {
+        //   totalTokensUpdated: tokensToUpdate.length,
+        // });
+        // nextUpdateTimeout = this.updateTokenOffChainDataInterval;
       }
     } catch (err) {
       this.logger.error({

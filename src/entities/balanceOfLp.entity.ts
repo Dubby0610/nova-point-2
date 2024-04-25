@@ -19,6 +19,6 @@ export class BalanceOfLp extends BaseEntity {
   @PrimaryColumn({ type: "bigint", transformer: bigIntNumberTransformer })
   public readonly blockNumber: number;
 
-  @Column({ type: "bigint", transformer: bigIntNumberTransformer })
-  public readonly balance: number;
+  @Column({ type: "varchar", length: 50 })
+  public readonly balance: string;
 }

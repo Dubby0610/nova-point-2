@@ -10,12 +10,12 @@ export class ReferralsRepository {
     private readonly refer: Repository<Referral>
   ) {}
 
-  public async add(referrer: string, address: string): Promise<void> {
-    await this.refer.insert({
-      referrer,
-      address,
-    });
-  }
+  // public async add(referrer: string, address: string): Promise<void> {
+  //   await this.refer.insert({
+  //     referrer,
+  //     address,
+  //   });
+  // }
 
   public async getAddressEligible(): Promise<Buffer[]> {
     const ret = await this.refer.query(`SELECT address FROM invites WHERE active = true`);
@@ -25,23 +25,23 @@ export class ReferralsRepository {
       return ret.map((r: any) => r.address);
     }
   }
-  public async updateReferralsBlock(referee: Buffer, block: number): Promise<void> {
-    await this.refer.query(`UPDATE invites SET "blockNumber" = $2 WHERE address = $1 AND "blockNumber" IS NULL`, [
-      referee,
-      block,
-    ]);
-  }
+  // public async updateReferralsBlock(referee: Buffer, block: number): Promise<void> {
+  //   await this.refer.query(`UPDATE invites SET "blockNumber" = $2 WHERE address = $1 AND "blockNumber" IS NULL`, [
+  //     referee,
+  //     block,
+  //   ]);
+  // }
 
-  public async updateActives(addresses: Buffer[]): Promise<void> {
-    for (const address of addresses) {
-      await this.refer.query(
-        `UPDATE invites
-               SET active = true
-               WHERE address = $1`,
-        [address]
-      );
-    }
-  }
+  // public async updateActives(addresses: Buffer[]): Promise<void> {
+  //   for (const address of addresses) {
+  //     await this.refer.query(
+  //       `UPDATE invites
+  //              SET active = true
+  //              WHERE address = $1`,
+  //       [address]
+  //     );
+  //   }
+  // }
 
   public async getAllAddressesInOrder(blockNumber: number): Promise<Buffer[]> {
     const ret = await this.refer.query(
