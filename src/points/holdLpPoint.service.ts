@@ -115,27 +115,27 @@ export class HoldLpPointService extends Worker {
       let groupBooster = new BigNumber(1);
       // get the last multiplier before the block timestamp
       const addressMultiplier = this.getAddressMultiplier(pairAddress, blockTs);
-      // const invite = await this.inviteRepository.getInvite(pairAddress);
+      // const invite = await this.inviteRepository.getInvite(address);
       // if (!!invite) {
       //   const groupTvl = groupTvlMap.get(invite.groupId);
       //   if (!!groupTvl) {
       //     groupBooster = groupBooster.plus(this.getGroupBooster(groupTvl));
       //   }
       // }
-      let firstDepositTime = this.addressFirstDepositTimeCache.get(pairAddress);
+      let firstDepositTime = this.addressFirstDepositTimeCache.get(address);
       if (!firstDepositTime) {
-        const addressFirstDeposit = await this.addressFirstDepositRepository.getAddressFirstDeposit(pairAddress);
+        const addressFirstDeposit = await this.addressFirstDepositRepository.getAddressFirstDeposit(address);
         firstDepositTime = addressFirstDeposit?.firstDepositTime;
         if (firstDepositTime) {
           const depositTime = new Date(Math.max(firstDepositTime.getTime(), this.pointsPhase1StartTime.getTime()));
-          this.addressFirstDepositTimeCache.set(pairAddress, depositTime);
+          this.addressFirstDepositTimeCache.set(address, depositTime);
         }
       }
       const loyaltyBooster = this.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
       // NOVA Point = sum_all tokens in activity list (Early_Bird_Multiplier * Token Multiplier * Address Multiplier * Token Amount * Token Price * (1 + Group Booster + Growth Booster) * Loyalty Booster / ETH_Price )
 
       this.logger.log(
-        `Addrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}`
+        `Addrss ${address} pairAddrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}`
       );
       const newHoldPoint = addressTvl.holdBasePoint
         .multipliedBy(earlyBirdMultiplier)
