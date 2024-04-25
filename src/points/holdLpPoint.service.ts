@@ -32,6 +32,7 @@ export class HoldLpPointService extends Worker {
   private readonly addressMultipliersCache: Map<string, TokenMultiplier[]>;
   private readonly withdrawStartTime: Date;
   private addressFirstDepositTimeCache: Map<string, Date>;
+  private readonly startBlock: number;
 
   public constructor(
     private readonly tokenService: TokenService,
@@ -47,6 +48,7 @@ export class HoldLpPointService extends Worker {
   ) {
     super();
     this.logger = new Logger(HoldLpPointService.name);
+    this.startBlock = this.configService.get<number>("startBlock");
     this.pointsStatisticalPeriodSecs = this.configService.get<number>("points.pointsStatisticalPeriodSecs");
     this.pointsPhase1StartTime = new Date(this.configService.get<string>("points.pointsPhase1StartTime"));
     this.addressMultipliersCache = new Map<string, TokenMultiplier[]>();
@@ -74,7 +76,8 @@ export class HoldLpPointService extends Worker {
   }
 
   async handleHoldPoint() {
-    const lastStatisticalBlockNumber = await this.pointsOfLpRepository.getLastHoldPointStatisticalBlockNumber();
+    const lastStatisticalBlockNumberDb = await this.pointsOfLpRepository.getLastHoldPointStatisticalBlockNumber();
+    const lastStatisticalBlockNumber = Math.max(lastStatisticalBlockNumberDb, this.startBlock);
     const lastStatisticalBlock = await this.blockRepository.getLastBlock({
       where: { number: lastStatisticalBlockNumber },
       select: { number: true, timestamp: true },
@@ -285,7 +288,7 @@ export class HoldLpPointService extends Worker {
     for (const priceId of allPriceIds) {
       const blockTokenPrice = await this.blockTokenPriceRepository.getBlockTokenPrice(blockNumber, priceId);
       if (!blockTokenPrice) {
-        throw new Error(`Token ${priceId} price not found`);
+        throw new Error(`BlockNumber : ${blockNumber}, Token ${priceId} price not found`);
       }
       tokenPrices.set(priceId, new BigNumber(blockTokenPrice.usdPrice));
     }
