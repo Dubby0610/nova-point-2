@@ -6,28 +6,40 @@ const getUserPositionsAtBlock = async (blockNumber) => {
     let result = [];
     let skip = 0;
     let fetchNext = true;
+    let pools = [];
     while (fetchNext) {
         const query = `query MyQuery {
       userPositions(block: {number: ${blockNumber}}, skip: ${skip}) {
         id
         positions {
-            balance
-            blockNumber
-            decimal
-            pool
-            token
-            transactionHash
-            id
-          }
+          decimal
+          blockNumber
+          id
+          pool
+          supplied
+          token
+          transactionHash
         }
-      }`;
-        const response = await fetch('https://graph.zklink.io/subgraphs/name/aqua-points', {
+      }
+      aquaCTokens(block: {number: ${blockNumber}}) {
+        balance
+        blockNumber
+        id
+        totalSupplied
+      }
+    }`;
+        const response = await fetch('http://3.114.68.110:8000/subgraphs/name/aqua-point', {
             method: 'POST',
             body: JSON.stringify({ query }),
             headers: { 'Content-Type': 'application/json' },
         });
         const { data } = await response.json();
-        const { userPositions } = data;
+        if (!data) {
+            console.log("No Data Yet!");
+            break;
+        }
+        const { userPositions, aquaCTokens } = data;
+        pools = aquaCTokens;
         const res = userPositions.map(data => {
             const userAddress = data.id;
             const balance = data.positions.map((item) => {
@@ -36,7 +48,8 @@ const getUserPositionsAtBlock = async (blockNumber) => {
                     pairAddress: item.pool,
                     tokenAddress: item.token,
                     blockNumber: blockNumber,
-                    balance: BigInt(item.balance)
+                    supplied: BigInt(item.supplied),
+                    pool: item.pool
                 };
             });
             return balance;
@@ -46,10 +59,31 @@ const getUserPositionsAtBlock = async (blockNumber) => {
             fetchNext = false;
         }
         else {
+            console.log(`GET DATA FROM ${skip}`);
             skip += 100;
         }
     }
-    return result;
+    const userBalanceList = result.map(position => {
+        const pool = pools.find(i => i.id === position.pool);
+        if (!pool) {
+            return {
+                address: position.address,
+                pairAddress: position.pairAddress,
+                tokenAddress: position.tokenAddress,
+                blockNumber: position.blockNumber,
+                balance: BigInt(0)
+            };
+        }
+        const { balance, totalSupplied } = pool;
+        return {
+            address: position.address,
+            pairAddress: position.pairAddress,
+            tokenAddress: position.tokenAddress,
+            blockNumber: position.blockNumber,
+            balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied)
+        };
+    });
+    return userBalanceList;
 };
 exports.getUserPositionsAtBlock = getUserPositionsAtBlock;
 const getTimestampAtBlock = async (blockNumber) => {
