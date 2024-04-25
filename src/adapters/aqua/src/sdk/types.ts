@@ -8,14 +8,26 @@ export type UserBalance = {
     pairAddress: string
     tokenAddress: string
     blockNumber: number
-    balance: BigInt
+    balance: bigint
 }
 
-export type UserPositions = {
+export type UserSupplied = Omit<UserBalance, 'balance'> & {
+    supplied: bigint
+    pool: string
+}
+
+export interface AquaCToken {
+    id: string
+    totalSupplied: string
+    balance: string
+    blockNumber: string
+}
+
+export type Response = {
     userPositions: Array<{
         id: string,
         positions: Array<{
-            balance: string;
+            supplied: string;
             blockNumber: string;
             decimal: string;
             id: string;
@@ -24,4 +36,5 @@ export type UserPositions = {
             transactionHash: string;
         }>
     }>
+    aquaCTokens: Array<AquaCToken>
 }
