@@ -67,24 +67,9 @@ export class BalanceOfLpRepository extends BaseRepository<BalanceOfLp> {
   public async getLastOrderByBlock(): Promise<BalanceOfLp> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     return await transactionManager.findOne<BalanceOfLp>(BalanceOfLp, {
-      where:{},
+      where: {},
       order: { blockNumber: "DESC" },
     });
-  }
-
-  public async setBalanceOfLpStatisticalBlockNumber(blockNumber: number): Promise<void> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    await transactionManager.query(`SELECT setval('"balanceOfLpStatisticalBlockNumber"', $1, false);`, [
-      blockNumber,
-    ]);
-  }
-
-  public async getLastBalanceOfLpStatisticalBlockNumber(): Promise<number> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    const [blockNumber] = await transactionManager.query(
-      `SELECT last_value FROM "balanceOfLpStatisticalBlockNumber";`
-    );
-    return Number(blockNumber.last_value);
   }
 
   public async insertBalance(balanceOfLp: QueryDeepPartialEntity<BalanceOfLp>): Promise<void> {

@@ -13,6 +13,7 @@ import { TokenOffChainDataProvider } from "./token/tokenOffChainData/tokenOffCha
 import { CoingeckoTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/coingecko/coingeckoTokenOffChainDataProvider";
 import { PortalsFiTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/portalsFi/portalsFiTokenOffChainDataProvider";
 import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOffChainDataSaver.service";
+import { BridgePointService } from "./points/bridgePoint.service";
 import {
   BatchRepository,
   BlockRepository,
@@ -24,6 +25,7 @@ import {
   PointsHistoryRepository,
   AddressFirstDepositRepository,
   ProjectRepository,
+  CacheRepository,
 } from "./repositories";
 import {
   Batch,
@@ -49,8 +51,14 @@ import {
   BlockAddressPointOfLp,
   BalanceOfLp,
   Project,
+  Cache,
 } from "./entities";
-import { typeOrmModuleOptions, typeOrmReferModuleOptions, typeOrmLrtModuleOptions } from "./typeorm.config";
+import {
+  typeOrmModuleOptions,
+  typeOrmReferModuleOptions,
+  typeOrmLrtModuleOptions,
+  typeOrmExplorerModuleOptions,
+} from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
 import { MetricsModule } from "./metrics";
 import { DbMetricsService } from "./dbMetrics.service";
@@ -95,7 +103,6 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
       Token,
       Address,
       AddressTransfer,
-      Transfer,
       Balance,
       Point,
       PointsHistory,
@@ -106,7 +113,9 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
       AddressTokenTvl,
       AddressFirstDeposit,
       GroupTvl,
+      Transfer,
     ]),
+
     TypeOrmModule.forRootAsync({
       name: "refer",
       imports: [ConfigModule],
@@ -120,6 +129,7 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
       },
     }),
     TypeOrmModule.forFeature([Invite, Referral], "refer"),
+
     TypeOrmModule.forRootAsync({
       name: "lrt",
       imports: [ConfigModule],
@@ -132,7 +142,22 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
         };
       },
     }),
-    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project], "lrt"),
+    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache], "lrt"),
+
+    TypeOrmModule.forRootAsync({
+      name: "explorer",
+      imports: [ConfigModule],
+      useFactory: () => {
+        return {
+          ...typeOrmExplorerModuleOptions,
+          autoLoadEntities: true,
+          retryDelay: 3000, // to cover 3 minute DB failover window
+          retryAttempts: 70, // try to reconnect for 3.5 minutes,
+        };
+      },
+    }),
+    // TypeOrmModule.forFeature([Transfer], "explorer"),
+
     EventEmitterModule.forRoot(),
     MetricsModule,
     UnitOfWorkModule,
@@ -181,6 +206,8 @@ import { HoldLpPointService } from "./points/holdLpPoint.service";
     AdapterService,
     HoldLpPointService,
     ProjectRepository,
+    CacheRepository,
+    BridgePointService,
   ],
 })
 export class AppModule {}

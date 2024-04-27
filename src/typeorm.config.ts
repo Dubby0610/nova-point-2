@@ -60,6 +60,25 @@ export const typeOrmLrtModuleOptions: DataSourceOptions = {
   migrations: [],
 };
 
+export const typeOrmExplorerModuleOptions: DataSourceOptions = {
+  type: "postgres",
+  host: process.env.EXPLORER_DATABASE_HOST || "localhost",
+  port: parseInt(process.env.EXPLORER_DATABASE_PORT) || 5432,
+  username: process.env.EXPLORER_DATABASE_USER || "postgres",
+  password: process.env.EXPLORER_DATABASE_PASSWORD || "postgres",
+  database: process.env.EXPLORER_DATABASE_NAME || "referdb",
+  poolSize: parseInt(process.env.EXPLORER_DATABASE_CONNECTION_POOL_SIZE, 10) || 100,
+  extra: {
+    idleTimeoutMillis: parseInt(process.env.EXPLORER_DATABASE_CONNECTION_IDLE_TIMEOUT_MS, 10) || 12000,
+  },
+  applicationName: "block-explorer-worker",
+  migrationsRun: false,
+  synchronize: false,
+  logging: false,
+  subscribers: [],
+  migrations: [],
+};
+
 const typeOrmCliDataSource = new DataSource({
   ...typeOrmLrtModuleOptions,
   entities: ["src/**/*.entity.{ts,js}"],

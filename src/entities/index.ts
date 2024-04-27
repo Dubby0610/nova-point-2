@@ -26,3 +26,4 @@ export * from "./pointsOfLp.entity";
 export * from "./blockAddressPointOfLp.entity";
 export * from "./balanceOfLp.entity";
 export * from "./project.entity";
+export * from "./cache.entity";

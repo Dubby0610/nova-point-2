@@ -20,3 +20,4 @@ export * from "./balanceOfLp.repository";
 export * from "./pointsOfLp.repository";
 export * from "./blockAddressPointOfLp.repository";
 export * from "./project.repository";
+export * from "./cache.repository";

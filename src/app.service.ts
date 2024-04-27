@@ -6,6 +6,7 @@ import { BLOCKS_REVERT_DETECTED_EVENT } from "./constants";
 import runMigrations from "./utils/runMigrations";
 import { AdapterService } from "./points/adapter.service";
 import { HoldLpPointService } from "./points/holdLpPoint.service";
+import { BridgePointService } from "./points/bridgePoint.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -15,15 +16,14 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly dataSource: DataSource,
     private readonly holdLpPointService: HoldLpPointService,
     private readonly adapterService: AdapterService,
+    private readonly bridgePointService: BridgePointService,
     private readonly configService: ConfigService
   ) {
     this.logger = new Logger(AppService.name);
   }
 
   public onModuleInit() {
-    runMigrations(this.dataSource, this.logger).then(() => {
-      this.startWorkers();
-    });
+    this.startWorkers();
   }
 
   public onModuleDestroy() {
@@ -40,17 +40,12 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-   const tasks = [
-    this.adapterService.start(),
-    this.holdLpPointService.start()
-  ];
+    // const tasks = [this.adapterService.start(), this.holdLpPointService.start(), this.bridgePointService.start()];
+    const tasks = [this.bridgePointService.start()];
     return Promise.all(tasks);
   }
 
   private stopWorkers() {
-    return Promise.all([
-      this.adapterService.stop(),
-      this.holdLpPointService.stop(),
-    ]);
+    return Promise.all([this.adapterService.stop(), this.holdLpPointService.stop(), this.bridgePointService.stop()]);
   }
 }
