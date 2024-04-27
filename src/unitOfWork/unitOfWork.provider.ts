@@ -144,3 +144,17 @@ export class LrtUnitOfWork extends UnitOfWork {
     super(dbCommitDurationMetric, dataSource, entityManager);
   }
 }
+
+@Injectable()
+export class ExplorerUnitOfWork extends UnitOfWork {
+  public constructor(
+    @InjectMetric(DB_COMMIT_DURATION_METRIC_NAME)
+    readonly dbCommitDurationMetric: Histogram,
+    @InjectDataSource("explorer")
+    readonly dataSource: DataSource,
+    @InjectEntityManager("explorer")
+    readonly entityManager: EntityManager
+  ) {
+    super(dbCommitDurationMetric, dataSource, entityManager);
+  }
+}
