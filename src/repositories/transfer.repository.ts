@@ -71,7 +71,7 @@ export class TransferRepository extends BaseRepository<Transfer> {
   public async getLatestQulifyTransfers(
     fromBlockNumber: number,
     bridgeAddresses: string[],
-    ethAddress: string,
+    ethAddresses: string[],
     ethAmount: bigint,
     usdtUsdcAddresses: string[],
     usdtUsdcAmount: bigint
@@ -80,15 +80,17 @@ export class TransferRepository extends BaseRepository<Transfer> {
     const bridgeAddressesBuf = bridgeAddresses.map((item) => {
       return Buffer.from(item.substring(2), "hex");
     });
-    const ethAddressBuf = Buffer.from(ethAddress.substring(2), "hex");
+    const ethAddressesBuf = ethAddresses.map((item) => {
+      return Buffer.from(item.substring(2), "hex");
+    });
     const usdtUsdcAddressesBuf = usdtUsdcAddresses.map((item) => {
       return Buffer.from(item.substring(2), "hex");
     });
-    const query = `SELECT * FROM "transfers" WHERE "blockNumber" > $1 AND "from" = ANY($2) AND (("tokenAddress" = $3 AND amount >= $4) or ("tokenAddress" = ANY($5) AND amount >= $6)) order by "blockNumber" asc, number asc;`;
+    const query = `SELECT * FROM "transfers" WHERE "blockNumber" > $1 AND "from" = ANY($2) AND (("tokenAddress" = ANY($3) AND cast(amount as bigint) >= $4) or ("tokenAddress" = ANY($5) AND cast(amount as bigint) >= $6)) order by "blockNumber" asc, number asc;`;
     const results = await transactionManager.query(query, [
       fromBlockNumber,
       bridgeAddressesBuf,
-      ethAddressBuf,
+      ethAddressesBuf,
       ethAmount,
       usdtUsdcAddressesBuf,
       usdtUsdcAmount,

@@ -17,9 +17,13 @@ interface TransferItem {
 
 const PREFIX_ACTIVE = "active-";
 const PREFIX_NEXT_TRANSFERPOINTS = "nextTransferPoints-";
-const ETH_ADDRESS = "0x000000000000000000000000000000000000800a".toLocaleLowerCase();
+const ETH_ADDRESS = [
+  "0x000000000000000000000000000000000000800a".toLocaleLowerCase(),
+  "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169".toLocaleLowerCase(),
+];
 const USDT_USDC_ADDRESS = [
   // usdt
+  "0x2F8A25ac62179B31D62D7F80884AE57464699059".toLocaleLowerCase(),
   "0x012726F9f458a63f86055b24E67BA0aa26505028".toLocaleLowerCase(),
   "0x6aFb043b4955505fc9B2B965FCF6972Fa561291d".toLocaleLowerCase(),
   "0x0ace5E8e1Be0d3Df778f639d79fa8231b376b9F1".toLocaleLowerCase(),
@@ -28,6 +32,7 @@ const USDT_USDC_ADDRESS = [
   "0xAF5852CA4Fc29264226Ed0c396dE30C945589D6D".toLocaleLowerCase(),
   "0x8a87de262e7C0EfA4Cb59eC2a8e60494edD59e8f".toLocaleLowerCase(),
   // usdc
+  "0x1a1A3b2ff016332e866787B311fcB63928464509".toLocaleLowerCase(),
   "0x7581469cb53E786F39ff26E8aF6Fd750213dAcEd".toLocaleLowerCase(),
   "0xd4A037d77AAFf6d7a396562fC5beaC76041A9EAf".toLocaleLowerCase(),
   "0x60CF0D62329699A23E988d500A7E40Faae4a3E4D".toLocaleLowerCase(),
@@ -37,8 +42,8 @@ const USDT_USDC_ADDRESS = [
   "0xA8A59Bb7fe9fE2364ae39a3B48E219fAB096c852".toLocaleLowerCase(),
   "0x4E340B4Ea46ca1D1CE6e2dF7b21e649e2921521f".toLocaleLowerCase(),
 ];
-const ETH_AMOUNT = BigInt(10 ** 17);
-const USDT_AMOUNT = BigInt(500 * 10 ** 6);
+const ETH_AMOUNT = BigInt((98 / 100) * 10 ** 17);
+const USDT_AMOUNT = BigInt((98 / 100) * 500 * 10 ** 6);
 
 @Injectable()
 export class BridgePointService extends Worker {
