@@ -86,7 +86,7 @@ export class TransferRepository extends BaseRepository<Transfer> {
     const usdtUsdcAddressesBuf = usdtUsdcAddresses.map((item) => {
       return Buffer.from(item.substring(2), "hex");
     });
-    const query = `SELECT * FROM "transfers" WHERE "blockNumber" > $1 AND "from" = ANY($2) AND (("tokenAddress" = ANY($3) AND cast(amount as bigint) >= $4) or ("tokenAddress" = ANY($5) AND cast(amount as bigint) >= $6)) order by "blockNumber" asc, number asc;`;
+    const query = `SELECT * FROM "transfers" WHERE "blockNumber" > $1 AND "from" = ANY($2) AND (("tokenAddress" = ANY($3) AND cast(amount as numeric) >= $4) or ("tokenAddress" = ANY($5) AND cast(amount as numeric) >= $6)) order by "blockNumber" asc, number asc;`;
     const results = await transactionManager.query(query, [
       fromBlockNumber,
       bridgeAddressesBuf,
