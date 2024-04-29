@@ -37,6 +37,7 @@
     "@nestjs/core": "^9.0.0",
     "@nestjs/event-emitter": "^1.4.1",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/schedule": "^4.0.2",
     "@nestjs/terminus": "^9.1.2",
     "@nestjs/typeorm": "^9.0.1",
     "@willsoto/nestjs-prometheus": "^4.7.0",

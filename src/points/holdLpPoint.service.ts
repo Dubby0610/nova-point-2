@@ -17,6 +17,7 @@ import { hexTransformer } from "../transformers/hex.transformer";
 import { ConfigService } from "@nestjs/config";
 import { getETHPrice, getTokenPrice, REFERRER_BONUS, STABLE_COIN_TYPE } from "./depositPoint.service";
 import addressMultipliers from "../addressMultipliers";
+import { Cron } from "@nestjs/schedule";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 type BlockAddressTvl = {
@@ -60,23 +61,14 @@ export class HoldLpPointService extends Worker {
     this.addressFirstDepositTimeCache = new Map();
   }
 
+  @Cron('0 0,8,16 * * *')
   protected async runProcess(): Promise<void> {
+    this.logger.log(`${HoldLpPointService.name} initialized`);
     try {
       await this.handleHoldPoint();
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
-
-    await waitFor(
-      () => !this.currentProcessPromise,
-      this.pointsStatisticalPeriodSecs * 1000,
-      this.pointsStatisticalPeriodSecs * 1000
-    );
-    if (!this.currentProcessPromise) {
-      return;
-    }
-
-    return this.runProcess();
   }
 
   async handleHoldPoint() {
