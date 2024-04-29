@@ -40,8 +40,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    // const tasks = [this.adapterService.start(), this.holdLpPointService.start(), this.bridgePointService.start()];
-    const tasks = [this.bridgePointService.start()];
+    const tasks = [this.adapterService.start(), this.holdLpPointService.start(), this.bridgePointService.start()];
     return Promise.all(tasks);
   }
 

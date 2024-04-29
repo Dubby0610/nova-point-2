@@ -77,10 +77,12 @@ import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository } from "./repositories";
 import { HoldLpPointService } from "./points/holdLpPoint.service";
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [config] }),
+    ScheduleModule.forRoot(),
     PrometheusModule.register(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
