@@ -1,22 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { PointsOfLp } from "../entities";
+import { BaseRepository } from './base.repository';
 
 @Injectable()
-export class PointsOfLpRepository {
-  public constructor(private readonly unitOfWork: UnitOfWork) {}
-
-  public async add(address: Buffer, pairAddress: Buffer, stakePoint: number): Promise<void> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    await transactionManager.query(
-      `INSERT INTO "pointsOfLp" (address, "pairAddress", "stakePoint") VALUES ($1,$2,$3) 
-            ON CONFLICT (address, "pairAddress") 
-            DO UPDATE
-            SET "stakePoint" = $3
-            `,
-      [address, pairAddress, stakePoint]
-    );
-  }
+export class PointsOfLpRepository  extends BaseRepository<PointsOfLp> {
+  public constructor(unitOfWork: UnitOfWork) {
+    super(PointsOfLp, unitOfWork);
+}
 
   public async updateDeposits(pairAddressBuf: Buffer, deposits: Map<string, number>): Promise<void> {
     const transactionManager = this.unitOfWork.getTransactionManager();
