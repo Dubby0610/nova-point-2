@@ -8,6 +8,7 @@ import { exec } from "child_process";
 import { BalanceOfLpRepository, BlockRepository, ProjectRepository } from "src/repositories";
 import * as csv from "csv-parser";
 import * as fs from "fs";
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class AdapterService extends Worker {
@@ -26,22 +27,21 @@ export class AdapterService extends Worker {
     this.logger = new Logger(AdapterService.name);
   }
 
+  @Cron('30 23,7,15 * * *')
   protected async runProcess(): Promise<void> {
     this.logger.log(`${AdapterService.name} initialized`);
-
     try {
       await this.loadLastBlockNumber();
     } catch (error) {
       this.logger.error("Failed to adapter balance", error.stack);
     }
 
-    const adapterInterval = this.configService.get<number>("adapterInterval");
-    await waitFor(() => !this.currentProcessPromise, adapterInterval * 1000, adapterInterval * 1000);
-    if (!this.currentProcessPromise) {
-      return;
-    }
-
-    return this.runProcess();
+    // const adapterInterval = this.configService.get<number>("adapterInterval");
+    // await waitFor(() => !this.currentProcessPromise, adapterInterval * 1000, adapterInterval * 1000);
+    // if (!this.currentProcessPromise) {
+    //   return;
+    // }
+    // return this.runProcess();
   }
 
   public async loadLastBlockNumber() {

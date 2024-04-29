@@ -44,11 +44,13 @@ if (!fs.existsSync(indexPath)) {
 // Import the funct function from the provided folder
 const { getUserBalanceByBlock } = require(indexPath);
 
+let rowSet = [];
 getUserBalanceByBlock(Number(blockNumber), Number(blockTimestamp)).then((result) => {
   const allCsvRows = [];
   try {
     // check : item of result must be an object with keys: address, pairAddress, tokenAddress, blockNumber, balance
-    result.forEach((item, key) => {
+    let duplicateKeys = 0;
+    for (const item of result) {
       if (
         !item.address ||
         !item.pairAddress ||
@@ -65,7 +67,19 @@ getUserBalanceByBlock(Number(blockNumber), Number(blockTimestamp)).then((result)
         console.error("Exiting the process due to invalid item, please fix the issue and try again.");
         process.exit(1);
       }
-    });
+
+      const kkey = `${item.address}_${item.pairAddress}_${item.tokenAddress}_${item.blockNumber}`;
+      if (rowSet[kkey]) {
+        console.error("Duplicate key: ", kkey);
+        duplicateKeys++;
+      } else {
+        rowSet[kkey] = item;
+      }
+    }
+    if(duplicateKeys > 0){
+      console.error("Exiting the process due to duplicate key, please fix the issue and try again.");
+      process.exit(1);
+    }
 
     // Accumulate CSV rows for all blocks
     allCsvRows.push(...result);

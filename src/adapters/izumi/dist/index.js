@@ -220,8 +220,21 @@ async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
     }
     console.info("pairAddress:", poolAddress);
   }
+ 
+  const resultTmp = await getLiquidities(poolInfos, blockNumber, blockTimestamp);
+  let resultFinal = [];
+  // loop resultTmp, group by address, pairAddress, tokenAddress, blockNumber and sum balance
+  for (const item of resultTmp) {
+    const key = `${item.address}_${item.pairAddress}_${item.tokenAddress}_${item.blockNumber}`;
+    if (resultFinal[key]) {
+      resultFinal[key].balance += item.balance;
+    } else {
+      resultFinal[key] = item;
+    }
+  }
+  // return array
+  return Object.values(resultFinal);
 
-  return await getLiquidities(poolInfos, blockNumber, blockTimestamp);
 }
 
 module.exports = {

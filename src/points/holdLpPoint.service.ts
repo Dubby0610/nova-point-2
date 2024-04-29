@@ -17,6 +17,7 @@ import { hexTransformer } from "../transformers/hex.transformer";
 import { ConfigService } from "@nestjs/config";
 import { getETHPrice, getTokenPrice, REFERRER_BONUS, STABLE_COIN_TYPE } from "./depositPoint.service";
 import addressMultipliers from "../addressMultipliers";
+import { Cron } from "@nestjs/schedule";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 type BlockAddressTvl = {
@@ -32,6 +33,7 @@ export class HoldLpPointService extends Worker {
   private readonly addressMultipliersCache: Map<string, TokenMultiplier[]>;
   private readonly withdrawStartTime: Date;
   private addressFirstDepositTimeCache: Map<string, Date>;
+  private readonly startBlock: number;
 
   public constructor(
     private readonly tokenService: TokenService,
@@ -47,6 +49,7 @@ export class HoldLpPointService extends Worker {
   ) {
     super();
     this.logger = new Logger(HoldLpPointService.name);
+    this.startBlock = this.configService.get<number>("startBlock");
     this.pointsStatisticalPeriodSecs = this.configService.get<number>("points.pointsStatisticalPeriodSecs");
     this.pointsPhase1StartTime = new Date(this.configService.get<string>("points.pointsPhase1StartTime"));
     this.addressMultipliersCache = new Map<string, TokenMultiplier[]>();
@@ -58,23 +61,37 @@ export class HoldLpPointService extends Worker {
     this.addressFirstDepositTimeCache = new Map();
   }
 
+  @Cron('0 0,8,16 * * *')
   protected async runProcess(): Promise<void> {
+    this.logger.log(`${HoldLpPointService.name} initialized`);
     try {
       await this.handleHoldPoint();
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
-
-    const holdLpPointInterval = this.configService.get<number>("holdLpPointInterval");
-    await waitFor(() => !this.currentProcessPromise, holdLpPointInterval * 1000, holdLpPointInterval * 1000);
-    if (!this.currentProcessPromise) {
-      return;
-    }
-
-    return this.runProcess();
   }
 
   async handleHoldPoint() {
+    // const lastStatisticalBlockNumberDb = await this.pointsOfLpRepository.getLastHoldPointStatisticalBlockNumber();
+    // const lastStatisticalBlockNumber = Math.max(lastStatisticalBlockNumberDb, this.startBlock);
+    // const lastStatisticalBlock = await this.blockRepository.getLastBlock({
+    //   where: { number: lastStatisticalBlockNumber },
+    //   select: { number: true, timestamp: true },
+    // });
+    // if (!lastStatisticalBlock) {
+    //   throw new Error(`Last hold point statistical block not found: ${lastStatisticalBlockNumber}`);
+    // }
+    // const lastStatisticalTs = lastStatisticalBlock.timestamp;
+    // const currentStatisticalTs = new Date(lastStatisticalTs.getTime() + this.pointsStatisticalPeriodSecs * 1000);
+    // const currentStatisticalBlock = await this.blockRepository.getNextHoldPointStatisticalBlock(currentStatisticalTs);
+    // if (!currentStatisticalBlock) {
+    //   this.logger.log(`Wait for the next hold point statistical block`);
+    //   return;
+    // }
+    // const sinceLastTime = currentStatisticalBlock.timestamp.getTime() - lastStatisticalTs.getTime();
+    // this.logger.log(
+    //   `Statistic hold point at block: ${currentStatisticalBlock.number}, since last: ${sinceLastTime / 1000} seconds`
+    // );
     // get last balance of lp statistical block number
     const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
     if (!lastBalanceOfLp) {
@@ -90,7 +107,6 @@ export class HoldLpPointService extends Worker {
       this.logger.log(`No block of lp found, block number : ${lastStatisticalBlockNumber}`);
       return;
     }
-
     const statisticStartTime = new Date();
     // get the early bird weight
     const earlyBirdMultiplier = this.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
@@ -115,27 +131,27 @@ export class HoldLpPointService extends Worker {
       let groupBooster = new BigNumber(1);
       // get the last multiplier before the block timestamp
       const addressMultiplier = this.getAddressMultiplier(pairAddress, blockTs);
-      // const invite = await this.inviteRepository.getInvite(pairAddress);
+      // const invite = await this.inviteRepository.getInvite(address);
       // if (!!invite) {
       //   const groupTvl = groupTvlMap.get(invite.groupId);
       //   if (!!groupTvl) {
       //     groupBooster = groupBooster.plus(this.getGroupBooster(groupTvl));
       //   }
       // }
-      let firstDepositTime = this.addressFirstDepositTimeCache.get(pairAddress);
+      let firstDepositTime = this.addressFirstDepositTimeCache.get(address);
       if (!firstDepositTime) {
-        const addressFirstDeposit = await this.addressFirstDepositRepository.getAddressFirstDeposit(pairAddress);
+        const addressFirstDeposit = await this.addressFirstDepositRepository.getAddressFirstDeposit(address);
         firstDepositTime = addressFirstDeposit?.firstDepositTime;
         if (firstDepositTime) {
           const depositTime = new Date(Math.max(firstDepositTime.getTime(), this.pointsPhase1StartTime.getTime()));
-          this.addressFirstDepositTimeCache.set(pairAddress, depositTime);
+          this.addressFirstDepositTimeCache.set(address, depositTime);
         }
       }
       const loyaltyBooster = this.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
       // NOVA Point = sum_all tokens in activity list (Early_Bird_Multiplier * Token Multiplier * Address Multiplier * Token Amount * Token Price * (1 + Group Booster + Growth Booster) * Loyalty Booster / ETH_Price )
 
       this.logger.log(
-        `Addrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}`
+        `Addrss ${address} pairAddrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}`
       );
       const newHoldPoint = addressTvl.holdBasePoint
         .multipliedBy(earlyBirdMultiplier)
@@ -145,7 +161,7 @@ export class HoldLpPointService extends Worker {
         .multipliedBy(loyaltyBooster);
       await this.updateHoldPoint(currentStatisticalBlock.number, pairAddress, address, newHoldPoint);
     }
-    // await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
+    await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(
@@ -282,7 +298,7 @@ export class HoldLpPointService extends Worker {
     for (const priceId of allPriceIds) {
       const blockTokenPrice = await this.blockTokenPriceRepository.getBlockTokenPrice(blockNumber, priceId);
       if (!blockTokenPrice) {
-        throw new Error(`Token ${priceId} price not found`);
+        throw new Error(`BlockNumber : ${blockNumber}, Token ${priceId} price not found`);
       }
       tokenPrices.set(priceId, new BigNumber(blockTokenPrice.usdPrice));
     }
