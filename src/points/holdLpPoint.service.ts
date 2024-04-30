@@ -59,7 +59,7 @@ export class HoldLpPointService extends Worker {
     this.addressFirstDepositTimeCache = new Map();
   }
 
-  @Cron("0 0,8,16 * * *")
+  @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
     this.logger.log(`${HoldLpPointService.name} initialized`);
     try {
