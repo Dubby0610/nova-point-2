@@ -16,32 +16,20 @@ export class AddressFirstDepositRepository extends BaseRepository<AddressFirstDe
     });
   }
 
+  public async getAllAddressesFirstDeposits(addresses: string[]): Promise<AddressFirstDeposit[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const results = await transactionManager
+      .createQueryBuilder(AddressFirstDeposit, "a")
+      .where("a.address IN (:...addresses)", { addresses: addresses.map(item => Buffer.from(item.substring(2), 'hex')) })
+      .getMany();
+    return results.map((row: any) => {
+      row.address = row.address.toString("hex");
+      return row;
+    });
+  }
+
   public async getAllAddressFirstDeposits(): Promise<AddressFirstDeposit[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     return await transactionManager.find<AddressFirstDeposit>(AddressFirstDeposit);
   }
-
-  // public createDefaultAddressTokenTvl(address: string): AddressFirstDeposit {
-  //   return {
-  //     address: address,
-  //     firstDepositTime: new Date(),
-  //   };
-  // }
-
-  // public async addMany(records: Partial<AddressFirstDeposit>[]): Promise<void> {
-  //   if (!records?.length) {
-  //     return;
-  //   }
-
-  //   const transactionManager = this.unitOfWork.getTransactionManager();
-
-  //   let recordsToAdd = [];
-  //   for (let i = 0; i < records.length; i++) {
-  //     recordsToAdd.push(records[i]);
-  //     if (recordsToAdd.length === 1000 || i === records.length - 1) {
-  //       await transactionManager.upsert<AddressFirstDeposit>(this.entityTarget, recordsToAdd, ["address"]);
-  //       recordsToAdd = [];
-  //     }
-  //   }
-  // }
 }

@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { PointsOfLp } from "../entities";
-import { BaseRepository } from './base.repository';
+import { BaseRepository } from "./base.repository";
 
 @Injectable()
-export class PointsOfLpRepository  extends BaseRepository<PointsOfLp> {
+export class PointsOfLpRepository extends BaseRepository<PointsOfLp> {
   public constructor(unitOfWork: UnitOfWork) {
     super(PointsOfLp, unitOfWork);
-}
+  }
 
   public async updateDeposits(pairAddressBuf: Buffer, deposits: Map<string, number>): Promise<void> {
     const transactionManager = this.unitOfWork.getTransactionManager();
@@ -47,6 +47,20 @@ export class PointsOfLpRepository  extends BaseRepository<PointsOfLp> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     return await transactionManager.findOne<PointsOfLp>(PointsOfLp, {
       where: { address, pairAddress },
+    });
+  }
+
+  public async getPointByAddresses(addresses: string[]): Promise<PointsOfLp[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const results = await transactionManager
+      .createQueryBuilder(PointsOfLp, "a")
+      .where("a.address IN (:...addresses)", { addresses: addresses.map(item => Buffer.from(item.substring(2), 'hex')) })
+      .getMany();
+    
+    return results.map((row: any) => {
+      row.address = row.address.toString("hex");
+      row.pairAddress = row.pairAddress.toString("hex");
+      return row;
     });
   }
 

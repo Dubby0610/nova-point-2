@@ -37,14 +37,12 @@ export abstract class BaseRepository<T> {
     for (let i = 0; i < records.length; i++) {
         recordsToInsert.push(records[i]);
         if (recordsToInsert.length === BATCH_SIZE || i === records.length - 1) {
-            console.log('Start inserted or ignore records: ', recordsToInsert.length);
             await transactionManager.createQueryBuilder()
                 .insert()
                 .into(this.entityTarget)
                 .values(recordsToInsert)
                 .orIgnore()
                 .execute();
-            console.log('End inserted or ignore records: ', recordsToInsert.length);
             recordsToInsert = [];
         }
     }
@@ -64,14 +62,12 @@ export abstract class BaseRepository<T> {
         for (let i = 0; i < records.length; i++) {
             recordsToAddOrUpdate.push(records[i]);
             if (recordsToAddOrUpdate.length === BATCH_SIZE || i === records.length - 1) {
-                console.log('Strat inserted or udpated records: ', recordsToAddOrUpdate.length);
                 await transactionManager.createQueryBuilder()
                     .insert()
                     .into(this.entityTarget)
                     .values(recordsToAddOrUpdate)
                     .orUpdate(updateColumns, conflictColumns)
                     .execute();
-                console.log('End inserted or udpated records: ', recordsToAddOrUpdate.length);
                 recordsToAddOrUpdate = [];
             }
         }

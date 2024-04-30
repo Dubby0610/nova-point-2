@@ -111,14 +111,6 @@ export class BridgePointService extends Worker {
 
     // loop lastTransfers
     for (const transfer of lastTransfers) {
-      // if (
-      //   !(
-      //     (transfer.tokenAddress.toLocaleLowerCase() === ETH_ADDRESS && transfer.amount >= ETH_AMOUNT) ||
-      //     (USDT_USDC_ADDRESS.includes(transfer.tokenAddress.toLocaleLowerCase()) && transfer.amount >= USDT_AMOUNT)
-      //   )
-      // ) {
-      //   continue;
-      // }
       const activeAddressKey = `${PREFIX_ACTIVE}-${transfer.address}`;
       await this.cacheRepository.setValue(activeAddressKey, "active");
       const transferBridgeAddress = transfer.bridgeAddress.toLocaleLowerCase();
