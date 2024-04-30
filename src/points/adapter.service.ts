@@ -27,7 +27,7 @@ export class AdapterService extends Worker {
     this.logger = new Logger(AdapterService.name);
   }
 
-  @Cron('30 23,7,15 * * *')
+  @Cron('20 1,9,17 * * *')
   protected async runProcess(): Promise<void> {
     this.logger.log(`${AdapterService.name} initialized`);
     try {

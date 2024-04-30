@@ -4,7 +4,7 @@ import { BaseRepository } from "./base.repository";
 import { BalanceOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 
-interface BalanceOfLpDto {
+export interface BalanceOfLpDto {
   address: Buffer;
   pairAddress: Buffer;
   tokenAddress?: Buffer;
@@ -37,12 +37,21 @@ export class BalanceOfLpRepository extends BaseRepository<BalanceOfLp> {
   public async getAllAddressesByBlock(blockNumber: number): Promise<BalanceOfLpDto[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
-      `SELECT address, "pairAddress" FROM public."balancesOfLp" WHERE "blockNumber" <= $1 group by address, "pairAddress";`,
+      `SELECT address, "pairAddress", MAX("blockNumber") AS "blockNumber" FROM public."balancesOfLp" WHERE "blockNumber" <= $1 group by address, "pairAddress";`,
       [blockNumber]
     );
     return result.map((row: any) => {
-      return { address: row.address, pairAddress: row.pairAddress } as BalanceOfLpDto;
+      return { address: row.address, pairAddress: row.pairAddress, blockNumber: row.blockNumber } as BalanceOfLpDto;
     });
+  }
+
+  public async getAllByBlocks(blockNumbers: number[]): Promise<BalanceOfLpDto[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.query(
+      `SELECT * FROM public."balancesOfLp" WHERE "blockNumber" = ANY($1);`,
+      [blockNumbers]
+    );
+    return result;
   }
 
   public async getAllAddresses(): Promise<Buffer[]> {

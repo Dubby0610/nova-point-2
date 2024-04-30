@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
-import waitFor from "../utils/waitFor";
 import {
   PointsOfLpRepository,
   BlockRepository,
@@ -18,6 +17,9 @@ import { ConfigService } from "@nestjs/config";
 import { getETHPrice, getTokenPrice, REFERRER_BONUS, STABLE_COIN_TYPE } from "./depositPoint.service";
 import addressMultipliers from "../addressMultipliers";
 import { Cron } from "@nestjs/schedule";
+import { BalanceOfLpDto } from "../repositories/balanceOfLp.repository";
+import { AddressFirstDeposit } from "src/entities/addressFirstDeposit.entity";
+import { PointsOfLp } from "src/entities";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 type BlockAddressTvl = {
@@ -28,12 +30,10 @@ type BlockAddressTvl = {
 @Injectable()
 export class HoldLpPointService extends Worker {
   private readonly logger: Logger;
-  private readonly pointsStatisticalPeriodSecs: number;
   private readonly pointsPhase1StartTime: Date;
   private readonly addressMultipliersCache: Map<string, TokenMultiplier[]>;
   private readonly withdrawStartTime: Date;
   private addressFirstDepositTimeCache: Map<string, Date>;
-  private readonly startBlock: number;
 
   public constructor(
     private readonly tokenService: TokenService,
@@ -49,8 +49,6 @@ export class HoldLpPointService extends Worker {
   ) {
     super();
     this.logger = new Logger(HoldLpPointService.name);
-    this.startBlock = this.configService.get<number>("startBlock");
-    this.pointsStatisticalPeriodSecs = this.configService.get<number>("points.pointsStatisticalPeriodSecs");
     this.pointsPhase1StartTime = new Date(this.configService.get<string>("points.pointsPhase1StartTime"));
     this.addressMultipliersCache = new Map<string, TokenMultiplier[]>();
     for (const m of addressMultipliers) {
@@ -61,7 +59,7 @@ export class HoldLpPointService extends Worker {
     this.addressFirstDepositTimeCache = new Map();
   }
 
-  @Cron('0 0,8,16 * * *')
+  @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
     this.logger.log(`${HoldLpPointService.name} initialized`);
     try {
@@ -72,26 +70,6 @@ export class HoldLpPointService extends Worker {
   }
 
   async handleHoldPoint() {
-    // const lastStatisticalBlockNumberDb = await this.pointsOfLpRepository.getLastHoldPointStatisticalBlockNumber();
-    // const lastStatisticalBlockNumber = Math.max(lastStatisticalBlockNumberDb, this.startBlock);
-    // const lastStatisticalBlock = await this.blockRepository.getLastBlock({
-    //   where: { number: lastStatisticalBlockNumber },
-    //   select: { number: true, timestamp: true },
-    // });
-    // if (!lastStatisticalBlock) {
-    //   throw new Error(`Last hold point statistical block not found: ${lastStatisticalBlockNumber}`);
-    // }
-    // const lastStatisticalTs = lastStatisticalBlock.timestamp;
-    // const currentStatisticalTs = new Date(lastStatisticalTs.getTime() + this.pointsStatisticalPeriodSecs * 1000);
-    // const currentStatisticalBlock = await this.blockRepository.getNextHoldPointStatisticalBlock(currentStatisticalTs);
-    // if (!currentStatisticalBlock) {
-    //   this.logger.log(`Wait for the next hold point statistical block`);
-    //   return;
-    // }
-    // const sinceLastTime = currentStatisticalBlock.timestamp.getTime() - lastStatisticalTs.getTime();
-    // this.logger.log(
-    //   `Statistic hold point at block: ${currentStatisticalBlock.number}, since last: ${sinceLastTime / 1000} seconds`
-    // );
     // get last balance of lp statistical block number
     const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
     if (!lastBalanceOfLp) {
@@ -114,53 +92,87 @@ export class HoldLpPointService extends Worker {
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
     const blockTs = currentStatisticalBlock.timestamp.getTime();
     const addressTvlMap = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
-    // const groupTvlMap = await this.getGroupTvlMap(currentStatisticalBlock.number, addressTvlMap);
+    this.logger.log(`Address tvl map size: ${addressTvlMap.size}`);
+    let addresses = [];
+    for (const key of addressTvlMap.keys()) {
+      const [address, _] = key.split("-");
+      if (!addresses.includes(address)) {
+        addresses.push(address);
+      }
+    }
+    this.logger.log(`Address list size: ${addresses.length}`);
+    // get all first deposit time
+    const addressFirstDepositList = await this.addressFirstDepositRepository.getAllAddressesFirstDeposits(addresses);
+    this.logger.log(`Address first deposit map size: ${addressFirstDepositList.length}`);
+    const addressFirstDepositMap: { [address: string]: AddressFirstDeposit } = {};
+    for (let i = 0; i < addressFirstDepositList.length; i++) {
+      const item = addressFirstDepositList[i];
+      const tmpAddress = item.address.toLocaleLowerCase();
+      if (tmpAddress) {
+        addressFirstDepositMap[tmpAddress] = item;
+      }
+    }
+    // get all point of lp by addresses
+    const addressPointList = await this.pointsOfLpRepository.getPointByAddresses(addresses);
+    this.logger.log(`Address point map size: ${addressPointList.length}`);
+    const addressPointMap: { [address: string]: PointsOfLp } = {};
+    for (let i = 0; i < addressPointList.length; i++) {
+      const item = addressPointList[i];
+      const tmpAddress = item.address.toLocaleLowerCase();
+      const tmpPairAddress = item.pairAddress.toLocaleLowerCase();
+      if (tmpAddress && tmpPairAddress) {
+        const key = `${tmpAddress}-${tmpPairAddress}`;
+        addressPointMap[key] = item;
+      }
+    } 
     // loop all address to calculate hold point
+    let blockAddressPointArr = [];
+    let addressPointArr = [];
+    let groupBooster = new BigNumber(1);
     for (const key of addressTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
       const addressTvl = addressTvlMap.get(key);
-      const fromBlockAddressPoint = await this.blockAddressPointOfLpRepository.getBlockAddressPoint(
-        currentStatisticalBlock.number,
-        address,
-        pairAddress
-      );
-      if (!!fromBlockAddressPoint && fromBlockAddressPoint.holdPoint > 0) {
-        this.logger.log(`Address hold point calculated: ${address}`);
-        continue;
-      }
-      let groupBooster = new BigNumber(1);
       // get the last multiplier before the block timestamp
       const addressMultiplier = this.getAddressMultiplier(pairAddress, blockTs);
-      // const invite = await this.inviteRepository.getInvite(address);
-      // if (!!invite) {
-      //   const groupTvl = groupTvlMap.get(invite.groupId);
-      //   if (!!groupTvl) {
-      //     groupBooster = groupBooster.plus(this.getGroupBooster(groupTvl));
-      //   }
-      // }
-      let firstDepositTime = this.addressFirstDepositTimeCache.get(address);
-      if (!firstDepositTime) {
-        const addressFirstDeposit = await this.addressFirstDepositRepository.getAddressFirstDeposit(address);
-        firstDepositTime = addressFirstDeposit?.firstDepositTime;
-        if (firstDepositTime) {
-          const depositTime = new Date(Math.max(firstDepositTime.getTime(), this.pointsPhase1StartTime.getTime()));
-          this.addressFirstDepositTimeCache.set(address, depositTime);
-        }
-      }
+      const addressFirstDeposit = addressFirstDepositMap[address.toLowerCase()];
+      const firstDepositTime = addressFirstDeposit?.firstDepositTime;
       const loyaltyBooster = this.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
-      // NOVA Point = sum_all tokens in activity list (Early_Bird_Multiplier * Token Multiplier * Address Multiplier * Token Amount * Token Price * (1 + Group Booster + Growth Booster) * Loyalty Booster / ETH_Price )
-
-      this.logger.log(
-        `Addrss ${address} pairAddrss ${pairAddress} earlyBirdMultiplier: ${earlyBirdMultiplier}, addressMultiplier: ${addressMultiplier}, loyaltyBooster: ${loyaltyBooster}`
-      );
       const newHoldPoint = addressTvl.holdBasePoint
         .multipliedBy(earlyBirdMultiplier)
         // use pairAddress caculate the groupBooster addressMultiplier loyaltyBooster
         .multipliedBy(groupBooster)
         .multipliedBy(addressMultiplier)
         .multipliedBy(loyaltyBooster);
-      await this.updateHoldPoint(currentStatisticalBlock.number, pairAddress, address, newHoldPoint);
+      const fromBlockAddressPoint = {
+        blockNumber: currentStatisticalBlock.number,
+        address: address,
+        pairAddress: pairAddress,
+        holdPoint: newHoldPoint.toNumber(),
+      };
+      blockAddressPointArr.push(fromBlockAddressPoint);
+      // let fromAddressPoint = await this.pointsOfLpRepository.getPointByAddress(address, pairAddress);
+      let fromAddressPoint = addressPointMap[key];
+      if (!fromAddressPoint) {
+        fromAddressPoint = {
+          id: 0,
+          address: address,
+          pairAddress: pairAddress,
+          stakePoint: 0,
+        };
+      }
+      fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
+      addressPointArr.push(fromAddressPoint);
+      this.logger.log(`address:${address}, pairAddress:${pairAddress}, fromAddressPoint: ${JSON.stringify(fromAddressPoint)}`);
     }
+    this.logger.log(`Start insert into db for block: ${currentStatisticalBlock.number}`);
+    await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
+    this.logger.log(
+      `Finish blockAddressPointArr for block: ${currentStatisticalBlock.number}, length: ${blockAddressPointArr.length}`
+    );
+    await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
+    this.logger.log(
+      `Finish addressPointArr for block: ${currentStatisticalBlock.number}, length: ${addressPointArr.length}`
+    );
     await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
@@ -178,16 +190,42 @@ export class HoldLpPointService extends Worker {
   ): Promise<Map<string, BlockAddressTvl>> {
     const addressTvlMap: Map<string, BlockAddressTvl> = new Map(); // key is `${address}-${pairAddress}`
     // get address and pairAddress
-    const addressBufferList = await this.balanceOfLpRepository.getAllAddressesByBlock(blockNumber);
-    this.logger.log(`The address list length: ${addressBufferList.length}`);
-    for (const addressBuffer of addressBufferList) {
-      const address = hexTransformer.from(addressBuffer.address);
-      const pairAddress = hexTransformer.from(addressBuffer.pairAddress);
-      const addressTvl = await this.calculateAddressTvl(address, pairAddress, blockNumber, tokenPriceMap, blockTs);
-      if (addressTvl.tvl.gt(new BigNumber(0))) {
-        this.logger.log(
-          `PairAddress ${pairAddress}, Address ${address}: [tvl: ${addressTvl.tvl}, holdBasePoint: ${addressTvl.holdBasePoint}]`
-        );
+    const addressPairAddressList = await this.balanceOfLpRepository.getAllAddressesByBlock(blockNumber);
+    this.logger.log(`The address list length: ${addressPairAddressList.length}`);
+    // get all blockNumber
+    let blockNumbers = [];
+    for (let i = 0; i < addressPairAddressList.length; i++) {
+      if (blockNumbers.includes(addressPairAddressList[i].blockNumber)) {
+        continue;
+      }
+      blockNumbers.push(addressPairAddressList[i].blockNumber);
+    }
+    this.logger.log(`The block number list length: ${blockNumbers.length}`);
+    if (blockNumbers.length === 0) {
+      return addressTvlMap;
+    }
+    const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
+    this.logger.log(`The all address list length: ${balanceList.length}`);
+    let balanceMap = new Map<string, BalanceOfLpDto[]>();
+    for (let index = 0; index < balanceList.length; index++) {
+      const balance = balanceList[index];
+      const address = hexTransformer.from(balance.address);
+      const pairAddress = hexTransformer.from(balance.pairAddress);
+      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
+      if (balanceMap.has(key)) {
+        balanceMap.get(key).push(balance);
+      } else {
+        balanceMap.set(key, [balance]);
+      }
+    }
+    for (const item of addressPairAddressList) {
+      const address = hexTransformer.from(item.address);
+      const pairAddress = hexTransformer.from(item.pairAddress);
+      const key = `${address}-${pairAddress}-${item.blockNumber}`;
+      const addressTvl = await this.calculateAddressTvl(balanceMap.get(key), tokenPriceMap, blockTs);
+      if (addressTvl.holdBasePoint.isZero()) {
+        // this.logger.log(`Address hold point is zero: ${key}`);
+        continue;
       }
       const tmpKeys = `${address}-${pairAddress}`;
       addressTvlMap.set(tmpKeys, addressTvl);
@@ -211,19 +249,10 @@ export class HoldLpPointService extends Worker {
   }
 
   async calculateAddressTvl(
-    address: string,
-    pairAddress: string,
-    blockNumber: number,
+    addressBalances: BalanceOfLpDto[],
     tokenPrices: Map<string, BigNumber>,
     blockTs: number
   ): Promise<BlockAddressTvl> {
-    const addressBuffer: Buffer = hexTransformer.to(address);
-    const pairAddressBuffer: Buffer = hexTransformer.to(pairAddress);
-    const addressBalances = await this.balanceOfLpRepository.getAccountBalancesByBlock(
-      addressBuffer,
-      pairAddressBuffer,
-      blockNumber
-    );
     let tvl: BigNumber = new BigNumber(0);
     let holdBasePoint: BigNumber = new BigNumber(0);
     for (const addressBalance of addressBalances) {
@@ -306,59 +335,24 @@ export class HoldLpPointService extends Worker {
   }
 
   async updateHoldPoint(blockNumber: number, pairAddress: string, from: string, holdPoint: BigNumber) {
-    // update point of user
-    let fromBlockAddressPoint = await this.blockAddressPointOfLpRepository.getBlockAddressPoint(
-      blockNumber,
-      from,
-      pairAddress
-    );
-    if (!fromBlockAddressPoint) {
-      fromBlockAddressPoint = this.blockAddressPointOfLpRepository.createDefaultBlockAddressPoint(
-        blockNumber,
-        from,
-        pairAddress
-      );
-    }
+    const fromBlockAddressPoint = {
+      blockNumber: blockNumber,
+      address: from,
+      pairAddress: pairAddress,
+      holdPoint: holdPoint.toNumber(),
+    };
     let fromAddressPoint = await this.pointsOfLpRepository.getPointByAddress(from, pairAddress);
     if (!fromAddressPoint) {
-      fromAddressPoint = this.pointsOfLpRepository.createDefaultPoint(from, pairAddress);
+      fromAddressPoint = {
+        id: 0,
+        address: from,
+        pairAddress: pairAddress,
+        stakePoint: 0,
+      };
     }
-    fromBlockAddressPoint.holdPoint = holdPoint.toNumber();
     fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + holdPoint.toNumber();
     this.logger.log(`PairAddrss ${pairAddress}, Address ${from} get hold point: ${holdPoint}`);
-    // update point of referrer
-    /*
-    let referrerBlockAddressPoint: BlockAddressPoint;
-    let referrerAddressPoint: Point;
-    const referral = await this.referrerRepository.getReferral(from);
-    const referrer = referral?.referrer;
-    if (!!referrer) {
-      referrerBlockAddressPoint = await this.blockAddressPointOfLpRepository.getBlockAddressPoint(
-        blockNumber,
-        referrer
-      );
-      if (!referrerBlockAddressPoint) {
-        referrerBlockAddressPoint = this.blockAddressPointOfLpRepository.createDefaultBlockAddressPoint(
-          blockNumber,
-          referrer
-        );
-      }
-      referrerAddressPoint = await this.pointsOfLpRepository.getPointByAddress(referrer);
-      if (!referrerAddressPoint) {
-        referrerAddressPoint = this.pointsOfLpRepository.createDefaultPoint(referrer);
-      }
-      const referrerBonus = holdPoint.multipliedBy(REFERRER_BONUS);
-      referrerBlockAddressPoint.refPoint = Number(referrerBlockAddressPoint.refPoint) + referrerBonus.toNumber();
-      referrerAddressPoint.refPoint = Number(referrerAddressPoint.refPoint) + referrerBonus.toNumber();
-      this.logger.log(`Referrer ${referrer} get ref point from hold: ${referrerBonus}`);
-    }
-    */
-    await this.blockAddressPointOfLpRepository.upsertUserAndReferrerPoint(
-      fromBlockAddressPoint,
-      fromAddressPoint
-      // referrerBlockAddressPoint,
-      // referrerAddressPoint
-    );
+    await this.blockAddressPointOfLpRepository.upsertUserAndReferrerPoint(fromBlockAddressPoint, fromAddressPoint);
   }
 
   isWithdrawStartPhase(blockTs: number): boolean {
