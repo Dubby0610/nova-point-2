@@ -124,11 +124,11 @@ export class HoldLpPointService extends Worker {
         const key = `${tmpAddress}-${tmpPairAddress}`;
         addressPointMap[key] = item;
       }
-    } 
+    }
     // loop all address to calculate hold point
     let blockAddressPointArr = [];
     let addressPointArr = [];
-    let groupBooster = new BigNumber(1);
+    let groupBooster = new BigNumber(1.5);
     for (const key of addressTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
       const addressTvl = addressTvlMap.get(key);
