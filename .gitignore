@@ -2,3 +2,6 @@ node_modules
 .env
 dist
 *.csv
+src/adapters/**/build
+src/adapters/**/node_modules
+src/adapters/**/generated

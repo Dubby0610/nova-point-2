@@ -142,16 +142,16 @@ async function getLiquidities(poolInfos, blockNumber, blockTimestamp) {
                 .toString()
             );
             result.push({
-              address: owner,
+              userAddress: owner,
               tokenAddress: poolInfo.tokenX.address,
-              pairAddress: poolInfo.address,
+              poolAddress: poolInfo.address,
               blockNumber: blockNumber,
               balance: balanceX,
             });
             result.push({
-              address: owner,
+              userAddress: owner,
               tokenAddress: poolInfo.tokenY.address,
-              pairAddress: poolInfo.address,
+              poolAddress: poolInfo.address,
               blockNumber: blockNumber,
               balance: balanceY,
             });
@@ -177,7 +177,7 @@ async function getLiquidities(poolInfos, blockNumber, blockTimestamp) {
 }
 
 function writeOutputFile(data) {
-  let csvContent = "address,pairAddress,tokenAddress,blockNumber,balance\n";
+  let csvContent = "userAddress,poolAddress,tokenAddress,blockNumber,balance\n";
   // loop data
   for (const item of data) {
     const row = `${item.address},${item.pairAddress},${item.tokenAddress},${item.blockNumber},${item.balance}`;
@@ -220,7 +220,7 @@ async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
     }
     console.info("pairAddress:", poolAddress);
   }
- 
+
   const resultTmp = await getLiquidities(poolInfos, blockNumber, blockTimestamp);
   let resultFinal = [];
   // loop resultTmp, group by address, pairAddress, tokenAddress, blockNumber and sum balance

@@ -48,19 +48,17 @@ let rowSet = [];
 getUserBalanceByBlock(Number(blockNumber), Number(blockTimestamp)).then((result) => {
   const allCsvRows = [];
   try {
-    // check : item of result must be an object with keys: address, pairAddress, tokenAddress, blockNumber, balance
+    // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
     let duplicateKeys = 0;
     for (const item of result) {
       if (
-        !item.address ||
-        !item.pairAddress ||
+        !item.userAddress ||
+        !item.poolAddress ||
         !item.tokenAddress ||
-        undefined === item.blockNumber ||
         undefined === item.balance ||
-        typeof item.address !== "string" ||
-        typeof item.pairAddress !== "string" ||
+        typeof item.userAddress !== "string" ||
+        typeof item.poolAddress !== "string" ||
         typeof item.tokenAddress !== "string" ||
-        typeof item.blockNumber !== "number" ||
         typeof item.balance !== "bigint"
       ) {
         console.error("Invalid item, key:", key, ", item:", item);
@@ -68,7 +66,7 @@ getUserBalanceByBlock(Number(blockNumber), Number(blockTimestamp)).then((result)
         process.exit(1);
       }
 
-      const kkey = `${item.address}_${item.pairAddress}_${item.tokenAddress}_${item.blockNumber}`;
+      const kkey = `${item.address}_${item.poolAddress}_${item.tokenAddress}`;
       if (rowSet[kkey]) {
         console.error("Duplicate key: ", kkey);
         duplicateKeys++;
@@ -81,8 +79,18 @@ getUserBalanceByBlock(Number(blockNumber), Number(blockTimestamp)).then((result)
       process.exit(1);
     }
 
+    const resultTmp = result.map((item) => {
+        return {
+            userAddress: item.userAddress,
+            poolAddress: item.poolAddress,
+            tokenAddress: item.tokenAddress,
+            blockNumber: blockNumber,
+            balance: item.balance
+        };
+    });
+
     // Accumulate CSV rows for all blocks
-    allCsvRows.push(...result);
+    allCsvRows.push(...resultTmp);
 
     // Write to file when batch size is reached or at the end of loop
     const ws = fs.createWriteStream(`${folderName}/data/output.${blockNumber}.csv`, { flags: "w" });
