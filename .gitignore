@@ -5,3 +5,4 @@ dist
 src/adapters/**/build
 src/adapters/**/node_modules
 src/adapters/**/generated
+.DS_Store
