@@ -1,5 +1,5 @@
 import { UserBalance, Response, UserSupplied, AquaCToken } from './types';
-import { formatUnits, getAddress, JsonRpcProvider } from 'ethers'
+import { JsonRpcProvider } from 'ethers'
 
 
 
@@ -33,7 +33,7 @@ export const getUserPositionsAtBlock = async (
       }
     }`;
 
-    const response = await fetch('http://3.114.68.110:8000/subgraphs/name/aqua-point', {
+    const response = await fetch('https://graph.zklink.io/subgraphs/name/aqua-points', {
       method: 'POST',
       body: JSON.stringify({ query }),
       headers: { 'Content-Type': 'application/json' },
@@ -52,8 +52,8 @@ export const getUserPositionsAtBlock = async (
 
       const balance = data.positions.map((item) => {
         return {
-          address: userAddress,
-          pairAddress: item.pool,
+          userAddress: userAddress,
+          poolAddress: item.pool,
           tokenAddress: item.token,
           blockNumber: blockNumber,
           supplied: BigInt(item.supplied),
@@ -78,9 +78,9 @@ export const getUserPositionsAtBlock = async (
     const pool = pools.find(i => i.id === position.pool)
     if (!pool) {
       return {
-        address: position.address,
-        pairAddress: position.pairAddress,
+        userAddress: position.userAddress,
         tokenAddress: position.tokenAddress,
+        poolAddress: position.poolAddress,
         blockNumber: position.blockNumber,
         balance: BigInt(0)
       }
@@ -88,9 +88,9 @@ export const getUserPositionsAtBlock = async (
 
     const { balance, totalSupplied } = pool
     return {
-      address: position.address,
-      pairAddress: position.pairAddress,
+      userAddress: position.userAddress,
       tokenAddress: position.tokenAddress,
+      poolAddress: position.poolAddress,
       blockNumber: position.blockNumber,
       balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied)
     }

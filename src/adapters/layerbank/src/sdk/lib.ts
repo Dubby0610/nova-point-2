@@ -50,8 +50,8 @@ export const getUserPositionsAtBlock = async (
 
       const balance = data.positions.map((item) => {
         return {
-          address: userAddress,
-          pairAddress: item.pool,
+          userAddress: userAddress,
+          poolAddress: item.pool,
           tokenAddress: item.token,
           blockNumber: blockNumber,
           supplied: BigInt(item.supplied),
@@ -76,8 +76,8 @@ export const getUserPositionsAtBlock = async (
     const pool = poolList.find(i => i.id === position.pool)
     if (!pool) {
       return {
-        address: position.address,
-        pairAddress: position.pairAddress,
+        userAddress: position.userAddress,
+        poolAddress: position.poolAddress,
         tokenAddress: position.tokenAddress,
         blockNumber: position.blockNumber,
         balance: BigInt(0)
@@ -86,8 +86,8 @@ export const getUserPositionsAtBlock = async (
 
     const { balance, totalSupplied } = pool
     return {
-      address: position.address,
-      pairAddress: position.pairAddress,
+      userAddress: position.userAddress,
+      poolAddress: position.poolAddress,
       tokenAddress: position.tokenAddress,
       blockNumber: position.blockNumber,
       balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied)
