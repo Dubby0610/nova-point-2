@@ -14,6 +14,7 @@ interface TransferItem {
   bridgeAddress: string;
   blockNumber: number;
   number: number;
+  timestamp: number;
   amount: bigint;
 }
 
@@ -55,7 +56,7 @@ const symbiosisBaseContractAddress = "0x8Dc71561414CDcA6DcA7C1dED1ABd04AF474D189
 @Injectable()
 export class BridgePointService extends Worker {
   private readonly logger: Logger;
-  private readonly bridgeConfig: Map<string, any> = new Map();
+  private readonly bridgeConfig = [];
   private readonly bridgeAddress: string[] = [];
   private lastTransferBlockNumber: number = 0;
   private readonly startBlock: number;
@@ -110,11 +111,12 @@ export class BridgePointService extends Worker {
   public async executePoints(lastTransfers: TransferItem[]): Promise<void> {
     const now = new Date();
     const bridgeAddressDailyCount = [];
-    for (const [address, bridge] of this.bridgeConfig) {
+    for (const address in this.bridgeConfig) {
+      const bridge = this.bridgeConfig[address];
       const key = this.getBridgeAddressDailyKey(now, bridge.id);
-      const count = (await this.cacheRepository.getValue(key)) || 0;
+      const count = Number(await this.cacheRepository.getValue(key)) || 0;
       this.logger.log(
-        `BridgeAddress: ${address}, BridgeId: ${bridge.id}, date:${now.getFullYear()}-${now.getMonth()}-${now.getDay()}, initCount: ${count}`
+        `key:${key}, BridgeAddress: ${address}, BridgeId: ${bridge.id}, date:${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}, initCount: ${count}`
       );
       bridgeAddressDailyCount[key] = count;
     }
@@ -131,14 +133,16 @@ export class BridgePointService extends Worker {
         continue;
       }
       // bridgeAddress-Date: total count of transfers of eve day, and saved by pgsql
-      const date = new Date(transfer.blockNumber * 1000);
+      const date = new Date(transfer.timestamp);
       const key = this.getBridgeAddressDailyKey(date, bridge.id);
       // when interval is 10s, and now is 2024-04-26 00:00:05, the transfer time may be 2024-04-26 23:59:59 or 2024-04-27 00:00:02, so we need to check the date
       if (!bridgeAddressDailyCount[key]) {
+        // from db
+        const tmpValue = await this.cacheRepository.getValue(key);
         this.logger.log(
-          `New key : BridgeAddress: ${transferBridgeAddress}, BridgeId: ${bridge.id}, date:${date.getDate()}, count: 0`
+          `key is ${key}, BridgeAddress: ${transferBridgeAddress}, BridgeId: ${bridge.id}, timestmap:${transfer.timestamp},date:${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}, count: 0`
         );
-        bridgeAddressDailyCount[key] = 0;
+        bridgeAddressDailyCount[key] = tmpValue;
       }
       const transferPoints = this.calculatePoint(bridgeAddressDailyCount[key], bridge);
       this.logger.log(
@@ -161,8 +165,9 @@ export class BridgePointService extends Worker {
     }
 
     // update count to pgsql
-    for (const [key, count] of bridgeAddressDailyCount) {
-      await this.cacheRepository.setValue(key, count);
+    for (const key in bridgeAddressDailyCount) {
+      const count = bridgeAddressDailyCount[key];
+      await this.cacheRepository.setValue(key, count.toString());
     }
 
     // update lastTransferBlockNumber
@@ -218,6 +223,7 @@ export class BridgePointService extends Worker {
         bridgeAddress: transfer.from.toLocaleLowerCase(),
         blockNumber: transfer.blockNumber,
         number: transfer.number,
+        timestamp: Number(transfer.timestamp),
         amount: BigInt(transfer.amount.toString()),
       };
     });
@@ -241,6 +247,6 @@ export class BridgePointService extends Worker {
 
   //get bridgeAddress daily key
   public getBridgeAddressDailyKey(date: Date, bridgeId: string): string {
-    return `${bridgeId}-${date.getFullYear()}-${date.getMonth()}-${date.getDay()}`;
+    return `${bridgeId}-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   }
 }
