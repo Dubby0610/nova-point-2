@@ -6,7 +6,6 @@ import BigNumber from "bignumber.js";
 import { ConfigService } from "@nestjs/config";
 import BridgeConfig from "src/bridge.config";
 import { HoldLpPointService } from "./holdLpPoint.service";
-import symbiosisConfig from "src/bridge.config";
 
 interface TransferItem {
   address: string;
