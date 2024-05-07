@@ -162,7 +162,9 @@ export class HoldLpPointService extends Worker {
       }
       fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
       addressPointArr.push(fromAddressPoint);
-      this.logger.log(`address:${address}, pairAddress:${pairAddress}, fromAddressPoint: ${JSON.stringify(fromAddressPoint)}`);
+      this.logger.log(
+        `address:${address}, pairAddress:${pairAddress}, fromAddressPoint: ${JSON.stringify(fromAddressPoint)}`
+      );
     }
     this.logger.log(`Start insert into db for block: ${currentStatisticalBlock.number}`);
     await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
