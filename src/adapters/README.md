@@ -17,7 +17,7 @@ Once the verification is successful, zkLink will start distributing Nova points 
 
 ## Points
 
-### Briefly Formulas:
+### General Formula:
 
 $$
 Points = Group Booster (Ecosystem Points + Asset Points) + Referral Points + Bonus Points
@@ -31,9 +31,7 @@ $$
 
 1. Vol signifies the total volume of trades executed by a user over a period of time.
 
-   $$ VolPoints\_{\text{\scriptsize u,t}} = booster · 1/1000 · Price · Quantity $$
-
-   - Spot DEX, Spot PERPs, Lending, Bridge:
+   - DEX, PERPs, Lending, Bridge:
      The total trading/lending/bridging volume by the user based on the formula above.
    - GameFi, NFTFi, SocialFi:
      The total trading volume of assets such as NFT and FT.  
