@@ -154,9 +154,9 @@ export class AdapterService extends Worker {
         pairAddresses.push(row.pairAddress);
       }
       return {
-        address: row.address,
+        address: row.userAddress,
         tokenAddress: row.tokenAddress,
-        pairAddress: row.pairAddress,
+        pairAddress: row.poolAddress,
         blockNumber: row.blockNumber,
         balance: row.balance,
       };
