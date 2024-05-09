@@ -46,7 +46,7 @@ $$
    For example, if two users, A and B, each stake 20 ETH in a protocol pool and receive 20 lpETH, then the pool locks 40 ETH of underlying tokens. When user C borrows 20 ETH, the underlying token balance for users A and B in the protocol is each 10 ETH. The calculation formula is: `TVL_u =20 lpETH / 40 lpETH * 20 ETH`.
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
-   - For Dex/Perps/Lending protocol, there is no limit to the tx volume. 
+   - For Dex/Perps/Lending protocol, there is no limit to the tx volume.
    - For Bridge, the tx volume should be greater than 0.1 ETH or 500 USDC/USDT.
    - For Bridge, it should be Number of bridged transactions.
    - For GameFi/NFTFi, it is the total number of on-chain interactions in the protocol.
@@ -62,8 +62,8 @@ You can use a subgraph or an existing service to process adapter data.
 **Requirements:**
 
 - You must provide an **npm project** with the correct npm dependencies included in the **package.json** and output an executable Node.js script in _dist/index_.
-- We need to provide the functions `getUserTVolByBlock`, `getUserTVLByBlock`, and `getUserTxNumByBlock`, based on three different types of points: **TVol**, **TVL**, and **TxNum**, which takes _blockNumber_ and _blockTimestamp_ as a parameter to execute the script and outputs a CSV file.
-- In the output CSV file, you need to include snapshot data of all users within the protocol at this _blockNumber_.
+- We need to provide the functions `getUserTransactionDataByBlock`, `getUserTVLByBlock`, based on three different types of points: **Vol**, **TVL**, and **TxNum**, which takes _lastBlockNumber_, _curBlockNumber_ as a parameter to execute the script and outputs a CSV file.
+- In the output CSV file, you need to include snapshot data of all users within the protocol at the specific _blockNumber_ or block number range.
 
 ## Installation & Setup
 
@@ -97,22 +97,24 @@ Upon successful deployment, a subgraph URL will be returned and displayed in you
 
 ### Data requirement
 
-Capture a snapshot every 8 hours at 02:00 UTC, 10:00 UTC, and 18:00 UTC of the Total Value Locked (TVL) distributed by assets per user on a daily basis.
+Capture a snapshot every 8 hours at 02:00 UTC, 10:00 UTC, and 18:00 UTC of data distributed by assets per user on a daily basis.
 
-#### Vol Points
+#### Vol Points & TxNum Points
 
-For Vol Points calculation, you need to provide every volume data of users within the block range. For dual-token pool liquidity providers, you need to split the user-provided liquidity of token0 and token1 into two data entries with the same tx hash. For example, in the _AddLiquidity_ event of WETH-USDT, a single transaction data entry needs to provide relevant information for **both** WETH and USDT. It should be split into two data entries with the same transaction hash. The contents of each data entry are as shown in the table below:
+For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volume and Tx Number to determine points. You need to provide the fields corresponding to the table below. Please note, if you do not provide prices, the points for the Tx Number may not be applicable.For the tokenAddress below, we request that you provide data related to the base token, rather than the quote token.
 
-| Data Field   | Notes                                                    | Example                                                            | Required |
-| ------------ | -------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
-| userAddress  | User account                                             | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C                         | Yes      |
-| poolAddress  | Each pool’s contract address                             | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf                         | Yes      |
-| tokenAddress | The ERC20 token address involved in the transaction      | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169                         | Yes      |
-| decimals     | The decimals of token                                    | 18                                                                 | Yes      |
-| price        | Price in USD                                             | 3400.23                                                            | Yes      |
-| quantity     | The quantity of ERC20 assets involved in the transaction | 1892000000000000000                                                | Yes      |
-| txHash       | Transaction Hash                                         | 0x8dde0e5cec00361984dbab3780af0372fe39930da1337709ebada69f63996170 | Yes      |
-| symbol       | token symbol                                             | WETH                                                               | No       |
+| Data Field      | Notes                                                                                                                                                | Example                                                            | Required for Vol | Required for TxNum |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------- | ------------------ |
+| timestamp       | block timestamp                                                                                                                                      | 1370000000                                                         | Yes              | Yes                |
+| userAddress     | User account                                                                                                                                         | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C                         | Yes              | Yes                |
+| contractAddress | related contract address                                                                                                                             | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf                         | Yes              | Yes                |
+| tokenAddress    | The ERC20/ERC721 token address involved in the transaction                                                                                           | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169                         | Yes              | Yes                |
+| decimals        | The decimals of token                                                                                                                                | 18                                                                 | Yes              | Yes                |
+| price           | Price in USD                                                                                                                                         | 3400.23                                                            | Yes              | No                 |
+| quantity        | The quantity of ERC20 assets involved in the transaction                                                                                             | 1892000000000000000                                                | Yes              | Yes                |
+| txHash          | Transaction Hash                                                                                                                                     | 0x8dde0e5cec00361984dbab3780af0372fe39930da1337709ebada69f63996170 | Yes              | Yes                |
+| nonce           | A unique identifier for a transaction, primarily used to distinguish cases where a single transaction contains multiple swap or similar transactions | 23                                                                 | Yes              | Yes                |
+| symbol          | token symbol                                                                                                                                         | WETH                                                               | No               | No                 |
 
 #### TVL Points
 
@@ -120,25 +122,14 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 
 | Data Field   | Notes                                               | Example                                    | Required |
 | ------------ | --------------------------------------------------- | ------------------------------------------ | -------- |
+| timestamp    | block timestamp                                     | 1370000000                                 | Yes      |
 | userAddress  | User account                                        | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
 | tokenAddress | The ERC20 token address involved in the transaction | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
 | poolAddress  | Each pool’s contract address                        | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
 | balance      | Historical balances raw data. 0.1 ETH               | 100000000000000000                         | Yes      |
+| symbol       | token symbol                                        | WETH                                       | No       |
 
-#### TxNum Points
-
-For Tx number points calculation, the provided data is the same as Vol points, including all transaction data of each user within the block range, the difference is that for dual-token pool liquidity providers, a single transaction does not need to be split, only the information of the single-side token needs to be provided, For example, in the _AddLiquidity_ event for WETH-USDT, only the relevant information of WETH _or_ USDT needs to be provided in a single transaction data entry. The data as shown in the table below:
-
-| Data Field   | Notes                                                    | Example                                                            | Required |
-| ------------ | -------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
-| userAddress  | User account                                             | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C                         | Yes      |
-| poolAddress  | Each pool’s contract address                             | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf                         | Yes      |
-| tokenAddress | The ERC20 token address involved in the transaction      | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169                         | Yes      |
-| decimals     | The decimals of token                                    | 18                                                                 | Yes      |
-| price        | Price in USD                                             | 3400.23                                                            | Yes      |
-| quantity     | The quantity of ERC20 assets involved in the transaction | 1892000000000000000                                                | Yes      |
-| txHash       | Transaction Hash                                         | 0x8dde0e5cec00361984dbab3780af0372fe39930da1337709ebada69f63996170 | Yes      |
-| symbol       | token symbol                                             | WETH                                                               | No       |
+                                    
 
 ## 5.2 Testing & Validation
 

@@ -5,8 +5,8 @@ const { write } = require("fast-csv");
 
 // Get the folder name from command line arguments
 const folderName = process.argv[2];
-const lastBlockNumber = process.argv[3];
-const curBlockNumber = process.argv[4];
+const curBlockNumber = process.argv[3];
+const lastBlockNumber = process.argv[4];
 
 if (!folderName) {
   console.error("Folder name not provided. Please provide the folder name as an argument.");
@@ -40,23 +40,24 @@ if (!fs.existsSync(indexPath)) {
 }
 
 // Import the funct function from the provided folder
-const { getUserTVolByBlock, getUserTVLByBlock, getUserTxNumByBlock } = require(indexPath);
+const { getUserTransactionDataByBlock, getUserTxNumByBlock } = require(indexPath);
 
-if (getUserTVolByBlock) {
-  getUserTVolByBlock(Number(lastBlockNumber), Number(curBlockNumber)).then((result) => {
+if (getUserTransactionDataByBlock) {
+  getUserTransactionDataByBlock(Number(lastBlockNumber), Number(curBlockNumber)).then((result) => {
     const allCsvRows = [];
     const keyMap = new Map();
     try {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
       for (const item of result) {
         if (
+          !item.timestamp ||
           !item.userAddress ||
-          !item.poolAddress ||
+          !item.contractAddress ||
           !item.tokenAddress ||
           !item.decimals ||
-          !item.price ||
           !item.quantity ||
-          !item.txHash
+          !item.txHash ||
+          !item.nonce
         ) {
           console.error("Invalid item, key:", tem.txHash, ", item:", item);
           console.error(
@@ -80,12 +81,14 @@ if (getUserTVolByBlock) {
       const resultTmp = result.map((item) => {
         return {
           userAddress: item.userAddress,
-          poolAddress: item.poolAddress,
+          contractAddress: item.contractAddress,
           tokenAddress: item.tokenAddress,
           decimals: item.decimals,
           price: item.price,
           quantity: item.quantity,
           txHash: item.txHash,
+          nonce: item.nonce,
+          timestamp: item.timestamp,
           blockNumber: curBlockNumber,
         };
       });
@@ -108,8 +111,8 @@ if (getUserTVolByBlock) {
   });
 }
 
-if (getUserTVLByBlock) {
-  getUserTVLByBlock(Number(curBlockNumber)).then((result) => {
+if (getUserTxNumByBlock) {
+  getUserTxNumByBlock(Number(curBlockNumber)).then((result) => {
     const allCsvRows = [];
     const keyMap = new Map();
     try {
@@ -160,64 +163,4 @@ if (getUserTVLByBlock) {
   });
 }
 
-if (getUserTxNumByBlock) {
-  getUserTxNumByBlock(Number(lastBlockNumber), Number(curBlockNumber)).then((result) => {
-    const allCsvRows = [];
-    const keyMap = new Map();
-    try {
-      // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
-      for (const item of result) {
-        const key = item.txHash;
-        if (
-          !item.userAddress ||
-          !item.poolAddress ||
-          !item.tokenAddress ||
-          !item.decimals ||
-          !item.price ||
-          !item.quantity ||
-          !item.txHash
-        ) {
-          console.error("Invalid item, key:", key, ", item:", item);
-          console.error("Exiting the process due to invalid item, please fix the issue and try again.");
-          process.exit(1);
-        }
 
-        if (keyMap.get(key)) {
-          console.error("Duplicate key: ", key);
-          console.error("Exiting the process due to duplicate key, please fix the issue and try again.");
-          process.exit(1);
-        } else {
-          keyMap.set(key, true);
-        }
-      }
-
-      const resultTmp = result.map((item) => {
-        return {
-          userAddress: item.userAddress,
-          poolAddress: item.poolAddress,
-          tokenAddress: item.tokenAddress,
-          decimals: item.decimals,
-          price: item.price,
-          quantity: item.quantity,
-          txHash: item.txHash,
-          blockNumber: curBlockNumber,
-        };
-      });
-
-      // Accumulate CSV rows for all blocks
-      allCsvRows.push(...resultTmp);
-
-      // Write to file when batch size is reached or at the end of loop
-      const ws = fs.createWriteStream(`${folderName}/data/output.vol.${blockNumber}.csv`, { flags: "w" });
-      write(allCsvRows, { headers: true })
-        .pipe(ws)
-        .on("finish", () => {
-          console.log(`CSV file has been written.`);
-        });
-      // Clear the accumulated CSV rows
-      allCsvRows.length = 0;
-    } catch (error) {
-      console.error(`An error occurred for block ${blockNumber}:`, error);
-    }
-  });
-}
