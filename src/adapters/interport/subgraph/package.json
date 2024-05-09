@@ -1,0 +1,21 @@
+{
+  "name": "zk_l3_graph",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "clean": "graph clean",
+    "create": "graph create interport-stablecoinfarm-tracking-zklink-nova --node http://3.114.68.110:8020",
+    "deploy": "graph deploy interport-stablecoinfarm-tracking-zklink-nova --ipfs http://3.114.68.110:5001 --node http://3.114.68.110:8020",
+    "remove": "graph remove interport-stablecoinfarm-tracking-zklink-nova --node http://3.114.68.110:8020",
+    "test": "graph test"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.71.1",
+    "@graphprotocol/graph-ts": "0.35.1",
+    "prettier": "^3.2.5"
+  },
+  "devDependencies": {
+    "matchstick-as": "0.6.0"
+  }
+}
