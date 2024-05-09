@@ -46,7 +46,8 @@ $$
    For example, if two users, A and B, each stake 20 ETH in a protocol pool and receive 20 lpETH, then the pool locks 40 ETH of underlying tokens. When user C borrows 20 ETH, the underlying token balance for users A and B in the protocol is each 10 ETH. The calculation formula is: `TVL_u =20 lpETH / 40 lpETH * 20 ETH`.
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
-   - For Dex/Perps/Lending protocol, tx volume should be grater than 0.1 ETH or 500 USDC/USDT.
+   - For Dex/Perps/Lending protocol, there is no limit to the tx volume. 
+   - For Bridge, the tx volume should be greater than 0.1 ETH or 500 USDC/USDT.
    - For Bridge, it should be Number of bridged transactions.
    - For GameFi/NFTFi, it is the total number of on-chain interactions in the protocol.
 
