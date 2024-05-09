@@ -19,7 +19,6 @@ export class AddressFirstDepositRepository extends BaseRepository<AddressFirstDe
   public async getAllAddressesFirstDeposits(addresses: string[]): Promise<AddressFirstDeposit[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const addressesBuff = addresses.map((item) => Buffer.from(item.substring(2), "hex"));
-    console.log("addressesBuff.length:", addressesBuff.length);
     const result = await transactionManager.query(
       `SELECT * FROM public."addressFirstDeposits" WHERE address = ANY($1);`,
       [addressesBuff]
