@@ -7,8 +7,8 @@ export function updateUserBalance(user: Address, balance: BigInt): UserPosition 
     let userPosition = UserPosition.load(user)
     if (!userPosition) {
         userPosition = new UserPosition(user)
-        userPosition.validate =  true
-    } 
+        userPosition.invalid = false
+    }
     userPosition.balance = balance
     userPosition.save()
 
@@ -19,10 +19,10 @@ export function updateUserBalance(user: Address, balance: BigInt): UserPosition 
 export function setUserInvalid(user: Address): UserPosition {
     let userPosition = UserPosition.load(user)
     if (!userPosition) {
-        userPosition = new UserPosition(user)   
-    } 
+        userPosition = new UserPosition(user)
+    }
     userPosition.balance = BigInt.zero()
-    userPosition.validate = false
+    userPosition.invalid = true
     userPosition.save()
 
     return userPosition

@@ -33,33 +33,33 @@ if (!fs.existsSync(folderPath)) {
 }
 
 // Check if the provided folder contains index.ts file
-const indexPath = path.join(folderPath, "dist/index.js");
+const indexPath = path.join(folderPath, "execution/dist/index.js");
 if (!fs.existsSync(indexPath)) {
   console.error(`Folder '${folderName}' does not contain index.ts file.`);
   process.exit(1);
 }
 
 // Import the funct function from the provided folder
-const { getUserTransactionDataByBlock, getUserTxNumByBlock } = require(indexPath);
+const { getUserTransactionData, getUserTVLData } = require(indexPath);
 
-if (getUserTransactionDataByBlock) {
-  getUserTransactionDataByBlock(Number(lastBlockNumber), Number(curBlockNumber)).then((result) => {
+if (getUserTransactionData) {
+  getUserTransactionData(Number(lastBlockNumber), Number(curBlockNumber)).then((result) => {
     const allCsvRows = [];
     const keyMap = new Map();
     try {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
       for (const item of result) {
         if (
-          !item.timestamp ||
-          !item.userAddress ||
-          !item.contractAddress ||
-          !item.tokenAddress ||
-          !item.decimals ||
-          !item.quantity ||
-          !item.txHash ||
-          !item.nonce
+          item.timestamp === undefined ||
+          item.userAddress === undefined ||
+          item.contractAddress === undefined ||
+          item.tokenAddress === undefined ||
+          item.decimals === undefined ||
+          item.quantity === undefined ||
+          item.txHash === undefined ||
+          item.nonce === undefined
         ) {
-          console.error("Invalid item, key:", tem.txHash, ", item:", item);
+          console.error("getUserTVLData Invalid item:", tem);
           console.error(
             "Exiting the process due to invalid item in getUserTVolByBlock, please fix the issue and try again."
           );
@@ -68,14 +68,12 @@ if (getUserTransactionDataByBlock) {
 
         const key = tem.txHash;
         if (keyMap.get(key)) {
-          console.error("Duplicate key: ", key);
+          console.error("getUserTVLData Duplicate key: ", key);
           console.error("Exiting the process due to duplicate key, please fix the issue and try again.");
           process.exit(1);
         } else {
           keyMap.set(key, true);
         }
-      }
-      if (duplicateKeys > 0) {
       }
 
       const resultTmp = result.map((item) => {
@@ -97,41 +95,51 @@ if (getUserTransactionDataByBlock) {
       allCsvRows.push(...resultTmp);
 
       // Write to file when batch size is reached or at the end of loop
-      const ws = fs.createWriteStream(`${folderName}/data/output.vol.${blockNumber}.csv`, { flags: "w" });
+      fs.mkdirSync(`${folderName}/data`, { recursive: true });
+      const ws = fs.createWriteStream(`${folderName}/data/tx.${curBlockNumber}.csv`, { flags: "w" });
       write(allCsvRows, { headers: true })
         .pipe(ws)
         .on("finish", () => {
           console.log(`CSV file has been written.`);
+        })
+        .on("error", (e) => {
+          console.log("write error:", e);
         });
       // Clear the accumulated CSV rows
       allCsvRows.length = 0;
     } catch (error) {
-      console.error(`An error occurred for block ${blockNumber}:`, error);
+      console.error(`An error occurred for block ${curBlockNumber}:`, error);
     }
   });
 }
 
-if (getUserTxNumByBlock) {
-  getUserTxNumByBlock(Number(curBlockNumber)).then((result) => {
+if (getUserTVLData) {
+  getUserTVLData(Number(curBlockNumber)).then((result) => {
     const allCsvRows = [];
     const keyMap = new Map();
     try {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
       for (const item of result) {
-        const key = item.userAddress;
+        const key = item.userAddress + item.tokenAddress;
 
-        if (!item.userAddress || !item.poolAddress || !item.tokenAddress || !item.balance) {
-          console.error("Invalid item, key:", item.userAddress, ", item:", item);
+        if (
+          item.userAddress === undefined ||
+          item.poolAddress === undefined ||
+          item.tokenAddress === undefined ||
+          item.balance === undefined ||
+          item.timestamp === undefined
+        ) {
+          console.error("getUserTVLData Invalid item:", item);
           console.error("Exiting the process due to invalid item, please fix the issue and try again.");
           process.exit(1);
         }
 
         if (keyMap.get(key)) {
-          console.error("Duplicate key: ", key);
+          console.error("getUserTVLData Duplicate key: ", key, item, keyMap.get(key));
           console.error("Exiting the process due to duplicate key, please fix the issue and try again.");
           process.exit(1);
         } else {
-          keyMap.set(key, true);
+          keyMap.set(key, item);
         }
       }
 
@@ -140,27 +148,28 @@ if (getUserTxNumByBlock) {
           userAddress: item.userAddress,
           poolAddress: item.poolAddress,
           tokenAddress: item.tokenAddress,
-          blockNumber: blockNumber,
+          blockNumber: item.blockNumber,
           balance: item.balance,
+          timestamp: item.timestamp,
         };
       });
 
       // Accumulate CSV rows for all blocks
       allCsvRows.push(...resultTmp);
+      fs.mkdirSync(`${folderName}/data`, { recursive: true });
 
-      // Write to file when batch size is reached or at the end of loop
-      const ws = fs.createWriteStream(`${folderName}/data/output.tvl.${blockNumber}.csv`, { flags: "w" });
+      const ws = fs.createWriteStream(`${folderName}/data/tvl.${curBlockNumber}.csv`, { flags: "wx" });
       write(allCsvRows, { headers: true })
         .pipe(ws)
         .on("finish", () => {
-          console.log(`CSV file has been written.`);
+          console.log(`${folderName}/data/tvl.${curBlockNumber}.csv has been written.`);
         });
       // Clear the accumulated CSV rows
       allCsvRows.length = 0;
+
+      // Write to file when batch size is reached or at the end of loop
     } catch (error) {
-      console.error(`An error occurred for block ${blockNumber}:`, error);
+      console.error(`An error occurred for block ${curBlockNumber}:`, error);
     }
   });
 }
-
-

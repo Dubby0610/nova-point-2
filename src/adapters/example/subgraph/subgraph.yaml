@@ -11,7 +11,7 @@ dataSources:
       startBlock: 727
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.7
+      apiVersion: 0.0.9
       language: wasm/assemblyscript
       file: ./src/index.ts
       entities:
@@ -38,7 +38,7 @@ templates:
       abi: LayerBankLToken
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.7
+      apiVersion: 0.0.9
       language: wasm/assemblyscript
       file: ./src/index.ts
       entities:

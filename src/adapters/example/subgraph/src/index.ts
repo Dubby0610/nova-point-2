@@ -1,23 +1,25 @@
-/** viewed */
-
 import { MarketListed } from '../generated/LayerBank/LayerBankCore'
 import { LayerBankLToken, Transfer } from '../generated/templates/LayerBankLToken/LayerBankLToken'
 import { PoolTokenPosition, Pool } from '../generated/schema'
 import { LayerBankLToken as LayerBankLTokenTemplate } from '../generated/templates'
-import { Address, BigInt, Bytes } from '@graphprotocol/graph-ts'
-import { setUserInvalid } from './general'
+import { Address, BigInt, Bytes, log } from '@graphprotocol/graph-ts'
+import { setUserInvalid, updateUserBalance } from './general'
+import { fetchTokenSymbol } from './utils/tokenHelper'
 
 export function handleMarketListed(event: MarketListed): void {
     const gToken = event.params.gToken
-    let pool = Pool.load(gToken)
+    let pool = Pool.load(Bytes.fromHexString(gToken.toHexString()))
+    const lToken = LayerBankLToken.bind(gToken)
+    const symbol = fetchTokenSymbol(lToken.underlying())
+
     if (!pool) {
-        pool = new Pool(gToken)
-        const lToken = LayerBankLToken.bind(gToken)
+        pool = new Pool(Bytes.fromHexString(gToken.toHexString()))
+        pool.address = Bytes.fromHexString(gToken.toHexString())
         pool.underlying = lToken.underlying()
         pool.decimals = BigInt.fromI32(lToken.decimals())
         pool.balance = lToken.getCash()
         pool.totalSupplied = lToken.totalSupply()
-        pool.symbol = Bytes.fromHexString(lToken.symbol())
+        pool.symbol = symbol
         pool.name = lToken.name()
         pool.save()
         LayerBankLTokenTemplate.create(gToken)
@@ -25,21 +27,27 @@ export function handleMarketListed(event: MarketListed): void {
 }
 
 export function handleTransfer(event: Transfer): void {
-    setUserInvalid(event.address)
-
     const lToken = LayerBankLToken.bind(event.address)
+    const symbol = fetchTokenSymbol(lToken.underlying())
+    log.info('example_2 name {},symbol {}, underlying {}', [lToken.name(), symbol, lToken.underlying().toHexString()])
     const underlying = lToken.underlying()
     let pool = Pool.load(event.address)
     if (!pool) {
         pool = new Pool(event.address)
+        pool.address = event.address
         pool.name = lToken.name()
-        pool.symbol = lToken.underlying()
+        pool.symbol = symbol
         pool.underlying = underlying
         pool.decimals = BigInt.fromI32(lToken.decimals())
         pool.balance = BigInt.zero()
         pool.totalSupplied = BigInt.zero()
         pool.save()
+    } else {
+        pool.symbol = symbol
+        pool.underlying = underlying
+        pool.save()
     }
+    setUserInvalid(event.address)
     // update from to
     if (event.params.from.notEqual(Address.zero())) {
         updateTokenPosition(event.params.from, event, pool)
@@ -52,6 +60,7 @@ export function handleTransfer(event: Transfer): void {
 }
 
 function updateTokenPosition(user: Address, event: Transfer, pool: Pool): void {
+    const userPosition = updateUserBalance(user, BigInt.zero())
 
     const lToken = LayerBankLToken.bind(event.address)
     let poolBalance = lToken.getCash();
@@ -71,7 +80,7 @@ function updateTokenPosition(user: Address, event: Transfer, pool: Pool): void {
     poolTokenPosition.pool = pool.id
     poolTokenPosition.poolName = lToken.name()
     poolTokenPosition.supplied = supplied
-    poolTokenPosition.userPosition = user
+    poolTokenPosition.userPosition = userPosition.id
     poolTokenPosition.save()
 }
 

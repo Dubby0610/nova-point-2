@@ -26,7 +26,7 @@ export function fetchTokenSymbol(tokenAddress: Address): string {
                 }
             }
         } else {
-            return ADDRESS_ZERO
+            return "ETH"
         }
     } else {
         symbolValue = symbolResult.value;

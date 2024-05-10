@@ -4,8 +4,8 @@ export interface BlockData {
 }
 
 export type UserBalance = {
-    address: string,
-    pairAddress: string
+    userAddress: string,
+    poolAddress: string
     tokenAddress: string
     blockNumber: number
     balance: bigint
