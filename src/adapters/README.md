@@ -55,21 +55,20 @@ $$
 
 ### Sample Adapter
 
-Check this [example](./example/)
-
-You can use a subgraph or an existing service to process adapter data.
+Check this [example](./example/)，
 
 **Requirements:**
 
-- You must provide an **npm project** with the correct npm dependencies included in the **package.json** and output an executable Node.js script in _dist/index_.
-- We need to provide the functions `getUserTransactionDataByBlock`, `getUserTVLByBlock`, based on three different types of points: **Vol**, **TVL**, and **TxNum**, which takes _lastBlockNumber_, _curBlockNumber_ as a parameter to execute the script and outputs a CSV file.
-- In the output CSV file, you need to include snapshot data of all users within the protocol at the specific _blockNumber_ or block number range.
+Create your own adapter directory under the adapters folder, which consists of three parts.
+
+- **execution**: This directory houses the Node.js execution files for your adapter. It is a complete npm project, with a `package.json` to ensure correct installation of dependencies. The compilation output entry file is located in `dist/index.js`. It provides the necessary output functions `getUserTransactionData` and `getUserTVLData`. We will pass the block height as a parameter, execute your function, and write the results to a CSV file.
+- **subgraph**: We strongly recommend using a subgraph as the data source for Execution because it offers more transparent logic and data. We will review your code to ensure the data originates from the blockchain. If you choose to use a subgraph, please build it in this directory. Refer to the example, create a `.env` file, and you can use the `deploySubgraph` script located in the root directory of adapters to deploy your subgraph to Nova's subgraph testing environment.
+
+- **data**: You can refer to [example/data](./example/data). You don't need to create this folder as it will be included in .gitignore. We just want you to explain what the output CSV file looks like. It will be located in the data directory. We will input block heights as needed and execute the getUserTransactionData and getUserTVLData functions you expose in the execution folder, finally outputting the CSV to the data folder.
 
 ## Installation & Setup
 
-If you utilize subgraph on Nova network, you must include the subgraph package in the project directory.
-
-The zkLink Nova network is not yet supported in The Graph's list of supported networks. As a result, to create a subgraph on the zkLink Nova network, it is necessary to set up your own hosted service. We have already set up a functional hosted service specifically for creating subgraphs on the zkLink Nova network. Please note the following requirements before proceeding:
+The zkLink Nova network is not yet supported in _The Graph_'s list of supported networks. As a result, to create a subgraph on the zkLink Nova network, it is necessary to set up your own hosted service. We have already set up a functional hosted service specifically for creating subgraphs on the zkLink Nova network. Please note the following requirements before proceeding:
 
 - We will provide you with the deployment scripts necessary for local development. However, you need to set a secret environment variable to distinguish the deployment path from other projects and prevent it from being arbitrarily overwritten. see [env](#how-to-deploy-and-test-your-own-subgraph)
 - Once the deployment is complete, teams must upload their source code to the **subgraph** directory.
@@ -77,29 +76,33 @@ The zkLink Nova network is not yet supported in The Graph's list of supported ne
 
 ### How to deploy and test your own subgraph?
 
-Then check the **.env.example** file in the **subgraph** folder of your project, create your own **.env** file, and change the `SUBGRAPH_PATH_SECRET` to a random value which is known only within your team.
+Copy example/subgraph folder to your own directory. Then check the **.env.example** file in the **subgraph** folder of your project, create your own **.env** file, and change the `SUBGRAPH_PATH_SECRET` to a random value which is known only within your team.
 
 ```bash
 cd src/adapters/<project folder>/subgraph/ && cp .env.example .env
 ```
 
-### Launch
+### Launch subgraph
 
 Return to the root directory of the adapters, you can use this script to deploy subgraph onto Nova subgraph service. Execute the deploySubgraph.js script with the following command:
 
 ```bash
-cd src/adapters/<project folder>/ && node ../deploySubgraph.js --directory <project folder>
+cd src/adapters && node ../deploySubgraph.js --directory <project folder>
 ```
 
 Upon successful deployment, a subgraph URL will be returned and displayed in your terminal.
 
-## Building the Adapter
+### Create your adapter
 
-### Data requirement
+Create an **execution** folder in your _project folder_, run `npm init`, or you can copy the `example/execution` folder directly.
 
-Capture a snapshot every 8 hours at 02:00 UTC, 10:00 UTC, and 18:00 UTC of data distributed by assets per user on a daily basis.
+In the entry file, you need to export two functions: `getUserTransactionData` and `getUserTVLData`. These functions should output data that [meets the requirements](#data-requirement). getUserTransactionData outputs **Vol Points & TxNum Points** data between two blocks, and getUserTVLData retrieves a snapshot of the **TVL Points** data for a specific block.
 
-#### Vol Points & TxNum Points
+## Data requirement
+
+We capture a snapshot every 8 hours at 02:00 UTC, 10:00 UTC, and 18:00 UTC of data distributed by assets per user on a daily basis.Please ensure that we can obtain correct data with any block height as the parameter.
+
+### Vol Points & TxNum Points
 
 For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volume and Tx Number to determine points. You need to provide the fields corresponding to the table below. Please note, if you do not provide prices, the points for the Tx Number may not be applicable.For the tokenAddress below, we request that you provide data related to the base token, rather than the quote token.
 
@@ -116,7 +119,7 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 | nonce           | A unique identifier for a transaction, primarily used to distinguish cases where a single transaction contains multiple swap or similar transactions | 23                                                                 | Yes              | Yes                |
 | symbol          | token symbol                                                                                                                                         | WETH                                                               | No               | No                 |
 
-#### TVL Points
+### TVL Points
 
 For TVL points calculation, you need to provide the balance portion quantity of different tokens locked by all users in the protocol pool at the corresponding block height.
 
@@ -129,11 +132,9 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 | balance      | Historical balances raw data. 0.1 ETH               | 100000000000000000                         | Yes      |
 | symbol       | token symbol                                        | WETH                                       | No       |
 
-                                    
+## Testing & Validation
 
-## 5.2 Testing & Validation
-
-Teams can use these test scripts to validate the csv results such that it meets our requirements.
+Teams can use these test scripts to validate the csv results such that it meets our requirements. (TBD)
 
 ```bash
 cd src/adapters/<project folder>/ && node ../testScript.js <project folder>
@@ -146,3 +147,7 @@ Teams should submit some transactions, data reference on the **blockchain explor
 We will facilitate our comparison of the provided data against the data provided in the generated CSV.
 
 Important Note: If we are unable to verify the authenticity of CSV data, then the PR will be rejected.
+
+## Contribution
+
+Fork a copy of your own repository, complete the adapter, and finally submit your PR to the **main** branch
