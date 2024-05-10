@@ -12,6 +12,8 @@ interface TransferItem {
   tokenAddress: string;
   bridgeAddress: string;
   blockNumber: number;
+  number: number;
+  timestamp: number;
   amount: bigint;
 }
 
@@ -44,11 +46,16 @@ const USDT_USDC_ADDRESS = [
 ];
 const ETH_AMOUNT = BigInt((98 / 100) * 10 ** 17);
 const USDT_AMOUNT = BigInt((98 / 100) * 500 * 10 ** 6);
+const symbiosisNotEqualToAddress = [
+  "0x2E818E50b913457015E1277B43E469b63AC5D3d7".toLocaleLowerCase(),
+  "0x0000000000000000000000000000000000000000".toLocaleLowerCase(),
+];
+const symbiosisBaseContractAddress = "0x8Dc71561414CDcA6DcA7C1dED1ABd04AF474D189".toLocaleLowerCase();
 
 @Injectable()
 export class BridgePointService extends Worker {
   private readonly logger: Logger;
-  private readonly bridgeConfig: any = {};
+  private readonly bridgeConfig = [];
   private readonly bridgeAddress: string[] = [];
   private lastTransferBlockNumber: number = 0;
   private readonly startBlock: number;
@@ -65,9 +72,13 @@ export class BridgePointService extends Worker {
     this.startBlock = this.configService.get<number>("startBlock");
     // loop BridgeConfig, use bridge.address to key and save to bridgeConfig
     for (const bridge of BridgeConfig) {
-      this.bridgeConfig[bridge.address] = bridge;
-      this.bridgeAddress.push(bridge.address);
-      this.projectRepository.upsert({ pairAddress: bridge.address, name: bridge.id }, true, ["pairAddress"]);
+      if (bridge.addresses.length > 0) {
+        for (const address of bridge.addresses) {
+          this.bridgeConfig[address] = bridge;
+          this.bridgeAddress.push(address);
+          this.projectRepository.upsert({ pairAddress: address, name: bridge.id }, true, ["pairAddress"]);
+        }
+      }
     }
   }
 
@@ -97,14 +108,14 @@ export class BridgePointService extends Worker {
   }
 
   public async executePoints(lastTransfers: TransferItem[]): Promise<void> {
-    const bridgeAddress: string[] = this.bridgeAddress;
     const now = new Date();
     const bridgeAddressDailyCount = [];
-    for (const address of bridgeAddress) {
-      const key = this.getBridgeAddressDailyKey(now, address);
-      const count = (await this.cacheRepository.getValue(key)) || 0;
+    for (const address in this.bridgeConfig) {
+      const bridge = this.bridgeConfig[address];
+      const key = this.getBridgeAddressDailyKey(now, bridge.id);
+      const count = Number(await this.cacheRepository.getValue(key)) || 0;
       this.logger.log(
-        `BridgeAddress: ${address}, date:${now.getFullYear()}-${now.getMonth()}-${now.getDay()}, initCount: ${count}`
+        `key:${key}, BridgeAddress: ${address}, BridgeId: ${bridge.id}, date:${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}, initCount: ${count}`
       );
       bridgeAddressDailyCount[key] = count;
     }
@@ -121,16 +132,20 @@ export class BridgePointService extends Worker {
         continue;
       }
       // bridgeAddress-Date: total count of transfers of eve day, and saved by pgsql
-      const date = new Date(transfer.blockNumber * 1000);
-      const key = this.getBridgeAddressDailyKey(date, transferBridgeAddress);
+      const date = new Date(transfer.timestamp);
+      const key = this.getBridgeAddressDailyKey(date, bridge.id);
       // when interval is 10s, and now is 2024-04-26 00:00:05, the transfer time may be 2024-04-26 23:59:59 or 2024-04-27 00:00:02, so we need to check the date
       if (!bridgeAddressDailyCount[key]) {
-        this.logger.log(`New key : BridgeAddress: ${transferBridgeAddress}, date:${date.getDate()}, count: 0`);
-        bridgeAddressDailyCount[key] = 0;
+        // from db
+        const tmpValue = await this.cacheRepository.getValue(key);
+        this.logger.log(
+          `key is ${key}, BridgeAddress: ${transferBridgeAddress}, BridgeId: ${bridge.id}, timestmap:${transfer.timestamp},date:${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}, count: 0`
+        );
+        bridgeAddressDailyCount[key] = tmpValue;
       }
       const transferPoints = this.calculatePoint(bridgeAddressDailyCount[key], bridge);
       this.logger.log(
-        `TransferAddress: ${transfer.address}, TransferBridgeAddress:${transferBridgeAddress}, TokenAddress:${transfer.tokenAddress}, Count:${bridgeAddressDailyCount[key]}, TransferPoints: ${transferPoints} `
+        `TransferAddress: ${transfer.address}, BridgeId: ${bridge.id}, TransferBridgeAddress:${transferBridgeAddress}, TokenAddress:${transfer.tokenAddress}, Count:${bridgeAddressDailyCount[key]}, TransferPoints: ${transferPoints} `
       );
       bridgeAddressDailyCount[key]++;
 
@@ -149,8 +164,9 @@ export class BridgePointService extends Worker {
     }
 
     // update count to pgsql
-    for (const [key, count] of bridgeAddressDailyCount) {
-      await this.cacheRepository.setValue(key, count);
+    for (const key in bridgeAddressDailyCount) {
+      const count = bridgeAddressDailyCount[key];
+      await this.cacheRepository.setValue(key, count.toString());
     }
 
     // update lastTransferBlockNumber
@@ -160,16 +176,42 @@ export class BridgePointService extends Worker {
   // fetch latest transfer list
   public async fetchTransferList(): Promise<TransferItem[]> {
     this.logger.log(`Fetch transfer list from blockNumber: ${this.lastTransferBlockNumber}`);
-    const bridgeAddress: string[] = this.bridgeAddress;
-    const transfersDb = await this.transferRepository.getLatestQulifyTransfers(
+    let defalutBridgeAddress: string[] = [],
+      symbiosisAddress: string[] = [];
+    for (const item of BridgeConfig) {
+      if (item.id == "symbiosis") {
+        symbiosisAddress = item.addresses;
+      } else {
+        defalutBridgeAddress = [...defalutBridgeAddress, ...item.addresses];
+      }
+    }
+    let transfersDb = await this.transferRepository.getLatestQulifyTransfers(
       this.lastTransferBlockNumber,
-      bridgeAddress,
+      defalutBridgeAddress,
       ETH_ADDRESS,
       ETH_AMOUNT,
       USDT_USDC_ADDRESS,
       USDT_AMOUNT
     );
-    this.logger.log(`From blockNumber: ${this.lastTransferBlockNumber}, fetched ${transfersDb.length} transfers`);
+    this.logger.log(
+      `TransfersDb from blockNumber: ${this.lastTransferBlockNumber}, fetched ${transfersDb.length} transfers`
+    );
+
+    // symbiosis
+    const transfersDbSymbiosis = await this.transferRepository.getSymbiosisLatestQulifyTransfers(
+      this.lastTransferBlockNumber,
+      symbiosisAddress,
+      ETH_ADDRESS,
+      ETH_AMOUNT,
+      USDT_USDC_ADDRESS,
+      USDT_AMOUNT,
+      symbiosisNotEqualToAddress,
+      symbiosisBaseContractAddress
+    );
+    this.logger.log(
+      `TransfersDbSymbiosis from blockNumber: ${this.lastTransferBlockNumber}, fetched ${transfersDbSymbiosis.length} transfers`
+    );
+    transfersDb = [...transfersDb, ...transfersDbSymbiosis];
     if (transfersDb.length === 0) {
       return [];
     }
@@ -179,9 +221,12 @@ export class BridgePointService extends Worker {
         tokenAddress: transfer.tokenAddress.toLocaleLowerCase(),
         bridgeAddress: transfer.from.toLocaleLowerCase(),
         blockNumber: transfer.blockNumber,
+        number: transfer.number,
+        timestamp: Number(transfer.timestamp),
         amount: BigInt(transfer.amount.toString()),
       };
     });
+    transfers.sort((a, b) => a.number - b.number);
     return transfers;
   }
 
@@ -200,7 +245,7 @@ export class BridgePointService extends Worker {
   }
 
   //get bridgeAddress daily key
-  public getBridgeAddressDailyKey(date: Date, bridgeAddress: string): string {
-    return `${bridgeAddress}-${date.getFullYear()}-${date.getMonth()}-${date.getDay()}`;
+  public getBridgeAddressDailyKey(date: Date, bridgeId: string): string {
+    return `${bridgeId}-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
   }
 }

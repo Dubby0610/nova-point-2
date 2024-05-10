@@ -18,12 +18,13 @@ export class AddressFirstDepositRepository extends BaseRepository<AddressFirstDe
 
   public async getAllAddressesFirstDeposits(addresses: string[]): Promise<AddressFirstDeposit[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
-    const results = await transactionManager
-      .createQueryBuilder(AddressFirstDeposit, "a")
-      .where("a.address IN (:...addresses)", { addresses: addresses.map(item => Buffer.from(item.substring(2), 'hex')) })
-      .getMany();
-    return results.map((row: any) => {
-      row.address = row.address.toString("hex");
+    const addressesBuff = addresses.map((item) => Buffer.from(item.substring(2), "hex"));
+    const result = await transactionManager.query(
+      `SELECT * FROM public."addressFirstDeposits" WHERE address = ANY($1);`,
+      [addressesBuff]
+    );
+    return result.map((row: any) => {
+      row.address = "0x" + row.address.toString("hex");
       return row;
     });
   }

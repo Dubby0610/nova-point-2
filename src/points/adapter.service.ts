@@ -10,6 +10,8 @@ import * as csv from "csv-parser";
 import * as fs from "fs";
 import { Cron } from '@nestjs/schedule';
 
+const OTHER_CHAINS_ETHADDRESS = "0x0000000000000000000000000000000000000000";
+const NOVA_CHAIN_ETHADDRESS = "0x000000000000000000000000000000000000800a";
 @Injectable()
 export class AdapterService extends Worker {
   private readonly logger: Logger;
@@ -152,6 +154,10 @@ export class AdapterService extends Worker {
     const dataToInsert = rows.map((row) => {
       if (!pairAddresses.includes(row.pairAddress)) {
         pairAddresses.push(row.pairAddress);
+      }
+      let tokenAddress = row.tokenAddress;
+      if (row.tokenAddress == OTHER_CHAINS_ETHADDRESS) {
+        tokenAddress = NOVA_CHAIN_ETHADDRESS;
       }
       return {
         address: row.userAddress,
