@@ -260,4 +260,194 @@ export default [
       },
     ],
   },
+  // izumi
+  {
+    address: "0xd4b701a553005464292e978efd8abc48252a7722",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x5457c04370c447aed563489d9fe0b1d057439e0b",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x19142b9d0077eb776d04a4b42a526dd07409b9db",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xc2909feb6f46e19f2b40f9288ac63726d7c2612c",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x062c027e4736f90bb06ba4bfc8036f133fd99413",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xe3905d48be8aedb1be57c8ad924c40de7e4fb4ff",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x28592307d115f883acc87763803c3679c0d42fb1",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xe8a8f1d76625b03b787f6ed17bd746e0515f3aef",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xfa38f432429d59ba653d5746cfea4f734f2c251e",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x25e28398ebd072a2280a2bb5f62d977820be3408",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xdbd6010d8aae58b229804d1296a0d245bf828365",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xbddcbb56e2a7f0370b66d259a29cdcd15bd36ad8",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x482cf88e25a7a9ee58761033b777d18198c05d84",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x39abf030516e346f6c6779d03b260a4449705ce0",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xb40805521e976a41028ae3244a2e0b1bb2b768b1",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xbc2a3ff0ce7413c184086b532bc121318117cacb",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xf6592fee86407a7fa4c2f05c894edadf25c30f57",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x802e9743d3421ce5786bc24aac90bbba404f82dd",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0xf30830372d919a129dafaaf51c4c80b7c9167cd7",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x6df75ff0b7fadd001f2c6b87d234ec8b17ca8008",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
 ];
