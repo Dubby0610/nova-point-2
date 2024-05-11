@@ -48,4 +48,15 @@ export default [
     addresses: ["0x5e809A85Aa182A9921EDD10a4163745bb3e36284".toLocaleLowerCase()],
     pointsRule: defaultPointsRule,
   },
+  {
+    id: "orbiter",
+    addresses: [
+      "0x80c67432656d59144ceff962e8faf8926599bcf8".toLocaleLowerCase(), // eth
+      "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8".toLocaleLowerCase(), // eth
+      "0xee73323912a4e3772b74ed0ca1595a152b0ef282".toLocaleLowerCase(), // eth
+      "0x41d3d33156ae7c62c094aae2995003ae63f587b3".toLocaleLowerCase(), // usdc
+      "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc".toLocaleLowerCase(), // usdt
+    ],
+    pointsRule: defaultPointsRule,
+  },
 ];
