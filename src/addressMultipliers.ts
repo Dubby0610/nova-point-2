@@ -441,4 +441,13 @@ export default [
       },
     ],
   },
+  {
+    address: "0x6df75ff0b7fadd001f2c6b87d234ec8b17ca8008",
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
 ];
