@@ -76,8 +76,8 @@ import { AddressFirstDeposit } from "./entities/addressFirstDeposit.entity";
 import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository } from "./repositories";
-import { HoldLpPointService } from "./points/holdLpPoint.service";
-import { ScheduleModule } from '@nestjs/schedule';
+import { TvlPointService } from "./points/tvlPoint.service";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -206,7 +206,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     PointsOfLpRepository,
     BlockAddressPointOfLpRepository,
     AdapterService,
-    HoldLpPointService,
+    TvlPointService,
     ProjectRepository,
     CacheRepository,
     BridgePointService,

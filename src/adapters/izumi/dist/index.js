@@ -33,6 +33,7 @@ const poolList = [
   "0xf6592fee86407a7fa4c2f05c894edadf25c30f57", //USDT.Arbi/USDC.Arbi
   "0x802e9743d3421ce5786bc24aac90bbba404f82dd", //USDC/ETH
   "0xf30830372d919a129dafaaf51c4c80b7c9167cd7", //SolvBTC.m/WETH
+  "0x6df75ff0b7fadd001f2c6b87d234ec8b17ca8008", //USDC/USDT
 ];
 const web3 = new Web3(rpcUrl);
 const abi = JSON.parse(fs.readFileSync(join(__dirname, "../abi/LiquidityManagerV2.json"), "utf-8"));

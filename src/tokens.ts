@@ -103,6 +103,26 @@ export default [
   {
     address: [
       {
+        chain: "Nova",
+        l1Address: "",
+        l2Address: "0xbEAf16cFD8eFe0FC97C2a07E349B9411F5dC272C",
+      },
+    ],
+    symbol: "solvBTC",
+    decimals: 18,
+    cgPriceId: "bitcoin",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 1.5,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
         chain: "Mantle",
         l1Address: "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
         l2Address: "0xc0eF13025202901aAD1659E048647659FD0fDa7A",
