@@ -18,7 +18,7 @@ export class AdapterService extends Worker {
   private readonly outputFileName = "/data/";
   private readonly logFilePath = join(__dirname, "../../src/adapters/processLogs.log");
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
-  private readonly adapterTxSyncBlockNumber = 'adapter-tx-sync-block-number'
+  private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber'
 
   public constructor(
     private readonly configService: ConfigService,
