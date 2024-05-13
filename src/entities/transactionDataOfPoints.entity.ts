@@ -4,7 +4,7 @@ import { bigIntNumberTransformer } from "../transformers/bigIntNumber.transforme
 import { hexTransformer } from "../transformers/hex.transformer";
 
 @Entity({ name: "transactionDataOfPoints" })
-@Index(["userAddress", "txHash", "nonce"])
+@Index(["userAddress", "txHash", "nonce"], { unique: true })
 export class TransactionDataOfPoints extends BaseEntity {
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   public readonly userAddress: string;
@@ -27,12 +27,12 @@ export class TransactionDataOfPoints extends BaseEntity {
   @Column({ type: "varchar", length: 100 })
   public readonly nonce: string;
 
-  @Column({ type: "timestamp" })
-  public readonly timestamp: Date;
+  public readonly timestamp: string;
 
-  @Column({ type: "varchar", length: 100 })
+  @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   public readonly txHash: string;
 
-  @PrimaryColumn({ type: "bigint", transformer: bigIntNumberTransformer })
+  @Index()
+  @Column({ type: "bigint", transformer: bigIntNumberTransformer })
   public readonly blockNumber: number;
 }

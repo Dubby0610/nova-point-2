@@ -32,32 +32,30 @@ const { getUserBalanceByBlock } = require(indexPath);
 
 // Call the getUserTVLByBlock function with desired arguments
 let rowSet = [];
-getUserBalanceByBlock(884302, 1711023841).then((result) => {
+getUserBalanceByBlock(1228630, 1714774080).then((result) => {
   if (!result.length) {
     throw new Error("Empty result");
   } else {
     let count = 0,
       error = 0;
 
-    // check : item of result must be an object with keys: address, pairAddress, tokenAddress, blockNumber, balance
+    // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
     result.forEach((item, key) => {
       count++;
       if (
-        !item.address ||
-        !item.pairAddress ||
+        !item.userAddress ||
+        !item.poolAddress ||
         !item.tokenAddress ||
-        undefined === item.blockNumber ||
         undefined === item.balance ||
-        typeof item.address !== "string" ||
-        typeof item.pairAddress !== "string" ||
+        typeof item.userAddress !== "string" ||
+        typeof item.poolAddress !== "string" ||
         typeof item.tokenAddress !== "string" ||
-        typeof item.blockNumber !== "number" ||
         typeof item.balance !== "bigint"
       ) {
         error++;
         console.error("Invalid item, key: ", key, ", item: ", item);
       }
-      const kkey = `${item.address}_${item.pairAddress}_${item.tokenAddress}_${item.blockNumber}`;
+      const kkey = `${item.userAddress}_${item.poolAddress}_${item.tokenAddress}`;
       if (rowSet[kkey]) {
         error++;
         console.error("Duplicate key: ", kkey);

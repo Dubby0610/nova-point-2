@@ -56,6 +56,7 @@
     "zksync-web3": "0.15.4"
   },
   "devDependencies": {
+    "@matterlabs/prettier-config": "^1.0.3",
     "@nestjs/cli": "^9.0.0",
     "@nestjs/schematics": "^9.0.0",
     "@nestjs/testing": "^9.0.0",

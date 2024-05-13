@@ -1,0 +1,1031 @@
+[
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "BitSwapLiquidityManager",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenX",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenY",
+              "type": "address"
+            },
+            {
+              "internalType": "uint24",
+              "name": "fee",
+              "type": "uint24"
+            }
+          ],
+          "internalType": "struct DynamicRangeTimestamp.PoolParams",
+          "name": "poolParams",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "rewardToken",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "provider",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "accRewardPerShare",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "rewardPerSecond",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct BaseTimestamp.RewardInfo[]",
+          "name": "_rewardInfos",
+          "type": "tuple[]"
+        },
+        {
+          "internalType": "address",
+          "name": "boostTokenAddr",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_startTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_endTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint24",
+          "name": "feeChargePercent",
+          "type": "uint24"
+        },
+        {
+          "internalType": "address",
+          "name": "_chargeReceiver",
+          "type": "address"
+        },
+        {
+          "internalType": "int24",
+          "name": "_pointRangeLeft",
+          "type": "int24"
+        },
+        {
+          "internalType": "int24",
+          "name": "_pointRangeRight",
+          "type": "int24"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "CollectReward",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "nBoost",
+          "type": "uint256"
+        }
+      ],
+      "name": "Deposit",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "endTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "ModifyEndTime",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "rewardToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "provider",
+          "type": "address"
+        }
+      ],
+      "name": "ModifyProvider",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "rewardToken",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "rewardPerSecond",
+          "type": "uint256"
+        }
+      ],
+      "name": "ModifyRewardPerSecond",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "Withdraw",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "BitSwapFactory",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "BitSwapLiquidityManager",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "boostToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "chargeReceiver",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "collect",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "collectAllTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "collectFeeCharged",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "contractType",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint128",
+          "name": "amountXDesired",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "amountYDesired",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint256",
+          "name": "numBoost",
+          "type": "uint256"
+        },
+        {
+          "internalType": "int24",
+          "name": "stdPoint",
+          "type": "int24"
+        }
+      ],
+      "name": "deposit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deltaNBoost",
+          "type": "uint256"
+        }
+      ],
+      "name": "depositBoost",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "emergenceWithdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "endTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "feeRemainPercent",
+      "outputs": [
+        {
+          "internalType": "uint24",
+          "name": "",
+          "type": "uint24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMiningContractInfo",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "tokenX_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenY_",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee_",
+          "type": "uint24"
+        },
+        {
+          "internalType": "address",
+          "name": "boostTokenAddr_",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastTouchTime_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalVLiquidity_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalTokenX_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalTokenY_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "totalNBoost_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "startTime_",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "endTime_",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getOraclePrice",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "avgPoint",
+          "type": "int24"
+        },
+        {
+          "internalType": "uint160",
+          "name": "avgSqrtPriceX96",
+          "type": "uint160"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getTokenIds",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastTouchTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_chargeReceiver",
+          "type": "address"
+        }
+      ],
+      "name": "modifyChargeReceiver",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_endTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "modifyEndTime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "rewardIdx",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "provider",
+          "type": "address"
+        }
+      ],
+      "name": "modifyProvider",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "rewardIdx",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rewardPerSecond",
+          "type": "uint256"
+        }
+      ],
+      "name": "modifyRewardPerSecond",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_startTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "modifyStartTime",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "data",
+          "type": "bytes[]"
+        }
+      ],
+      "name": "multicall",
+      "outputs": [
+        {
+          "internalType": "bytes[]",
+          "name": "results",
+          "type": "bytes[]"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "owners",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "pendingReward",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "pendingRewards",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pointRangeLeft",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "",
+          "type": "int24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pointRangeRight",
+      "outputs": [
+        {
+          "internalType": "int24",
+          "name": "",
+          "type": "int24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "rewardInfos",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "rewardToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "provider",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "accRewardPerShare",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rewardPerSecond",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardInfosLen",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardPool",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "tokenX",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenY",
+          "type": "address"
+        },
+        {
+          "internalType": "uint24",
+          "name": "fee",
+          "type": "uint24"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "startTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "swapPool",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "tokenStatus",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "nftId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "vLiquidity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "BitSwapLiquidity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "validVLiquidity",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nBoost",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastTouchTime",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountX",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountY",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "tokenXIsETH",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "tokenYIsETH",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalFeeChargedX",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalFeeChargedY",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalNBoost",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalTokenX",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalTokenY",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalVLiquidity",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "weth",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "noReward",
+          "type": "bool"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+]

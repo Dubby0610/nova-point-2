@@ -241,5 +241,3 @@ async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
 module.exports = {
   getUserBalanceByBlock,
 };
-
-// 0x936c9a1b8f88bfdbd5066ad08e5d773bc82eb15f

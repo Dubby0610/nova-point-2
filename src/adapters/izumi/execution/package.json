@@ -1,0 +1,19 @@
+{
+  "name": "izumi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "liquidityAmountSnapshot.js",
+  "scripts": {
+    "postinstall": "patch-package",
+    "compile": "echo compile",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ethers": "^6.12.1",
+    "iziswap-sdk": "^1.4.11",
+    "patch-package": "^8.0.0",
+    "web3": "^4.7.0"
+  }
+}
