@@ -5,6 +5,10 @@ import { DataSource } from "typeorm";
 import { BLOCKS_REVERT_DETECTED_EVENT } from "./constants";
 import runMigrations from "./utils/runMigrations";
 import { BridgePointService } from "./points/bridgePoint.service";
+import { AdapterService } from "./points/adapter.service";
+import { TvlPointService } from "./points/tvlPoint.service";
+import { VolPointService } from "./points/volPoint.service";
+import { TxNumPointService } from "./points/txNumPoint.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -12,15 +16,20 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
   public constructor(
     private readonly dataSource: DataSource,
+    private readonly adapterService: AdapterService,
     private readonly bridgePointService: BridgePointService,
+    private readonly tvlPointService: TvlPointService,
+    private readonly volPointService: VolPointService,
+    private readonly txNumPointService: TxNumPointService,
     private readonly configService: ConfigService
   ) {
     this.logger = new Logger(AppService.name);
   }
 
   public onModuleInit() {
-    this.startWorkers();
-    this.adapterService.loadLastBlockNumber()
+    runMigrations(this.dataSource, this.logger).then(() => {
+      this.startWorkers();
+    });
   }
 
   public onModuleDestroy() {
@@ -37,13 +46,25 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    // const tasks = [this.tvlPointService.start(), this.bridgePointService.start()];
-    const tasks = [this.bridgePointService.start()];
+    this.adapterService.loadLastBlockNumber();
+    const tasks = [
+      this.tvlPointService.start(),
+      this.volPointService.start(),
+      this.txNumPointService.start(),
+      this.bridgePointService.start(),
+    ];
+    // const tasks = [this.bridgePointService.start()];
     return Promise.all(tasks);
   }
 
   private stopWorkers() {
-    // return Promise.all([this.tvlPointService.stop(), this.bridgePointService.stop()]);
-    return Promise.all([this.bridgePointService.stop()]);
+    const tasks = [
+      this.tvlPointService.stop(),
+      this.volPointService.stop(),
+      this.txNumPointService.stop(),
+      this.bridgePointService.stop(),
+    ];
+    // const tasks = [this.bridgePointService.stop()];
+    return Promise.all(tasks);
   }
 }

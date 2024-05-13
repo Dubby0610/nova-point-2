@@ -78,6 +78,9 @@ import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository, TxDataOfPointsRepository } from "./repositories";
 import { TvlPointService } from "./points/tvlPoint.service";
+import { VolPointService } from "./points/volPoint.service";
+import { TxNumPointService } from "./points/txNumPoint.service";
+import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
@@ -214,6 +217,9 @@ import { ScheduleModule } from "@nestjs/schedule";
     ProjectRepository,
     CacheRepository,
     BridgePointService,
+    BoosterService,
+    VolPointService,
+    TxNumPointService,
     TxDataOfPointsRepository,
   ],
 })

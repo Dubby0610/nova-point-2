@@ -9,12 +9,11 @@ import {
   BlockAddressPointOfLpRepository,
   AddressFirstDepositRepository,
   CacheRepository,
+  TxDataOfPointsRepository,
 } from "../repositories";
 import { PointsOfLp, AddressFirstDeposit } from "src/entities";
-import {
-  TransactionDataOfPointsRepository,
-  TransactionDataOfPointsDto,
-} from "../repositories/TransactionDataOfPoints.repository";
+import { TransactionDataOfPointsDto } from "../repositories/txDataOfPoints.repository";
+import dappConfig from "src/dapp.config";
 
 const txNumberLastBlockNumberKey = "txNumberLastBlockNumberKey";
 const transactionDataBlockNumberKey = "transactionDataBlockNumber";
@@ -23,10 +22,11 @@ const transactionDataBlockNumberKey = "transactionDataBlockNumber";
 export class TxNumPointService extends Worker {
   private readonly logger: Logger;
   private readonly type: string = "txNum";
+  private readonly projectName: string[] = [];
 
   public constructor(
     private readonly cacheRepository: CacheRepository,
-    private readonly transactionDataOfPointsRepository: TransactionDataOfPointsRepository,
+    private readonly transactionDataOfPointsRepository: TxDataOfPointsRepository,
     private readonly pointsOfLpRepository: PointsOfLpRepository,
     private readonly blockAddressPointOfLpRepository: BlockAddressPointOfLpRepository,
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
@@ -35,6 +35,7 @@ export class TxNumPointService extends Worker {
   ) {
     super();
     this.logger = new Logger(TxNumPointService.name);
+    this.projectName = dappConfig.txNum;
   }
 
   @Cron("0 2,10,18 * * *")
@@ -48,13 +49,19 @@ export class TxNumPointService extends Worker {
   }
 
   async handleCalculatePoint() {
+    if (this.projectName.length == 0) {
+      this.logger.log(`None project calculate ${this.type} points.`);
+      return;
+    }
+    this.logger.log(`There projects calculate ${this.type} points, ${JSON.stringify(this.projectName)}`);
     const lastBlockNumberStr = await this.cacheRepository.getValue(txNumberLastBlockNumberKey);
     const lastBlockNumber = lastBlockNumberStr ? Number(lastBlockNumberStr) : 0;
     const endBlockNumberStr = await this.cacheRepository.getValue(transactionDataBlockNumberKey);
     const endBlockNumber = endBlockNumberStr ? Number(endBlockNumberStr) : 0;
     const volDetails: TransactionDataOfPointsDto[] = await this.transactionDataOfPointsRepository.getListByBlockNumber(
       lastBlockNumber,
-      endBlockNumber
+      endBlockNumber,
+      this.projectName
     );
     if (volDetails.length === 0) {
       this.logger.error(`volume details is empty, from lastBlockNumber: ${lastBlockNumber}`);
