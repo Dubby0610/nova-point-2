@@ -28,9 +28,9 @@ export class TransactionDataOfPoints extends BaseEntity {
   public readonly nonce: string;
 
   @Column({ type: "timestamp" })
-  public readonly timestamp: Date;
+  public readonly timestamp: string;
 
-  @Column({ type: "varchar", length: 100 })
+  @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   public readonly txHash: string;
 
   @Index()

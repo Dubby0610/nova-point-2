@@ -21,6 +21,7 @@ export type UserTxData = {
     quantity: bigint
     txHash: string
     nonce: string
+    blockNumber: number
 }
 
 export type UserSupplied = Omit<UserTVLData, 'balance'> & {

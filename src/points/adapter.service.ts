@@ -58,10 +58,10 @@ export class AdapterService extends Worker {
       this.logger.log(
         `Had adapted balance, Last block number: ${lastBlock.number}, Last balance of lp block number: ${lastBalanceOfLp.blockNumber}`
       );
-      // return;
+      return;
     }
     const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-    await this.runCommandsInAllDirectories(1405239, Number(adapterTxSyncBlockNumber)); // todo
+    await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
   }
 
   public async runCommandsInAllDirectories(curBlockNumber: number, lastBlockNumber: number,): Promise<void> {
@@ -194,7 +194,7 @@ export class AdapterService extends Worker {
       .on("data", (row) => results.push(row))
       .on("end", async () => {
         await this.insertTXDataToDb(results, dir);
-        // fs.unlinkSync(outputPath);
+        fs.unlinkSync(outputPath);
         this.logger.log(
           `Adapter:${dir}\tCSV file successfully processed, ${results.length} rows inserted into db.`
         );

@@ -66,7 +66,7 @@ if (getUserTransactionData) {
           process.exit(1);
         }
 
-        const key = item.txHash;
+        const key = `${item.txHash}-${item.nonce}`;
         if (keyMap.get(key)) {
           console.error("getUserTVLData Duplicate key: ", key);
           console.error("Exiting the process due to duplicate key, please fix the issue and try again.");
@@ -87,7 +87,7 @@ if (getUserTransactionData) {
           txHash: item.txHash,
           nonce: item.nonce,
           timestamp: item.timestamp,
-          blockNumber: curBlockNumber,
+          blockNumber: item.blockNumber,
         };
       });
 
