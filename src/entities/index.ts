@@ -28,3 +28,4 @@ export * from "./balanceOfLp.entity";
 export * from "./project.entity";
 export * from "./cache.entity";
 export * from "./transactionDataOfPoints.entity";
+export * from "./addressFirstDeposit.entity";

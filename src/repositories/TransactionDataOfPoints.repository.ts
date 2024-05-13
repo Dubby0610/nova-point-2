@@ -2,13 +2,28 @@ import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { TransactionDataOfPoints } from "../entities";
+import { toLowerCase } from "../../../nova-point-redistribute/src/utils/point";
 
-export interface BalanceOfLpDto {
-  address: Buffer;
-  pairAddress: Buffer;
-  tokenAddress?: Buffer;
-  balance?: string;
-  blockNumber?: number;
+export interface TransactionDataOfPointsDto {
+  userAddress: string;
+  contractAddress: string;
+  tokenAddress: string;
+  decimals: number;
+  price: string;
+  quantity: bigint;
+  nonce: string;
+  timestamp: Date;
+  txHash: string;
+  blockNumber: number;
+  projectName: string;
+}
+
+export interface TxNumberGroupByUserAddressAndContractAddressDto {
+  userAddress: string;
+  contractAddress: string;
+  txNumber: number;
+  blockNumber: number;
+  projectName: string;
 }
 
 @Injectable()
@@ -20,16 +35,34 @@ export class TransactionDataOfPointsRepository extends BaseRepository<Transactio
   public async getListByBlockNumber(
     startBlockNumber: number,
     endBlockNumber: number
-  ): Promise<TransactionDataOfPoints[]> {
+  ): Promise<TransactionDataOfPointsDto[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
-      `SELECT * FROM public."transactionDataOfPoints" WHERE "blockNumber" >= $1 AND "blockNumber" < $2;`,
+      `SELECT a.*, b.name AS "projectName" FROM public."transactionDataOfPoints" AS a LEFT JOIN project AS b ON a."contractAddress"=b."pairAddress" WHERE a."blockNumber" >= $1 AND a."blockNumber" < $2;`,
       [startBlockNumber, endBlockNumber]
     );
     return result.map((row: any) => {
-      row.userAddress = "0x" + row.userAddress.toString("hex");
-      row.contractAddress = "0x" + row.contractAddress.toString("hex");
-      row.tokenAddress = "0x" + row.tokenAddress.toString("hex");
+      row.userAddress = "0x" + row.userAddress.toString("hex").toLowerCase();
+      row.contractAddress = "0x" + row.contractAddress.toString("hex").toLowerCase();
+      row.tokenAddress = "0x" + row.tokenAddress.toString("hex").toLowerCase();
+      row.txHash = "0x" + row.txHash.toString("hex").toLowerCase();
+      row.timestamp = new Date(row.timestamp);
+      return row;
+    });
+  }
+
+  public async getTxNumberListByBlockNumber(
+    startBlockNumber: number,
+    endBlockNumber: number
+  ): Promise<TxNumberGroupByUserAddressAndContractAddressDto[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.query(
+      `SELECT a."userAddress", a."contractAddress", count(*) AS "txNumber", b.name AS "projectName" FROM public."transactionDataOfPoints" AS a LEFT JOIN project AS b ON a."contractAddress"=b."pairAddress" WHERE a."blockNumber" >= $1 AND a."blockNumber" < $2  GROUP BY a."userAddress",a."contractAddress";`,
+      [startBlockNumber, endBlockNumber]
+    );
+    return result.map((row: any) => {
+      row.userAddress = "0x" + row.userAddress.toString("hex").toLowerCase();
+      row.contractAddress = "0x" + row.contractAddress.toString("hex").toLowerCase();
       return row;
     });
   }
