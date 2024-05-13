@@ -28,7 +28,7 @@ type BlockAddressTvl = {
 };
 
 @Injectable()
-export class HoldLpPointService extends Worker {
+export class TxNumPointService extends Worker {
   private readonly logger: Logger;
   private readonly pointsPhase1StartTime: Date;
   private readonly addressMultipliersCache: Map<string, TokenMultiplier[]>;
@@ -48,7 +48,7 @@ export class HoldLpPointService extends Worker {
     private readonly configService: ConfigService
   ) {
     super();
-    this.logger = new Logger(HoldLpPointService.name);
+    this.logger = new Logger(TxNumPointService.name);
     this.pointsPhase1StartTime = new Date(this.configService.get<string>("points.pointsPhase1StartTime"));
     this.addressMultipliersCache = new Map<string, TokenMultiplier[]>();
     for (const m of addressMultipliers) {
@@ -61,7 +61,7 @@ export class HoldLpPointService extends Worker {
 
   @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
-    this.logger.log(`${HoldLpPointService.name} initialized`);
+    this.logger.log(`${TxNumPointService.name} initialized`);
     try {
       await this.handleHoldPoint();
     } catch (error) {
@@ -115,7 +115,7 @@ export class HoldLpPointService extends Worker {
     // get all point of lp by addresses
     const addressPointList = await this.pointsOfLpRepository.getPointByAddresses(addresses);
     this.logger.log(`Address point map size: ${addressPointList.length}`);
-    let addressPointMap: { [address: string]: PointsOfLp } = {};
+    const addressPointMap: { [address: string]: PointsOfLp } = {};
     for (let i = 0; i < addressPointList.length; i++) {
       const item = addressPointList[i];
       const tmpAddress = item.address.toLocaleLowerCase();

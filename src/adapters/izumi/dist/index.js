@@ -32,6 +32,7 @@ const poolList = [
   "0x57a0c8ba60a7db72d8a19ba1585f7f16e881f08f", //USDT.Arbi/USDC.Arbi
   "0xf6592fee86407a7fa4c2f05c894edadf25c30f57", //USDT.Arbi/USDC.Arbi
   "0x802e9743d3421ce5786bc24aac90bbba404f82dd", //USDC/ETH
+  "0x6df75ff0b7fadd001f2c6b87d234ec8b17ca8008"
 ];
 const web3 = new Web3(rpcUrl);
 const abi = JSON.parse(fs.readFileSync(join(__dirname, "../abi/LiquidityManagerV2.json"), "utf-8"));
@@ -220,7 +221,7 @@ async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
     }
     console.info("pairAddress:", poolAddress);
   }
- 
+
   const resultTmp = await getLiquidities(poolInfos, blockNumber, blockTimestamp);
   let resultFinal = [];
   // loop resultTmp, group by address, pairAddress, tokenAddress, blockNumber and sum balance

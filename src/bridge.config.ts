@@ -60,3 +60,5 @@ export default [
     pointsRule: defaultPointsRule,
   },
 ];
+
+
