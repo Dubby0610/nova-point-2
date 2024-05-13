@@ -1,5 +1,5 @@
-<h1 align="center">zkLink Nova point system adapters</h1>
-<p align="center"><i>Guide Document for Projects Integrated with ZKLink Points System</i></p>
+<h1 align="center">zkLink Nova Point System Adapter</h1>
+<p align="center"><i>Guidelines for Projects to be Integrated with zkLink Nova Point System</i></p>
 
 # Preamble
 
