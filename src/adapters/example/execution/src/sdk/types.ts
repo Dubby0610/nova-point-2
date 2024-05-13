@@ -3,7 +3,7 @@ export interface BlockData {
     blockTimestamp: number;
 }
 
-export type UserBalance = {
+export type UserTVLData = {
     userAddress: string,
     poolAddress: string
     tokenAddress: string
@@ -11,7 +11,19 @@ export type UserBalance = {
     balance: bigint
 }
 
-export type UserSupplied = Omit<UserBalance, 'balance'> & {
+export type UserTxData = {
+    timestamp: number
+    userAddress: string
+    contractAddress: string
+    tokenAddress: string
+    decimals: number
+    price: number
+    quantity: bigint
+    txHash: string
+    nonce: string
+}
+
+export type UserSupplied = Omit<UserTVLData, 'balance'> & {
     supplied: bigint
     pool: string
 }

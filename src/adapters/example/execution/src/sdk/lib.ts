@@ -1,4 +1,4 @@
-import { UserBalance, Response, UserSupplied, Pool } from './types';
+import { UserTVLData, Response, UserSupplied, Pool } from './types';
 import { JsonRpcProvider } from 'ethers'
 import path from 'path'
 require('dotenv').config({ path: path.join(__dirname, '../../.env') });
@@ -106,7 +106,7 @@ const getAllUserPosition = async (blockNumber: number) => {
 
 export const getUserPositionsAtBlock = async (
   blockNumber: number,
-): Promise<UserBalance[]> => {
+): Promise<UserTVLData[]> => {
   const result = await getAllUserPosition(blockNumber)
   const poolList = await getAllPools()
   const timestamp = await getTimestampAtBlock(blockNumber)

@@ -59,14 +59,14 @@ if (getUserTransactionData) {
           item.txHash === undefined ||
           item.nonce === undefined
         ) {
-          console.error("getUserTVLData Invalid item:", tem);
+          console.error("getUserTVLData Invalid item:", item);
           console.error(
             "Exiting the process due to invalid item in getUserTVolByBlock, please fix the issue and try again."
           );
           process.exit(1);
         }
 
-        const key = tem.txHash;
+        const key = item.txHash;
         if (keyMap.get(key)) {
           console.error("getUserTVLData Duplicate key: ", key);
           console.error("Exiting the process due to duplicate key, please fix the issue and try again.");
@@ -93,10 +93,10 @@ if (getUserTransactionData) {
 
       // Accumulate CSV rows for all blocks
       allCsvRows.push(...resultTmp);
-
+      const file = `${folderName}/data/tx.${curBlockNumber}.csv`;
       // Write to file when batch size is reached or at the end of loop
       fs.mkdirSync(`${folderName}/data`, { recursive: true });
-      const ws = fs.createWriteStream(`${folderName}/data/tx.${curBlockNumber}.csv`, { flags: "w" });
+      const ws = fs.createWriteStream(file, { flags: "w" });
       write(allCsvRows, { headers: true })
         .pipe(ws)
         .on("finish", () => {
@@ -121,7 +121,6 @@ if (getUserTVLData) {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
       for (const item of result) {
         const key = item.userAddress + item.tokenAddress;
-
         if (
           item.userAddress === undefined ||
           item.poolAddress === undefined ||
@@ -156,13 +155,14 @@ if (getUserTVLData) {
 
       // Accumulate CSV rows for all blocks
       allCsvRows.push(...resultTmp);
+      const file = `${folderName}/data/tvl.${curBlockNumber}.csv`;
       fs.mkdirSync(`${folderName}/data`, { recursive: true });
 
-      const ws = fs.createWriteStream(`${folderName}/data/tvl.${curBlockNumber}.csv`, { flags: "wx" });
+      const ws = fs.createWriteStream(file, { flags: "w" });
       write(allCsvRows, { headers: true })
         .pipe(ws)
         .on("finish", () => {
-          console.log(`${folderName}/data/tvl.${curBlockNumber}.csv has been written.`);
+          console.log(`${file} has been written.`);
         });
       // Clear the accumulated CSV rows
       allCsvRows.length = 0;

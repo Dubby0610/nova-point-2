@@ -1,4 +1,4 @@
-import { UserBalance, Response, UserSupplied, Pool } from './types';
+import { UserBalance, Response, UserSupplied, AquaCToken } from './types';
 import { JsonRpcProvider } from 'ethers'
 
 
@@ -10,28 +10,30 @@ export const getUserPositionsAtBlock = async (
 
   let skip = 0;
   let fetchNext = true;
-  let poolList: Pool[] = []
+  let pools: AquaCToken[] = []
   while (fetchNext) {
     const query = `query MyQuery {
-      userPositions(where: {validate: true, id_not: "0x000000000000000000000000000000000000dead"}, block: {number: ${blockNumber}}, skip: ${skip}) {
+      userPositions(block: {number: ${blockNumber}}, skip: ${skip}) {
         id
-        balance
         positions {
+          decimal
+          blockNumber
           id
           pool
-          poolName
           supplied
           token
+          transactionHash
         }
       }
-      pools(block: {number: ${blockNumber}}) {
+      aquaCTokens(block: {number: ${blockNumber}}) {
         balance
+        blockNumber
         id
         totalSupplied
       }
     }`;
 
-    const response = await fetch('http://3.114.68.110:8000/subgraphs/name/layerbank-point', {
+    const response = await fetch('https://graph.zklink.io/subgraphs/name/aqua-points', {
       method: 'POST',
       body: JSON.stringify({ query }),
       headers: { 'Content-Type': 'application/json' },
@@ -43,8 +45,8 @@ export const getUserPositionsAtBlock = async (
       break;
     }
 
-    const { userPositions, pools } = data as Response
-    poolList = pools
+    const { userPositions, aquaCTokens } = data as Response
+    pools = aquaCTokens
     const res = userPositions.map(data => {
       const userAddress = data.id
 
@@ -71,26 +73,28 @@ export const getUserPositionsAtBlock = async (
       skip += 100
     }
   }
-
+  const timestamp = await getTimestampAtBlock(blockNumber)
   const userBalanceList = result.map(position => {
-    const pool = poolList.find(i => i.id === position.pool)
+    const pool = pools.find(i => i.id === position.pool)
     if (!pool) {
       return {
         userAddress: position.userAddress,
-        poolAddress: position.poolAddress,
         tokenAddress: position.tokenAddress,
+        poolAddress: position.poolAddress,
         blockNumber: position.blockNumber,
-        balance: BigInt(0)
+        balance: BigInt(0),
+        timestamp
       }
     }
 
     const { balance, totalSupplied } = pool
     return {
       userAddress: position.userAddress,
-      poolAddress: position.poolAddress,
       tokenAddress: position.tokenAddress,
+      poolAddress: position.poolAddress,
       blockNumber: position.blockNumber,
-      balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied)
+      balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied),
+      timestamp
     }
 
   })

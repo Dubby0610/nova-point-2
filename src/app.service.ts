@@ -23,7 +23,10 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   public onModuleInit() {
+    console.log(1111, 'onModuleInit');
+
     this.startWorkers();
+    this.adapterService.loadLastBlockNumber()
   }
 
   public onModuleDestroy() {
