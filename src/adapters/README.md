@@ -15,7 +15,6 @@ This comparison is crucial to ensure the accuracy and consistency of the data be
 
 Once the verification is successful, zkLink will start distributing Nova points to users.
 
-
 ## Points
 
 ### General Formula:
@@ -134,10 +133,13 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 
 ## Testing & Validation
 
-Teams can use these test scripts to validate the csv results such that it meets our requirements. (TBD)
+You can validate whether the script can output a CSV file that meets the data requirements by executing `runScript`. If the execution is successful, a CSV file with the corresponding block height will be generated in the `data` root folder under the directory you created.
 
 ```bash
-cd src/adapters/<project folder>/ && node ../testScript.js <project folder>
+# @params folderName: The name of the folder where the script will be executed.
+# @params startBlock: The starting block number.
+# @params endBlock: The ending block number. If you only generate TVL data and do not export the `getUserTransactionData` method, you can use any number.
+cd src/adapters && node runScript.js <projectFolder> <startBlock> <endBlock>
 ```
 
 We will conduct a sampling verification of your CSV results. Teams are required to provide detailed methods of verification, including the approach and information utilized in the verification process.
