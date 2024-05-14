@@ -69,14 +69,14 @@ export class HoldLpPointService extends Worker {
     }
   }
 
-  async handleHoldPoint() {
+  async handleHoldPoint(exeBlockNumber?: number, exeBlockTimestamp?: number) {
     // get last balance of lp statistical block number
     const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
     if (!lastBalanceOfLp) {
       this.logger.log(`No balance of lp found`);
       return;
     }
-    const lastStatisticalBlockNumber = lastBalanceOfLp.blockNumber;
+    const lastStatisticalBlockNumber = exeBlockNumber ? exeBlockNumber : lastBalanceOfLp.blockNumber;
     const currentStatisticalBlock = await this.blockRepository.getLastBlock({
       where: { number: lastStatisticalBlockNumber },
       select: { number: true, timestamp: true },
@@ -143,12 +143,24 @@ export class HoldLpPointService extends Worker {
         .multipliedBy(groupBooster)
         .multipliedBy(addressMultiplier)
         .multipliedBy(loyaltyBooster);
-      const fromBlockAddressPoint = {
-        blockNumber: currentStatisticalBlock.number,
-        address: address,
-        pairAddress: pairAddress,
-        holdPoint: newHoldPoint.toNumber(),
-      };
+      let fromBlockAddressPoint = {};
+      if (exeBlockTimestamp) {
+        fromBlockAddressPoint = {
+          blockNumber: currentStatisticalBlock.number,
+          address: address,
+          pairAddress: pairAddress,
+          holdPoint: newHoldPoint.toNumber(),
+          createdAt: exeBlockTimestamp,
+          updatedAt: exeBlockTimestamp,
+        };
+      } else {
+        fromBlockAddressPoint = {
+          blockNumber: currentStatisticalBlock.number,
+          address: address,
+          pairAddress: pairAddress,
+          holdPoint: newHoldPoint.toNumber(),
+        };
+      }
       blockAddressPointArr.push(fromBlockAddressPoint);
       // let fromAddressPoint = await this.pointsOfLpRepository.getPointByAddress(address, pairAddress);
       let fromAddressPoint = addressPointMap[key];

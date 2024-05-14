@@ -33,6 +33,10 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   @OnEvent(BLOCKS_REVERT_DETECTED_EVENT)
   protected async handleBlocksRevert({ detectedIncorrectBlockNumber }: { detectedIncorrectBlockNumber: number }) {
     this.logger.log("Stopping workers before blocks revert");
+    // await this.holdLpPointService.handleHoldPoint();
+    // await this.holdLpPointService.handleHoldPoint();
+    // await this.holdLpPointService.handleHoldPoint();
+    // await this.holdLpPointService.handleHoldPoint();
     await this.stopWorkers();
 
     this.logger.log("Starting workers after blocks revert");

@@ -89,12 +89,10 @@ export class BridgePointService extends Worker {
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
-
     await waitFor(() => !this.currentProcessPromise, interval * 1000, interval * 1000);
     if (!this.currentProcessPromise) {
       return;
     }
-
     return this.runProcess();
   }
 
