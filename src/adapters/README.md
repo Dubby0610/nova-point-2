@@ -119,6 +119,10 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 | nonce           | A unique identifier for a transaction, primarily used to distinguish cases where a single transaction contains multiple swap or similar transactions | 23                                                                 | Yes              | Yes                |
 | symbol          | token symbol                                                                                                                                         | WETH                                                               | No               | No                 |
 
+**Important Notes: 
+1. contractAddress refers to the releveant pool address at which protocol stores the assets.
+2. tokenAddress refers to the address at which users stake the assets.
+
 ### TVL Points
 
 For TVL points calculation, you need to provide the balance portion quantity of different tokens locked by all users in the protocol pool at the corresponding block height.
@@ -131,6 +135,24 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 | poolAddress  | Each pool’s contract address                        | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
 | balance      | Historical balances raw data. 0.1 ETH               | 100000000000000000                         | Yes      |
 | symbol       | token symbol                                        | WETH                                       | No       |
+
+**Important Note: 
+**For TVL point calculation, we take into consideration the balance of tokens held in the user's address in every 8 hour snapshot. This means that all different types of transaction data with the data fields in the table shall be provided, including the withdrawal data, not just the deposit data. 
+
+**Illustrated Examples of Calculation on Nova**
+
+_**Case 1: **_
+
+Imagine that user A (A) deposits 500 ETH/USDC into the ETH/USDC pool and receive 500 stETH. Then, user B (B) comes in and borrow the 100 ETH/USDC out of the 500 ETH/USDC. 
+A will receive points for the 400 stETH owned. 
+B will receive points for the 100 ETH/USDC borrowed. 
+In conclusion, the points are calculated based on the actual amount of tokens owned by the users in the pool. Then, we will calculate the % of tokens owned by A & B in the pool. 
+
+_**Case 2: **_
+
+Imagine that A & B each locks up 100 USDC in the pool. The contract has a total of 200 USDC locked up, then the balance of A & B will be 200 USDC each. 
+Case 2.1: If A withdraws all staked USDC, then A's balance will be 0. 
+Case 2.2: If a new user, C comes in and borrows 100 USDC, then the assets which are locked up by the contract will be left with only 100 USDC. This means that A and B each now owns 50% of total asset balance in the contract. A & B's final balance will be 50 USDC each in this case. 
 
 ## Testing & Validation
 
