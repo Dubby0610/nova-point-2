@@ -119,7 +119,7 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 | nonce           | A unique identifier for a transaction, primarily used to distinguish cases where a single transaction contains multiple swap or similar transactions | 23                                                                 | Yes              | Yes                |
 | symbol          | token symbol                                                                                                                                         | WETH                                                               | No               | No                 |
 
-**Important Notes: 
+****Important Notes: **
 1. contractAddress refers to the releveant pool address at which protocol stores the assets.
 2. tokenAddress refers to the address at which users stake the assets.
 
@@ -151,7 +151,9 @@ In conclusion, the points are calculated based on the actual amount of tokens ow
 _**Case 2: **_
 
 Imagine that A & B each locks up 100 USDC in the pool. The contract has a total of 200 USDC locked up, then the balance of A & B will be 200 USDC each. 
+
 Case 2.1: If A withdraws all staked USDC, then A's balance will be 0. 
+
 Case 2.2: If a new user, C comes in and borrows 100 USDC, then the assets which are locked up by the contract will be left with only 100 USDC. This means that A and B each now owns 50% of total asset balance in the contract. A & B's final balance will be 50 USDC each in this case. 
 
 ## Testing & Validation
