@@ -4,8 +4,8 @@ const fs = require("fs");
 const join = require("path").join;
 const BigNumber = require("bignumber.js");
 const { getLiquidityValue } = require("iziswap-sdk/lib/liquidityManager/calc");
+const { JsonRpcProvider } = require("ethers");
 
-const outputFile = join(__dirname, "../output.csv");
 const chainId = "810180";
 const rpcUrl = "https://rpc.zklink.network";
 const liquidityManagerContract = "0x936c9A1B8f88BFDbd5066ad08e5d773BC82EB15F";
@@ -41,6 +41,12 @@ const poolAbi = JSON.parse(fs.readFileSync(join(__dirname, "../abi/pool.abi.json
 const erc20Abi = JSON.parse(fs.readFileSync(join(__dirname, "../abi/ERC20.json"), "utf-8"));
 const liquidityManager = new web3.eth.Contract(abi, liquidityManagerContract);
 
+const getTimestampAtBlock = async (blockNumber) => {
+  const provider = new JsonRpcProvider("https://rpc.zklink.io");
+  const block = await provider.getBlock(blockNumber);
+  return Number(block?.timestamp);
+};
+
 async function getPoolState(pool, blockNumber) {
   const {
     sqrtPrice_96,
@@ -71,7 +77,7 @@ function decodeMethodResult(contract, methodName, data) {
   }
 }
 
-async function getLiquidities(poolInfos, blockNumber, blockTimestamp) {
+async function getLiquidities(poolInfos, blockNumber) {
   const totalSupply = await liquidityManager.methods.liquidityNum().call({}, blockNumber);
   console.info("totalSupply", totalSupply);
 
@@ -95,6 +101,8 @@ async function getLiquidities(poolInfos, blockNumber, blockTimestamp) {
       }
 
       try {
+        const timestamp = await getTimestampAtBlock(blockNumber);
+
         const liquidities = await liquidityManager.methods.multicall(batchCalls).call({}, blockNumber);
         liquidities.forEach((t, index) => {
           const data_decoded = decodeMethodResult(liquidityManager, "liquidities", t);
@@ -144,18 +152,20 @@ async function getLiquidities(poolInfos, blockNumber, blockTimestamp) {
                 .toString()
             );
             result.push({
-              address: owner,
+              userAddress: owner,
               tokenAddress: poolInfo.tokenX.address,
-              pairAddress: poolInfo.address,
+              poolAddress: poolInfo.address,
               blockNumber: blockNumber,
               balance: balanceX,
+              timestamp: timestamp,
             });
             result.push({
-              address: owner,
+              userAddress: owner,
               tokenAddress: poolInfo.tokenY.address,
-              pairAddress: poolInfo.address,
+              poolAddress: poolInfo.address,
               blockNumber: blockNumber,
               balance: balanceY,
+              timestamp: timestamp,
             });
           }
         }
@@ -178,17 +188,7 @@ async function getLiquidities(poolInfos, blockNumber, blockTimestamp) {
   return result;
 }
 
-function writeOutputFile(data) {
-  let csvContent = "address,pairAddress,tokenAddress,blockNumber,balance\n";
-  // loop data
-  for (const item of data) {
-    const row = `${item.address},${item.pairAddress},${item.tokenAddress},${item.blockNumber},${item.balance}`;
-    csvContent += row + "\n";
-  }
-  fs.writeFileSync(outputFile, csvContent);
-}
-
-async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
+async function getUserTVLData(blockNumber) {
   const poolInfos = new Map();
   for (poolAddress of poolList) {
     try {
@@ -223,7 +223,7 @@ async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
     console.info("pairAddress:", poolAddress);
   }
 
-  const resultTmp = await getLiquidities(poolInfos, blockNumber, blockTimestamp);
+  const resultTmp = await getLiquidities(poolInfos, blockNumber);
   let resultFinal = [];
   // loop resultTmp, group by address, pairAddress, tokenAddress, blockNumber and sum balance
   for (const item of resultTmp) {
@@ -239,5 +239,7 @@ async function getUserBalanceByBlock(blockNumber, blockTimestamp) {
 }
 
 module.exports = {
-  getUserBalanceByBlock,
+  getUserTVLData,
 };
+
+// 0x936c9a1b8f88bfdbd5066ad08e5d773bc82eb15f
