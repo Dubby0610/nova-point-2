@@ -1,10 +1,10 @@
-import { UserBalance } from './sdk/types';
+import { UserTVLData } from './sdk/types';
 import {
   getUserPositionsAtBlock,
 } from './sdk/lib';
 
-export const getUserBalanceByBlock = async (blockNumber: number, blockTimestamp: number): Promise<UserBalance[]> => {
-  const res: UserBalance[] = await getUserPositionsAtBlock(blockNumber);
+export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]> => {
+  const res: UserTVLData[] = await getUserPositionsAtBlock(blockNumber);
 
-  return res.map(item => ({ ...item, block_number: blockNumber, timestamp: blockTimestamp }));
+  return res.map(item => ({ ...item, blockNumber: blockNumber }));
 };

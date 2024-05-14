@@ -1,15 +1,17 @@
-import {Call, MulticallResult, Response, StakeData, UserBalance} from './types';
+import 'dotenv/config';
+import { Call, MulticallResult, Response, StakeData, UserTVLData } from './types';
 import { Contract, FallbackProvider } from 'ethers'
 import { createFallbackProvider } from './utils/provider';
 import {
   MULTICALL_ADDRESS,
   STABLECOIN_FARM_ADDRESS,
-  SUBGRAPH_URL,
   USDC_VAULT_ADDRESS,
   USDT_VAULT_ADDRESS, VaultID
 } from './utils/constants';
 import MULTICALL_ABI from './abis/multicall.json';
-import {decodeUserInfo, encodeUserInfo} from './utils/encoder';
+import { decodeUserInfo, encodeUserInfo } from './utils/encoder';
+
+const SUBGRAPH_ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string;
 
 async function querySubgraphUpToBlock(blockNumber: number): Promise<StakeData[]> {
   let allStakes: StakeData[] = [];
@@ -29,7 +31,7 @@ async function querySubgraphUpToBlock(blockNumber: number): Promise<StakeData[]>
               timestamp
           }
       }`;
-    const response = await fetch(SUBGRAPH_URL, {
+    const response = await fetch(SUBGRAPH_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query })
@@ -59,10 +61,10 @@ function removeDuplicateUsers(stakes: StakeData[]): StakeData[] {
   return Array.from(uniqueUsers.values());
 }
 
-export async function getUserPositionsAtBlock(blockNumber: number): Promise<UserBalance[]> {
+export async function getUserPositionsAtBlock(blockNumber: number): Promise<UserTVLData[]> {
   const provider: FallbackProvider = createFallbackProvider();
   const multicall = new Contract(MULTICALL_ADDRESS, MULTICALL_ABI, provider);
-  const results: UserBalance[] = [];
+  const results: UserTVLData[] = [];
 
   const stakings: StakeData[] = await querySubgraphUpToBlock(blockNumber);
 
@@ -91,8 +93,7 @@ export async function getUserPositionsAtBlock(blockNumber: number): Promise<User
       tokenAddress,
       poolAddress: STABLECOIN_FARM_ADDRESS,
       balance: BigInt(userBalance),
-      block_number: Number(staking.blocknumber),
-      timestamp: Number(staking.timestamp),
+      blockNumber: Number(staking.blocknumber),
     });
   }
 

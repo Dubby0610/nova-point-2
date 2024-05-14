@@ -1,12 +1,11 @@
 export type Address = string;
 
-export type UserBalance = {
+export type UserTVLData = {
     userAddress: Address;
     tokenAddress: Address;
     poolAddress: Address;
     balance: bigint;
-    block_number: number;
-    timestamp: number;
+    blockNumber: number;
 }
 
 export type StakeData = {

@@ -5,9 +5,6 @@
     "codegen": "graph codegen",
     "build": "graph build",
     "clean": "graph clean",
-    "create": "graph create interport-stablecoinfarm-tracking-zklink-nova --node http://3.114.68.110:8020",
-    "deploy": "graph deploy interport-stablecoinfarm-tracking-zklink-nova --ipfs http://3.114.68.110:5001 --node http://3.114.68.110:8020",
-    "remove": "graph remove interport-stablecoinfarm-tracking-zklink-nova --node http://3.114.68.110:8020",
     "test": "graph test"
   },
   "dependencies": {

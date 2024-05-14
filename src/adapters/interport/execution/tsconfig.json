@@ -1,4 +1,5 @@
 {
+  "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "module": "commonjs",
     "declaration": true,
@@ -7,6 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "esnext",
     "sourceMap": true,
+    "baseUrl": ".",
     "outDir": "./dist",
     "rootDir": "./src",
     "incremental": true,
@@ -23,8 +25,13 @@
     "allowJs": true,
     "checkJs": false,
     "strict": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "strictPropertyInitialization": false,
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "src/types"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "subgraph"],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "subgraph", "**/*.test.ts"],
 }

@@ -5,8 +5,6 @@ export const STABLECOIN_FARM_ADDRESS = '0xEF902012C4a227461BdefF8Fa26b596eA125C7
 export const RPC_URL = 'https://rpc.zklink.io';
 export const BACKUP_RPC_URL = 'https://rpc.zklink.network';
 
-export const SUBGRAPH_URL = 'http://3.114.68.110:8000/subgraphs/name/interport-stablecoinfarm-tracking-zklink-nova';
-
 export const MULTICALL_ADDRESS = '0x6e75153704467252b4221e571064f6c66c578147';
 
 export enum VaultID {
