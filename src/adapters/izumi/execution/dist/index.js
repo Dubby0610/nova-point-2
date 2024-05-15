@@ -144,12 +144,12 @@ async function getLiquidities(poolInfos, blockNumber) {
             const balanceX = BigInt(
               new BigNumber(amountXDecimal)
                 .multipliedBy(new BigNumber(10).pow(Number(poolInfo.tokenX.decimal)))
-                .toString()
+                .toString(10)
             );
             const balanceY = BigInt(
               new BigNumber(amountYDecimal)
                 .multipliedBy(new BigNumber(10).pow(Number(poolInfo.tokenY.decimal)))
-                .toString()
+                .toString(10)
             );
             result.push({
               userAddress: owner,
@@ -225,9 +225,9 @@ async function getUserTVLData(blockNumber) {
 
   const resultTmp = await getLiquidities(poolInfos, blockNumber);
   let resultFinal = [];
-  // loop resultTmp, group by address, pairAddress, tokenAddress, blockNumber and sum balance
+  // loop resultTmp, group by userAddress, tokenAddress, blockNumber and sum balance
   for (const item of resultTmp) {
-    const key = `${item.address}_${item.pairAddress}_${item.tokenAddress}_${item.blockNumber}`;
+    const key = `${item.userAddress}_${item.tokenAddress}_${item.blockNumber}`;
     if (resultFinal[key]) {
       resultFinal[key].balance += item.balance;
     } else {
