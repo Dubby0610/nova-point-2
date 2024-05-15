@@ -69,7 +69,7 @@ export class HoldLpPointService extends Worker {
     }
   }
 
-  async handleHoldPoint(exeBlockNumber?: number, exeBlockTimestamp?: number) {
+  async handleHoldPoint(exeBlockNumber?: number, exeBlockTimestamp?: string) {
     // get last balance of lp statistical block number
     const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
     if (!lastBalanceOfLp) {

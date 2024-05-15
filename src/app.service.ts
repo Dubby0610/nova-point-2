@@ -26,12 +26,10 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
   public async onModuleInit() {
     // await this.adapterService.loadLastBlockNumber(800000, 0);
-    // await this.holdLpPointService.handleHoldPoint(975239, 1715102340);
-    // await this.holdLpPointService.handleHoldPoint(1376336, 1715102340);
-    // await this.holdLpPointService.handleHoldPoint(1385070, 1715131140);
-    // await this.holdLpPointService.handleHoldPoint(1395273, 1715159940);
-    // await this.holdLpPointService.handleHoldPoint(1401273, 1715188740);
-    // await this.holdLpPointService.handleHoldPoint(1401273, 1715188740);
+    await this.holdLpPointService.handleHoldPoint(1376336, new Date(1715102340 * 1000).toISOString());
+    await this.holdLpPointService.handleHoldPoint(1385070, new Date(1715131140 * 1000).toISOString());
+    await this.holdLpPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
+    await this.holdLpPointService.handleHoldPoint(1401273, new Date(1715188740 * 1000).toISOString());
     this.startWorkers();
   }
 
