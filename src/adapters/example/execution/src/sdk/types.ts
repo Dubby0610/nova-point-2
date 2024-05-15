@@ -9,6 +9,7 @@ export type UserTVLData = {
     tokenAddress: string
     blockNumber: number
     balance: bigint
+    timestamp: number
 }
 
 export type UserTxData = {
@@ -24,7 +25,7 @@ export type UserTxData = {
     blockNumber: number
 }
 
-export type UserSupplied = Omit<UserTVLData, 'balance'> & {
+export type UserSupplied = Omit<UserTVLData, 'balance' | 'timestamp'> & {
     supplied: bigint
     pool: string
 }

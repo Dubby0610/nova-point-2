@@ -29,7 +29,7 @@ $$
 Ecosystem Points = Vol_{\text{\scriptsize u,t}} Points + TVL_{\text{\scriptsize u,t}} Points + TxNum_{\text{\scriptsize u,t }}Points
 $$
 
-1. Vol signifies the total volume of trades executed by a user over a period of time.
+1. Vol<sub>u,t</sub> signifies the total volume of trades executed by a user over a period of time.
 
    - DEX, PERPs, Lending, Bridge:
      The total trading/lending/bridging volume by the user based on the formula above.
@@ -41,9 +41,18 @@ $$
 2. TVL<sub>u,t</sub> (Total Locked Value):
    Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of time.
 
-   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool.
+   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is USDC/ETH/WETH ect.
 
-   For example, if two users, A and B, each stake 20 ETH in a protocol pool and receive 20 lpETH, then the pool locks 40 ETH of underlying tokens. When user C borrows 20 ETH, the underlying token balance for users A and B in the protocol is each 10 ETH. The calculation formula is: `TVL_u =20 lpETH / 40 lpETH * 20 ETH`.
+   #### TVL_u example
+
+   Next, I'd like you to explain how to calculate a user's TVL, denoted as TVL_u.
+
+   If two users, A and B, each stake 20 ETH in the contract pool and then receive 20 lpETH, then the contract locks **40 ETH** of underlying tokens(ETH).
+
+   - When user **C borrows 20 ETH** from this contract, A and B still maintain a **50%** stake each in the token staked in the contract, but the contract's TVL has decreased to 20 ETH, so the **balance** of A and B is: `TVL_u = percent * contract TVL = 50% * 20 = 10 ETH`
+   - When user **A staked an additional 40 ETH**, the total value locked (TVL) in the contract increased to 80 ETH. A's stake percentage is now 75%, while B's stake percentage is 25%. At this point, balance_A is `TVL_u = percent * contract TVL = 75% * 80 = 60 ETH` and balance_B is `TVL_u = percent * contract TVL = 25% * 80 = 20 ETH`.
+
+   You can specify conditions for the percentage of a user's balance, such as their participation in a specific contract interaction. However, the formula for TVL_u is always the user's percentage multiplied by the total TVL of the underlying token in the contract.`percent% * contract TVL`
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
    - For Dex/Perps/Lending protocol, there is no limit to the tx volume.
@@ -51,6 +60,10 @@ $$
    - For GameFi/NFTFi, it is the total number of on-chain interactions in the protocol.
 
 ## Getting Started
+
+100 ETH 100 lETH layerbank 10000 lETH 10020ETH
+
+100/10000 \* 10020
 
 ### Sample Adapter
 
@@ -127,14 +140,14 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 
 For TVL points calculation, you need to provide the balance portion quantity of different tokens locked by all users in the protocol pool at the corresponding block height.
 
-| Data Field   | Notes                                               | Example                                    | Required |
-| ------------ | --------------------------------------------------- | ------------------------------------------ | -------- |
-| timestamp    | block timestamp                                     | 1370000000                                 | Yes      |
-| userAddress  | User account                                        | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
-| tokenAddress | The ERC20 token address involved in the transaction | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
-| poolAddress  | Each pool’s contract address                        | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
-| balance      | Historical balances raw data. 0.1 ETH               | 100000000000000000                         | Yes      |
-| symbol       | token symbol                                        | WETH                                       | No       |
+| Data Field   | Notes                                                                                                  | Example                                    | Required |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ | -------- |
+| timestamp    | block timestamp                                                                                        | 1370000000                                 | Yes      |
+| userAddress  | User account                                                                                           | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
+| tokenAddress | Underlying token address. eg: WETH address                                                             | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
+| poolAddress  | Each pool’s contract address                                                                           | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
+| balance      | Refer to [TVL_u](#tvl_u-example) & [Important Note](#important-notes), should be raw data, eg: 0.1 ETH | 100000000000000000                         | Yes      |
+| symbol       | token symbol                                                                                           | WETH                                       | No       |
 
 **Important Note:**
 
