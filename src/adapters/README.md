@@ -136,25 +136,27 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 | balance      | Historical balances raw data. 0.1 ETH               | 100000000000000000                         | Yes      |
 | symbol       | token symbol                                        | WETH                                       | No       |
 
-**Important Note: 
-**For TVL point calculation, we take into consideration the balance of tokens held in the user's address in every 8 hour snapshot. This means that all different types of transaction data with the data fields in the table shall be provided, including the withdrawal data, not just the deposit data. 
+**Important Note:**
 
-**Illustrated Examples of Calculation on Nova**
+For TVL point calculation, we take into consideration the balance of tokens locked in the contracts in every 8 hour snapshot. This means that the subgraph should listen for events where the user's percentage share in the contract changes, such as Transfer, Mint, Stake, Deposit, etc.
 
-_**Case 1: **_
+**Illustrated examples of balance calculation on Nova**
 
-Imagine that user A (A) deposits 500 ETH/USDC into the ETH/USDC pool and receive 500 stETH. Then, user B (B) comes in and borrow the 100 ETH/USDC out of the 500 ETH/USDC. 
-A will receive points for the 400 stETH owned. 
-B will receive points for the 100 ETH/USDC borrowed. 
-In conclusion, the points are calculated based on the actual amount of tokens owned by the users in the pool. Then, we will calculate the % of tokens owned by A & B in the pool. 
+> The calculation formula is always the percentage multiplied by the pool's TVL.
 
-_**Case 2: **_
+**Case 1:**
 
-Imagine that A & B each locks up 100 USDC in the pool. The contract has a total of 200 USDC locked up, then the balance of A & B will be 200 USDC each. 
+Imagine that user A (A) deposits 500 ETH/USDC into the ETH/USDC pool and receive 500 stETH. Then, user B (B) comes in and borrow the 100 ETH/USDC out of the 500 ETH/USDC. Due to the decrease in the contract's TVL, A will only receive points for the 400 stETH owned. The Formula: For A `TVL_u = percentage * poolTVL = 100% * 400 = 400ETH`
 
-Case 2.1: If A withdraws all staked USDC, then A's balance will be 0. 
+In conclusion, the points are calculated based on the pool's TVL. Then, we will calculate the % of tokens owned by A.
 
-Case 2.2: If a new user, C comes in and borrows 100 USDC, then the assets which are locked up by the contract will be left with only 100 USDC. This means that A and B each now owns 50% of total asset balance in the contract. A & B's final balance will be 50 USDC each in this case. 
+**Case 2:**
+
+Imagine that A & B each locks up 100 USDC in the pool. The contract has a total of 200 USDC locked up, then tA and B each occupy 50% of the TVL in the contract.
+
+Case 2-1: If A withdraws all staked USDC, then A's balance will be 0, B occupies 100% of the TVL in the contract. contract TVL is 100 USDC. The Formula: For A is 0; For B `TVL_u = percentage * poolTVL = 100% * 100 = 100ETH`
+
+Case 2-2: If a new user, C comes in and borrows 100 USDC, then the assets which are locked up by the contract will be left with only 100 USDC. This means that A and B each now owns 50% of total asset balance in the contract. A & B's final balance will be 50 USDC each in this case. The Formula: `TVL_u = percentage * poolTVL = 50% * 100 = 50ETH`
 
 ## Testing & Validation
 
