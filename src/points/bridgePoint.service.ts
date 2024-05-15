@@ -221,7 +221,7 @@ export class BridgePointService extends Worker {
         blockNumber: transfer.blockNumber,
         number: transfer.number,
         timestamp: Number(transfer.timestamp),
-        amount: BigInt(transfer.amount.toString()),
+        amount: BigInt(transfer.amount ?? "0"),
       };
     });
     transfers.sort((a, b) => a.number - b.number);

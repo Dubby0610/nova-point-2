@@ -25,10 +25,13 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   public async onModuleInit() {
-    await this.holdLpPointService.handleHoldPoint(1376336,1715102340);
-    await this.holdLpPointService.handleHoldPoint(1385070,1715131140);
-    await this.holdLpPointService.handleHoldPoint(1395273,1715159940);
-    await this.holdLpPointService.handleHoldPoint(1401273,1715188740);
+    // await this.adapterService.loadLastBlockNumber(800000, 0);
+    // await this.holdLpPointService.handleHoldPoint(975239, 1715102340);
+    // await this.holdLpPointService.handleHoldPoint(1376336, 1715102340);
+    // await this.holdLpPointService.handleHoldPoint(1385070, 1715131140);
+    // await this.holdLpPointService.handleHoldPoint(1395273, 1715159940);
+    // await this.holdLpPointService.handleHoldPoint(1401273, 1715188740);
+    // await this.holdLpPointService.handleHoldPoint(1401273, 1715188740);
     this.startWorkers();
   }
 
@@ -46,13 +49,11 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    // const tasks = [this.holdLpPointService.start(), this.bridgePointService.start()];
     const tasks = [this.bridgeActiveService.start(), this.bridgePointService.start()];
     return Promise.all(tasks);
   }
 
   private stopWorkers() {
-    // return Promise.all([this.holdLpPointService.stop(), this.bridgePointService.stop()]);
     return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 }

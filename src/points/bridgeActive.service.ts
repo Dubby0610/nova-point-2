@@ -83,6 +83,9 @@ export class BridgeActiveService extends Worker {
     await this.cacheRepository.addManyIgnoreConflicts(activeList);
     // update lastTransferBlockNumber
     await this.cacheRepository.setValue(ONLY_ACTIVE_BLOCKNUMBER_KEY, latestBlockNumber.toString());
+    this.logger.log(
+      `success for meson free bridge, latestBlockNumber is ${latestBlockNumber}, length: ${activeList.length}}`
+    );
   }
 
   // fetch latest transfer list
@@ -117,7 +120,7 @@ export class BridgeActiveService extends Worker {
         blockNumber: transfer.blockNumber,
         number: transfer.number,
         timestamp: Number(transfer.timestamp),
-        amount: BigInt(transfer.amount.toString()),
+        amount: BigInt(transfer.amount ?? "0"),
       };
     });
     transfers.sort((a, b) => a.number - b.number);
