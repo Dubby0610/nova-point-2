@@ -41,18 +41,37 @@ $$
 2. TVL<sub>u,t</sub> (Total Locked Value):
    Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of time.
 
-   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is USDC/ETH/WETH ect.
+   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is USDC/ETH/WETH etc.
 
-   #### TVL_u example
+   `TVL points = sum_all tokens ( user’s token balance * price * token multiplier ) * project booster`
 
-   Next, I'd like you to explain how to calculate a user's TVL, denoted as TVL_u.
+**How to get user’s token balance for TVL point calculation**
 
-   If two users, A and B, each stake 20 ETH in the contract pool and then receive 20 lpETH, then the contract locks **40 ETH** of underlying tokens(ETH).
+For TVL point calculation, we take into consideration the balance of tokens locked in the contracts in every 8 hour snapshot. 
+In most cases, for each token, the balance of tokens is calculated by multiplying the share percentage of the pool by the pool’s token balance. 
 
-   - When user **C borrows 20 ETH** from this contract, A and B still maintain a **50%** stake each in the token staked in the contract, but the contract's TVL has decreased to 20 ETH, so the **balance** of A and B is: `TVL_u = percent * contract TVL = 50% * 20 = 10 ETH`
-   - When user **A staked an additional 40 ETH**, the total value locked (TVL) in the contract increased to 80 ETH. A's stake percentage is now 75%, while B's stake percentage is 25%. At this point, balance_A is `TVL_u = percent * contract TVL = 75% * 80 = 60 ETH` and balance_B is `TVL_u = percent * contract TVL = 25% * 80 = 20 ETH`.
+`User’s Token Balance = User’s LP share percentage * Pool balance`
 
-   You can specify conditions for the percentage of a user's balance, such as their participation in a specific contract interaction. However, the formula for TVL_u is always the user's percentage multiplied by the total TVL of the underlying token in the contract.`percent% * contract TVL`
+This means that the subgraph should listen for events where the user's percentage share in the contract changes based on the actions such as Transfer, Mint, Stake, Deposit, etc. And the pool’s balance might change due to the user's trading or borrowing activities. Pool balance here is equivalent to the contract TVL. 
+
+**Illustrated examples of balance calculation on Nova**
+
+**Case 1: for lending protocols**
+
+Imagine that A deposits 10 ETH to the liquidity pool (LP). Then B comes in and borrows 2 ETH out of the 10 ETH in the LP. Due to the decrease in the contract’s balance, A will only receive points for the 8 ETH left in the pool.
+For most lending protocols, as the liquidity pool is mixed, we assume liquidity providers are providing liquidity on a pro-rata basis. For example, if user A provides 10 ETH to an ETH liquidity pool, and gets back 10 ETH.LP tokens. Now if there’re 100 ETH.LP tokens in total supply, then user A has 10/100 = 10 % of the liquidity pool. And if 20 ETH were borrowed, and there are 80 ETH left in the pool, then user A’s balance will be `10%* 80= 8 ETH` 
+
+`User A’s token balance: User A’s LP share percentage * Pool balance = 10% * 80 = 8ETH`
+
+**Case 2: For uniswap V2 liquidity pool**
+
+Imagine that user A deposits 1 ETH and 3000 USDC in a swap liquidity pool, and gets back 1 ETH-USDC LP token, which presents to the tokens deposited. Assuming the total supply of ETH-USDC LP token is 100, and there are 100 ETH and 300,000 USDC in the pool, then user A has 1/100= 1% of the liquidity pool. Afterwards, as the ETH price fluctuates, the pool now has 60 ETH and 500,000 USDC (due to x*y=k mechanism), user A now has 1%*60=0.6 ETH and 1%* 500,000=5000 USDC.
+
+**Case 3: For uniswap V3 liquidity pool**
+
+As uniswap V3, as users can provide customized liquidity and get their unique LP NFT, we will calculate points for the balance owned by the user’s total NFTs.
+
+NOTE: Team can to specify the conditions for the percentage of user's LP share such as users' paticipation in a specific contract interaction. However, the formula to calculate user's token balance is always the user's percentage of LP share multiplies by the pool balance of the underlying token in the contract. ie `User's LP share percentage * Pool balance` 
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
    - For Dex/Perps/Lending protocol, there is no limit to the tx volume.
@@ -60,10 +79,6 @@ $$
    - For GameFi/NFTFi, it is the total number of on-chain interactions in the protocol.
 
 ## Getting Started
-
-100 ETH 100 lETH layerbank 10000 lETH 10020ETH
-
-100/10000 \* 10020
 
 ### Sample Adapter
 
@@ -148,29 +163,6 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 | poolAddress  | Each pool’s contract address                                                                           | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
 | balance      | Refer to [TVL_u](#tvl_u-example) & [Important Note](#important-notes), should be raw data, eg: 0.1 ETH | 100000000000000000                         | Yes      |
 | symbol       | token symbol                                                                                           | WETH                                       | No       |
-
-**Important Note:**
-
-For **TVL point calculation**, we take into consideration the balance of tokens locked in the contracts in every 8 hour snapshot. This means that the subgraph should listen for events where the user's percentage share in the contract changes, such as Transfer, Mint, Stake, Deposit, etc.
-
-**Illustrated examples of balance calculation on Nova**
-
-> The calculation formula is always the percentage multiplied by the pool's TVL.
-
-_**Case 1:**_
-
-Imagine that user A (A) deposits 500 ETH/USDC into the ETH/USDC pool and receive 500 stETH. Then, user B (B) comes in and borrow the 100 ETH/USDC out of the 500 ETH/USDC.
-Due to the decrease in the contract's TVL, A will only receive points for the 400 stETH owned. **The Formula**: For A `TVL_u = percentage * poolTVL = 100% * 400 = 400ETH`
-
-In conclusion, the points are calculated based on the pool's TVL. Then, we will calculate the % of tokens owned by A.
-
-_**Case 2:**_
-
-Imagine that A & B each locks up 100 USDC in the pool. The contract has a total of 200 USDC locked up, then tA and B each occupy 50% of the TVL in the contract.
-
-- Case 2-1: If A withdraws all staked USDC, then A's balance will be 0, B occupies 100% of the TVL in the contract. contract TVL is 100 USDC. **The Formula**: For A is 0; For B `TVL_u = percentage * poolTVL = 100% * 100 = 100ETH`
-
-- Case 2-2: If a new user, C comes in and borrows 100 USDC, then the assets which are locked up by the contract will be left with only 100 USDC. This means that A and B each now owns 50% of total asset balance in the contract. A & B's final balance will be 50 USDC each in this case. **The Formula**: `TVL_u = percentage * poolTVL = 50% * 100 = 50ETH`
 
 ## Testing & Validation
 
