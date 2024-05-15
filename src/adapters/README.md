@@ -40,11 +40,27 @@ $$
      In this sense, the total trading volume can signify total transaction volume in gameFi. - To prevent sybil attack, a multiplier of 1/x where x = 1000, 2000,..., N is used for each specific protocol. The multiplier is incorporated into the constant b.
 
 2. TVL<sub>u,t</sub> (Total Locked Value):
-   Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of time.
+   Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of 
+   time.
 
-   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool.
+   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is 
+   USDC/ETH/WETH ect.
 
-   For example, if two users, A and B, each stake 20 ETH in a protocol pool and receive 20 lpETH, then the pool locks 40 ETH of underlying tokens. When user C borrows 20 ETH, the underlying token balance for users A and B in the protocol is each 10 ETH. The calculation formula is: `TVL_u =20 lpETH / 40 lpETH * 20 ETH`.
+   #### TVL_u example
+
+   Next, I'd like you to explain how to calculate a user's TVL, denoted as TVL_u.
+
+   If two users, A and B, each stake 20 ETH in the contract pool and then receive 20 lpETH, then the contract locks **40 ETH** of underlying tokens(ETH).
+
+   - When user **C borrows 20 ETH** from this contract, A and B still maintain a **50%** stake each in the token staked in the contract, but the contract's TVL has       
+     decreased to 20 ETH, so the **balance** of A and B is: `TVL_u = percent * contract TVL = 50% * 20 = 10 ETH`
+   - When user **A staked an additional 40 ETH**, the total value locked (TVL) in the contract increased to 80 ETH. A's stake percentage is now 75%, while B's stake 
+     percentage is 25%. At this point, balance_A is `TVL_u = percent * contract TVL = 75% * 80 = 60 ETH` and balance_B is `TVL_u = percent * contract TVL = 25% * 80 = 20 
+     ETH`.
+
+   You can specify conditions for the percentage of a user's balance, such as their participation in a specific contract interaction. However, the formula for TVL_u is 
+   always the user's percentage multiplied by the total TVL of the underlying token in the contract.`percent% * contract TVL`
+
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
    - For Dex/Perps/Lending protocol, there is no limit to the tx volume.
