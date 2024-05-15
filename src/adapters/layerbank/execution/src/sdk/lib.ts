@@ -31,7 +31,7 @@ export const getUserPositionsAtBlock = async (
       }
     }`;
 
-    const response = await fetch('http://3.114.68.110:8000/subgraphs/name/layerbank-point', {
+    const response = await fetch('https://graph.zklink.io/subgraphs/name/layerbank-points', {
       method: 'POST',
       body: JSON.stringify({ query }),
       headers: { 'Content-Type': 'application/json' },
