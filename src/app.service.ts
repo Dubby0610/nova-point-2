@@ -24,7 +24,11 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     this.logger = new Logger(AppService.name);
   }
 
-  public onModuleInit() {
+  public async onModuleInit() {
+    await this.holdLpPointService.handleHoldPoint(1376336,1715102340);
+    await this.holdLpPointService.handleHoldPoint(1385070,1715131140);
+    await this.holdLpPointService.handleHoldPoint(1395273,1715159940);
+    await this.holdLpPointService.handleHoldPoint(1401273,1715188740);
     this.startWorkers();
   }
 
@@ -35,10 +39,6 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   @OnEvent(BLOCKS_REVERT_DETECTED_EVENT)
   protected async handleBlocksRevert({ detectedIncorrectBlockNumber }: { detectedIncorrectBlockNumber: number }) {
     this.logger.log("Stopping workers before blocks revert");
-    // await this.holdLpPointService.handleHoldPoint();
-    // await this.holdLpPointService.handleHoldPoint();
-    // await this.holdLpPointService.handleHoldPoint();
-    // await this.holdLpPointService.handleHoldPoint();
     await this.stopWorkers();
 
     this.logger.log("Starting workers after blocks revert");

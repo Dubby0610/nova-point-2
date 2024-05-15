@@ -85,6 +85,7 @@ export class HoldLpPointService extends Worker {
       this.logger.log(`No block of lp found, block number : ${lastStatisticalBlockNumber}`);
       return;
     }
+    this.logger.log(`Start calculate tvl points at blockNumber:${currentStatisticalBlock.number}`);
     const statisticStartTime = new Date();
     // get the early bird weight
     const earlyBirdMultiplier = this.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
