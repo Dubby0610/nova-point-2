@@ -120,7 +120,7 @@ if (getUserTVLData) {
     try {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
       for (const item of result) {
-        const key = item.userAddress + item.tokenAddress;
+        const key = item.userAddress + item.tokenAddress + item.poolAddress;
         if (
           item.userAddress === undefined ||
           item.poolAddress === undefined ||

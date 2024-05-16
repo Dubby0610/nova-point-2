@@ -227,7 +227,7 @@ async function getUserTVLData(blockNumber) {
   let resultFinal = [];
   // loop resultTmp, group by userAddress, tokenAddress, blockNumber and sum balance
   for (const item of resultTmp) {
-    const key = `${item.userAddress}_${item.tokenAddress}_${item.blockNumber}`;
+    const key = `${item.userAddress}_${item.poolAddress}_${item.tokenAddress}_${item.blockNumber}`;
     if (resultFinal[key]) {
       resultFinal[key].balance += item.balance;
     } else {
