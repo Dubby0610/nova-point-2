@@ -1,0 +1,8 @@
+{
+  "zklink-nova": {
+    "RubicMultiProxy": {
+      "address": "0x6AA981bFF95eDfea36Bdae98C26B274FfcafE8d3",
+      "startBlock": 1615591
+    }
+  }
+}

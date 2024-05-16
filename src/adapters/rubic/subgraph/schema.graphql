@@ -1,0 +1,32 @@
+type RubicSwappedGeneric @entity(immutable: true) {
+  id: Bytes!
+  transactionId: Bytes! # bytes32
+  integrator: Bytes! # address
+  referrer: Bytes! # address
+  fromAssetId: Bytes! # address
+  toAssetId: Bytes! # address
+  fromAmount: BigInt! # uint256
+  toAmount: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type RubicTransferStarted @entity(immutable: true) {
+  id: Bytes!
+  bridgeData_transactionId: Bytes! # bytes32
+  bridgeData_bridge: String! # string
+  bridgeData_integrator: Bytes! # address
+  bridgeData_referrer: Bytes! # address
+  bridgeData_sendingAssetId: Bytes! # address
+  bridgeData_receivingAssetId: Bytes! # address
+  bridgeData_receiver: Bytes! # address
+  bridgeData_refundee: Bytes! # address
+  bridgeData_minAmount: BigInt! # uint256
+  bridgeData_destinationChainId: BigInt! # uint256
+  bridgeData_hasSourceSwaps: Boolean! # bool
+  bridgeData_hasDestinationCall: Boolean! # bool
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
