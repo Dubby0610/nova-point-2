@@ -1,32 +1,37 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OnEvent } from "@nestjs/event-emitter";
-import { DataSource } from "typeorm";
 import { BLOCKS_REVERT_DETECTED_EVENT } from "./constants";
-import runMigrations from "./utils/runMigrations";
 import { BridgePointService } from "./points/bridgePoint.service";
+
+import { BridgeActiveService } from "./points/bridgeActive.service";
 import { AdapterService } from "./points/adapter.service";
 import { TvlPointService } from "./points/tvlPoint.service";
-import { VolPointService } from "./points/volPoint.service";
-import { TxNumPointService } from "./points/txNumPoint.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger;
 
   public constructor(
-    private readonly dataSource: DataSource,
-    private readonly adapterService: AdapterService,
+
     private readonly bridgePointService: BridgePointService,
+
+    private readonly bridgeActiveService: BridgeActiveService,
+    private readonly configService: ConfigService,
+    private readonly adapterService: AdapterService,
     private readonly tvlPointService: TvlPointService,
-    private readonly volPointService: VolPointService,
-    private readonly txNumPointService: TxNumPointService,
-    private readonly configService: ConfigService
   ) {
     this.logger = new Logger(AppService.name);
   }
 
-  public onModuleInit() {
+  public async onModuleInit() {
+    // example:
+    // await this.adapterService.loadLastBlockNumber(1376336, 1476336);
+    // second params is utc+8
+    // await this.holdLpPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
+
+    await this.adapterService.loadLastBlockNumber(1671452, 1671452);
+    await this.tvlPointService.handleHoldPoint(1671452, new Date("2024-05-16 09:19").toISOString());
     this.startWorkers();
     // runMigrations(this.dataSource, this.logger).then(() => {
     //   this.startWorkers();
@@ -47,25 +52,11 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    this.adapterService.loadLastBlockNumber();
-    const tasks = [
-      this.tvlPointService.start(),
-      this.volPointService.start(),
-      this.txNumPointService.start(),
-      this.bridgePointService.start(),
-    ];
-    // const tasks = [this.bridgePointService.start()];
+    const tasks = [this.bridgeActiveService.start(), this.bridgePointService.start()];
     return Promise.all(tasks);
   }
 
   private stopWorkers() {
-    const tasks = [
-      this.tvlPointService.stop(),
-      this.volPointService.stop(),
-      this.txNumPointService.stop(),
-      this.bridgePointService.stop(),
-    ];
-    // const tasks = [this.bridgePointService.stop()];
-    return Promise.all(tasks);
+    return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 }

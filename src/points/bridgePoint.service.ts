@@ -96,12 +96,10 @@ export class BridgePointService extends Worker {
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
-
     await waitFor(() => !this.currentProcessPromise, interval * 1000, interval * 1000);
     if (!this.currentProcessPromise) {
       return;
     }
-
     return this.runProcess();
   }
 
@@ -230,7 +228,7 @@ export class BridgePointService extends Worker {
         blockNumber: transfer.blockNumber,
         number: transfer.number,
         timestamp: Number(transfer.timestamp),
-        amount: BigInt(transfer.amount.toString()),
+        amount: BigInt(transfer.amount ?? "0"),
       };
     });
     transfers.sort((a, b) => a.number - b.number);

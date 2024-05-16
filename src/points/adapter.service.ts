@@ -8,7 +8,7 @@ import { exec } from "child_process";
 import { BalanceOfLpRepository, BlockRepository, CacheRepository, ProjectRepository, TxDataOfPointsRepository } from "src/repositories";
 import * as csv from "csv-parser";
 import * as fs from "fs";
-import { Cron } from '@nestjs/schedule';
+import { Cron } from "@nestjs/schedule";
 
 const OTHER_CHAINS_ETHADDRESS = "0x0000000000000000000000000000000000000000";
 const NOVA_CHAIN_ETHADDRESS = "0x000000000000000000000000000000000000800a";
@@ -32,7 +32,7 @@ export class AdapterService extends Worker {
     this.logger = new Logger(AdapterService.name);
   }
 
-  @Cron('20 1,9,17 * * *')
+  @Cron("20 1,9,17 * * *")
   protected async runProcess(): Promise<void> {
     this.logger.log(`${AdapterService.name} initialized`);
     try {
@@ -49,7 +49,7 @@ export class AdapterService extends Worker {
     // return this.runProcess();
   }
 
-  public async loadLastBlockNumber() {
+  public async loadLastBlockNumber(lastBlockNumber?: number, curBlockNumber?: number) {
     const lastBlock = await this.blockRepository.getLastBlock({
       select: { number: true, timestamp: true },
     });
@@ -60,8 +60,13 @@ export class AdapterService extends Worker {
       );
       return;
     }
-    const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-    await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
+    if (lastBlockNumber && curBlockNumber) {
+      await this.runCommandsInAllDirectories(lastBlockNumber, curBlockNumber);
+    } else {
+      const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
+      await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
+    }
+
   }
 
   public async runCommandsInAllDirectories(curBlockNumber: number, lastBlockNumber: number,): Promise<void> {

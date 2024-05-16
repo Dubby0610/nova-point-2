@@ -60,14 +60,14 @@ export class TvlPointService extends Worker {
     }
   }
 
-  async handleHoldPoint() {
+  async handleHoldPoint(exeBlockNumber?: number, exeBlockTimestamp?: string) {
     // get last balance of lp statistical block number
     const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
     if (!lastBalanceOfLp) {
       this.logger.log(`No balance of lp found`);
       return;
     }
-    const lastStatisticalBlockNumber = lastBalanceOfLp.blockNumber;
+    const lastStatisticalBlockNumber = exeBlockNumber ? exeBlockNumber : lastBalanceOfLp.blockNumber;
     const currentStatisticalBlock = await this.blockRepository.getLastBlock({
       where: { number: lastStatisticalBlockNumber },
       select: { number: true, timestamp: true },
@@ -76,6 +76,7 @@ export class TvlPointService extends Worker {
       this.logger.log(`No block of lp found, block number : ${lastStatisticalBlockNumber}`);
       return;
     }
+    this.logger.log(`Start calculate tvl points at blockNumber:${currentStatisticalBlock.number}`);
     const statisticStartTime = new Date();
     // get the early bird weight
     const earlyBirdMultiplier = this.boosterService.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
@@ -84,7 +85,7 @@ export class TvlPointService extends Worker {
     const blockTs = currentStatisticalBlock.timestamp.getTime();
     const addressTvlMap = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
     this.logger.log(`Address tvl map size: ${addressTvlMap.size}`);
-    let addresses = [];
+    let addresses: Array<string> = [];
     for (const key of addressTvlMap.keys()) {
       const [address, _] = key.split("-");
       if (!addresses.includes(address)) {
@@ -123,24 +124,37 @@ export class TvlPointService extends Worker {
     for (const key of addressTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
       const addressTvl = addressTvlMap.get(key);
+      if (!addressTvl) continue
       // get the last multiplier before the block timestamp
       const addressMultiplier = this.getAddressMultiplier(pairAddress, blockTs);
       const addressFirstDeposit = addressFirstDepositMap[address.toLowerCase()];
       const firstDepositTime = addressFirstDeposit?.firstDepositTime;
       const loyaltyBooster = this.boosterService.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
-      const newHoldPoint = addressTvl.holdBasePoint
+
+      const newHoldPoint = addressTvl?.holdBasePoint
         .multipliedBy(earlyBirdMultiplier)
         // use pairAddress caculate the groupBooster addressMultiplier loyaltyBooster
         .multipliedBy(groupBooster)
         .multipliedBy(addressMultiplier)
         .multipliedBy(loyaltyBooster);
-      const fromBlockAddressPoint = {
-        blockNumber: currentStatisticalBlock.number,
-        address: address,
-        pairAddress: pairAddress,
-        holdPoint: newHoldPoint.toNumber(),
-        type: this.type,
-      };
+      let fromBlockAddressPoint = {};
+      if (exeBlockTimestamp) {
+        fromBlockAddressPoint = {
+          blockNumber: currentStatisticalBlock.number,
+          address: address,
+          pairAddress: pairAddress,
+          holdPoint: newHoldPoint.toNumber(),
+          createdAt: exeBlockTimestamp,
+          updatedAt: exeBlockTimestamp,
+        };
+      } else {
+        fromBlockAddressPoint = {
+          blockNumber: currentStatisticalBlock.number,
+          address: address,
+          pairAddress: pairAddress,
+          holdPoint: newHoldPoint.toNumber(),
+        };
+      }
       blockAddressPointArr.push(fromBlockAddressPoint);
       // let fromAddressPoint = await this.pointsOfLpRepository.getPointByAddress(address, pairAddress);
       let fromAddressPoint = addressPointMap[key];
@@ -171,8 +185,7 @@ export class TvlPointService extends Worker {
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(
-      `Finish hold point statistic for block: ${currentStatisticalBlock.number}, elapsed time: ${
-        statisticElapsedTime / 1000
+      `Finish hold point statistic for block: ${currentStatisticalBlock.number}, elapsed time: ${statisticElapsedTime / 1000
       } seconds`
     );
   }
@@ -182,22 +195,8 @@ export class TvlPointService extends Worker {
     blockTs: number,
     tokenPriceMap: Map<string, BigNumber>
   ): Promise<Map<string, BlockAddressTvl>> {
-    const addressTvlMap: Map<string, BlockAddressTvl> = new Map(); // key is `${address}-${pairAddress}`
-    // get address and pairAddress
-    const addressPairAddressList = await this.balanceOfLpRepository.getAllAddressesByBlock(blockNumber);
-    this.logger.log(`The address list length: ${addressPairAddressList.length}`);
-    // get all blockNumber
-    let blockNumbers = [];
-    for (let i = 0; i < addressPairAddressList.length; i++) {
-      if (blockNumbers.includes(addressPairAddressList[i].blockNumber)) {
-        continue;
-      }
-      blockNumbers.push(addressPairAddressList[i].blockNumber);
-    }
-    this.logger.log(`The block number list length: ${blockNumbers.length}`);
-    if (blockNumbers.length === 0) {
-      return addressTvlMap;
-    }
+    const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
+    const blockNumbers = [blockNumber];
     const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
     this.logger.log(`The all address list length: ${balanceList.length}`);
     let balanceMap = new Map<string, BalanceOfLpDto[]>();
@@ -205,24 +204,19 @@ export class TvlPointService extends Worker {
       const balance = balanceList[index];
       const address = hexTransformer.from(balance.address);
       const pairAddress = hexTransformer.from(balance.pairAddress);
-      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
+      const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
         balanceMap.set(key, [balance]);
       }
     }
-    for (const item of addressPairAddressList) {
-      const address = hexTransformer.from(item.address);
-      const pairAddress = hexTransformer.from(item.pairAddress);
-      const key = `${address}-${pairAddress}-${item.blockNumber}`;
-      const addressTvl = await this.calculateAddressTvl(balanceMap.get(key), tokenPriceMap, blockTs);
+    for (const [key, value] of balanceMap) {
+      const addressTvl = await this.calculateAddressTvl(value, tokenPriceMap, blockTs);
       if (addressTvl.holdBasePoint.isZero()) {
-        // this.logger.log(`Address hold point is zero: ${key}`);
         continue;
       }
-      const tmpKeys = `${address}-${pairAddress}`;
-      addressTvlMap.set(tmpKeys, addressTvl);
+      addressTvlMap.set(key, addressTvl);
     }
     return addressTvlMap;
   }

@@ -450,4 +450,32 @@ export default [
       },
     ],
   },
+  // layerbank
+  {
+    address: "0xe6052ce0B230e17CAeabAB46cb2777ED3dC855Db", //lBTCT
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x62681d33f1440F47c668905E9660a7e5da32C845", //lMBTC
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: "0x24bCF64b02fB00b8160351AD117C2A359584eb08", //lSolvBTC
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
 ];

@@ -14,6 +14,7 @@ import { CoingeckoTokenOffChainDataProvider } from "./token/tokenOffChainData/pr
 import { PortalsFiTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/portalsFi/portalsFiTokenOffChainDataProvider";
 import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOffChainDataSaver.service";
 import { BridgePointService } from "./points/bridgePoint.service";
+import { BridgeActiveService } from "./points/bridgeActive.service";
 import {
   BatchRepository,
   BlockRepository,
@@ -221,6 +222,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     VolPointService,
     TxNumPointService,
     TxDataOfPointsRepository,
+    BridgeActiveService,
   ],
 })
 export class AppModule {}
