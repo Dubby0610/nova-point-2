@@ -203,22 +203,8 @@ export class HoldLpPointService extends Worker {
     blockTs: number,
     tokenPriceMap: Map<string, BigNumber>
   ): Promise<Map<string, BlockAddressTvl>> {
-    const addressTvlMap: Map<string, BlockAddressTvl> = new Map(); // key is `${address}-${pairAddress}`
-    // get address and pairAddress
-    const addressPairAddressList = await this.balanceOfLpRepository.getAllAddressesByBlock(blockNumber);
-    this.logger.log(`The address list length: ${addressPairAddressList.length}`);
-    // get all blockNumber
-    let blockNumbers = [];
-    for (let i = 0; i < addressPairAddressList.length; i++) {
-      if (blockNumbers.includes(addressPairAddressList[i].blockNumber)) {
-        continue;
-      }
-      blockNumbers.push(addressPairAddressList[i].blockNumber);
-    }
-    this.logger.log(`The block number list length: ${blockNumbers.length}`);
-    if (blockNumbers.length === 0) {
-      return addressTvlMap;
-    }
+    const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
+    const blockNumbers = [blockNumber];
     const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
     this.logger.log(`The all address list length: ${balanceList.length}`);
     let balanceMap = new Map<string, BalanceOfLpDto[]>();
@@ -226,24 +212,19 @@ export class HoldLpPointService extends Worker {
       const balance = balanceList[index];
       const address = hexTransformer.from(balance.address);
       const pairAddress = hexTransformer.from(balance.pairAddress);
-      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
+      const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
         balanceMap.set(key, [balance]);
       }
     }
-    for (const item of addressPairAddressList) {
-      const address = hexTransformer.from(item.address);
-      const pairAddress = hexTransformer.from(item.pairAddress);
-      const key = `${address}-${pairAddress}-${item.blockNumber}`;
-      const addressTvl = await this.calculateAddressTvl(balanceMap.get(key), tokenPriceMap, blockTs);
+    for (const [key, value] of balanceMap) {
+      const addressTvl = await this.calculateAddressTvl(value, tokenPriceMap, blockTs);
       if (addressTvl.holdBasePoint.isZero()) {
-        // this.logger.log(`Address hold point is zero: ${key}`);
         continue;
       }
-      const tmpKeys = `${address}-${pairAddress}`;
-      addressTvlMap.set(tmpKeys, addressTvl);
+      addressTvlMap.set(key, addressTvl);
     }
     return addressTvlMap;
   }
