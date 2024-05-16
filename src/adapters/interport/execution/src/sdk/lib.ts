@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { Call, MulticallResult, Response, StakeData, UserTVLData } from './types';
 import { Contract, FallbackProvider } from 'ethers'
 import { createFallbackProvider } from './utils/provider';
@@ -10,6 +9,8 @@ import {
 } from './utils/constants';
 import MULTICALL_ABI from './abis/multicall.json';
 import { decodeUserInfo, encodeUserInfo } from './utils/encoder';
+import path from 'path';
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const SUBGRAPH_ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string;
 
@@ -81,7 +82,7 @@ export async function getUserPositionsAtBlock(blockNumber: number): Promise<User
 
   const userInfoResults: MulticallResult[] = await multicall.tryAggregate.staticCall(false, userInfoCalls, blockTag);
 
-  for (const [ index, userInfo ] of userInfoResults.entries()) {
+  for (const [index, userInfo] of userInfoResults.entries()) {
     if (!userInfo.success) continue;
 
     const staking = stakings[index];
@@ -94,6 +95,7 @@ export async function getUserPositionsAtBlock(blockNumber: number): Promise<User
       poolAddress: STABLECOIN_FARM_ADDRESS,
       balance: BigInt(userBalance),
       blockNumber: Number(staking.blocknumber),
+      timestamp: Number(staking.timestamp)
     });
   }
 

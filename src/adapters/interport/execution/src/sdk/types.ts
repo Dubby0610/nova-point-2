@@ -6,6 +6,7 @@ export type UserTVLData = {
     poolAddress: Address;
     balance: bigint;
     blockNumber: number;
+    timestamp: number;
 }
 
 export type StakeData = {
