@@ -1,0 +1,75 @@
+diff --git a/node_modules/iziswap-sdk/lib/base/token/token.d.ts b/node_modules/iziswap-sdk/lib/base/token/token.d.ts
+index 27292e4..0080beb 100644
+--- a/node_modules/iziswap-sdk/lib/base/token/token.d.ts
++++ b/node_modules/iziswap-sdk/lib/base/token/token.d.ts
+@@ -2,7 +2,7 @@ import { BaseChain, ChainId, TokenInfoFormatted } from "../types";
+ import { BigNumber } from 'bignumber.js';
+ import Web3 from "web3";
+ import { Contract } from 'web3-eth-contract';
+-export declare const amount2Decimal: (amount: BigNumber, token: TokenInfoFormatted) => number;
++export declare const amount2Decimal: (amount: BigNumber, token: TokenInfoFormatted) => string;
+ export declare const decimal2Amount: (amountDecimal: number, token: TokenInfoFormatted) => BigNumber;
+ export declare const getErc20TokenContract: (address: string, web3: Web3) => Contract;
+ export declare const getContract: (abi: any, address: string, web3: Web3) => Contract;
+diff --git a/node_modules/iziswap-sdk/lib/base/token/token.js b/node_modules/iziswap-sdk/lib/base/token/token.js
+index 1a0330f..237aad7 100644
+--- a/node_modules/iziswap-sdk/lib/base/token/token.js
++++ b/node_modules/iziswap-sdk/lib/base/token/token.js
+@@ -18,7 +18,7 @@ const bignumber_js_1 = require("bignumber.js");
+ // const memoizeOne = require('memoize-one')
+ const erc20_json_1 = __importDefault(require("./erc20.json"));
+ const amount2Decimal = (amount, token) => {
+-    return Number(amount.div(Math.pow(10, token.decimal)));
++    return Number(amount.div(Math.pow(10, Number(token.decimal))));
+ };
+ exports.amount2Decimal = amount2Decimal;
+ const decimal2Amount = (amountDecimal, token) => {
+diff --git a/node_modules/iziswap-sdk/src/base/token/token.ts b/node_modules/iziswap-sdk/src/base/token/token.ts
+index 8f9d9a5..9b834aa 100644
+--- a/node_modules/iziswap-sdk/src/base/token/token.ts
++++ b/node_modules/iziswap-sdk/src/base/token/token.ts
+@@ -8,11 +8,11 @@ import { AbiItem } from 'web3-utils'
+ import abi from './erc20.json'
+ 
+ export const amount2Decimal = (amount: BigNumber, token: TokenInfoFormatted): number => {
+-    return Number(amount.div(10 ** token.decimal))
++    return Number(amount.div(10 ** Number(token.decimal)))
+ }
+ 
+ export const decimal2Amount = (amountDecimal: number, token: TokenInfoFormatted): BigNumber => {
+-    return new BigNumber(amountDecimal).times(10 ** token.decimal)
++    return new BigNumber(amountDecimal).times(10 ** Number(token.decimal))
+ }
+ 
+ export const getErc20TokenContract = (address: string, web3: Web3) => {
+@@ -39,7 +39,7 @@ export const getContract = (abi: any, address: string, web3: Web3) => {
+ //     return memoizedGetContract<Contract>(abi, address, web3)
+ // }
+ 
+-export const fetchToken = async(tokenAddr: string, chain: BaseChain, web3: Web3): Promise<TokenInfoFormatted> => {
++export const fetchToken = async (tokenAddr: string, chain: BaseChain, web3: Web3): Promise<TokenInfoFormatted> => {
+     const contract = getContract(abi, tokenAddr, web3);
+     const decimal = Number(await contract.methods.decimals().call());
+     const symbol = await contract.methods.symbol().call();
+diff --git a/node_modules/iziswap-sdk/src/base/types.ts b/node_modules/iziswap-sdk/src/base/types.ts
+index c4bb9fd..1396e0e 100644
+--- a/node_modules/iziswap-sdk/src/base/types.ts
++++ b/node_modules/iziswap-sdk/src/base/types.ts
+@@ -13,7 +13,7 @@ export interface TokenInfoFormatted {
+     icon?: string;
+     address: string;
+     wrapTokenAddress?: string;
+-    decimal: number;
++    decimal: bigint;
+     addTime?: Date;
+     custom?: boolean;
+ }
+@@ -1302,7 +1302,7 @@ const lookupTableReducer = (
+ 
+ export const initialChainTable = initialChains.reduce(lookupTableReducer, {})
+ 
+-export const getChain = (chainId: ChainId):BaseChain => {
++export const getChain = (chainId: ChainId): BaseChain => {
+     return initialChainTable[chainId]
+ }
+ 

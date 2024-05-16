@@ -53,6 +53,7 @@ import {
   BalanceOfLp,
   Project,
   Cache,
+  TransactionDataOfPoints,
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -76,8 +77,11 @@ import { AddressTvlRepository } from "./repositories";
 import { AddressFirstDeposit } from "./entities/addressFirstDeposit.entity";
 import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
-import { BlockAddressPointOfLpRepository } from "./repositories";
-import { HoldLpPointService } from "./points/holdLpPoint.service";
+import { BlockAddressPointOfLpRepository, TxDataOfPointsRepository } from "./repositories";
+import { TvlPointService } from "./points/tvlPoint.service";
+import { VolPointService } from "./points/volPoint.service";
+import { TxNumPointService } from "./points/txNumPoint.service";
+import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
@@ -145,7 +149,10 @@ import { ScheduleModule } from "@nestjs/schedule";
         };
       },
     }),
-    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache], "lrt"),
+    TypeOrmModule.forFeature(
+      [PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache, TransactionDataOfPoints],
+      "lrt"
+    ),
 
     TypeOrmModule.forRootAsync({
       name: "explorer",
@@ -207,10 +214,14 @@ import { ScheduleModule } from "@nestjs/schedule";
     PointsOfLpRepository,
     BlockAddressPointOfLpRepository,
     AdapterService,
-    HoldLpPointService,
+    TvlPointService,
     ProjectRepository,
     CacheRepository,
     BridgePointService,
+    BoosterService,
+    VolPointService,
+    TxNumPointService,
+    TxDataOfPointsRepository,
     BridgeActiveService,
   ],
 })

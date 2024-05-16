@@ -1,0 +1,57 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: LayerBank
+    network: zklink-nova
+    source:
+      abi: LayerBankCore
+      address: '0x4Ac518DbF0CC730A1c880739CFa98fe0bB284959'
+      startBlock: 727
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/index.ts
+      entities:
+        - Pool
+        - PoolTokenPosition
+      abis:
+        - name: LayerBankCore
+          file: ./abis/LayerBankCore.json
+        - name: LayerBankLToken
+          file: ./abis/LayerBankLToken.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20BytesMethod
+          file: ./abis/ERC20BytesMethod.json
+      eventHandlers:
+        - event: MarketListed(address)
+          handler: handleMarketListed
+
+templates:
+  - kind: ethereum/contract
+    name: LayerBankLToken
+    network: zklink-nova
+    source:
+      abi: LayerBankLToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/index.ts
+      entities:
+        - Pool
+        - PoolTokenPosition
+        - UserPosition
+      abis:
+        - name: LayerBankLToken
+          file: ./abis/LayerBankLToken.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20BytesMethod
+          file: ./abis/ERC20BytesMethod.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer

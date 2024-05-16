@@ -1,5 +1,15 @@
 node_modules
 .env
-dist
+
+.DS_Store
 *.csv
 *.log
+src/adapters/**/build
+src/adapters/**/node_modules
+src/adapters/**/generated
+!src/adapters/example/data/**/*.csv
+
+dist
+!/src/adapters/izumi/execution/dist/
+/src/adapters/izumi/execution/dist/*
+!/src/adapters/izumi/execution/dist/*.js
