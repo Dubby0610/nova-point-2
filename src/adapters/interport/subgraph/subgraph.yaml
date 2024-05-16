@@ -1,0 +1,25 @@
+specVersion: 1.0.0
+description: Interport Finance for zkLink Nova
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: StablecoinFarm
+    network: zklink-nova
+    source:
+      address: '0xEF902012C4a227461BdefF8Fa26b596eA125C711'
+      abi: StablecoinFarm
+      startBlock: 819382
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/mapping.ts
+      entities:
+        - UserStake
+      abis:
+        - name: StablecoinFarm
+          file: ./abis/StablecoinFarm.json
+      eventHandlers:
+        - event: Staked(indexed address,indexed uint256,uint256)
+          handler: handleStaked

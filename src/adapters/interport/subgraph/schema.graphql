@@ -1,0 +1,8 @@
+type UserStake @entity {
+  id: ID!
+  user: Bytes!
+  pid: BigInt!
+  amount: BigInt!
+  timestamp: BigInt!
+  blocknumber: BigInt!
+}
