@@ -5,6 +5,7 @@ node_modules
 *.csv
 *.log
 src/adapters/**/build
+src/adapters/**/data
 src/adapters/**/node_modules
 src/adapters/**/generated
 !src/adapters/example/data/**/*.csv
