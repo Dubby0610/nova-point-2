@@ -14,6 +14,7 @@ import { CoingeckoTokenOffChainDataProvider } from "./token/tokenOffChainData/pr
 import { PortalsFiTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/portalsFi/portalsFiTokenOffChainDataProvider";
 import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOffChainDataSaver.service";
 import { BridgePointService } from "./points/bridgePoint.service";
+import { BridgeActiveService } from "./points/bridgeActive.service";
 import {
   BatchRepository,
   BlockRepository,
@@ -77,7 +78,7 @@ import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository } from "./repositories";
 import { HoldLpPointService } from "./points/holdLpPoint.service";
-import { ScheduleModule } from '@nestjs/schedule';
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -210,6 +211,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ProjectRepository,
     CacheRepository,
     BridgePointService,
+    BridgeActiveService,
   ],
 })
 export class AppModule {}

@@ -7,6 +7,7 @@ import runMigrations from "./utils/runMigrations";
 import { AdapterService } from "./points/adapter.service";
 import { HoldLpPointService } from "./points/holdLpPoint.service";
 import { BridgePointService } from "./points/bridgePoint.service";
+import { BridgeActiveService } from "./points/bridgeActive.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -17,12 +18,18 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly holdLpPointService: HoldLpPointService,
     private readonly adapterService: AdapterService,
     private readonly bridgePointService: BridgePointService,
+    private readonly bridgeActiveService: BridgeActiveService,
     private readonly configService: ConfigService
   ) {
     this.logger = new Logger(AppService.name);
   }
 
-  public onModuleInit() {
+  public async onModuleInit() {
+    // await this.adapterService.loadLastBlockNumber(800000, 0);
+    await this.holdLpPointService.handleHoldPoint(1376336, new Date(1715102340 * 1000).toISOString());
+    await this.holdLpPointService.handleHoldPoint(1385070, new Date(1715131140 * 1000).toISOString());
+    await this.holdLpPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
+    await this.holdLpPointService.handleHoldPoint(1401273, new Date(1715188740 * 1000).toISOString());
     this.startWorkers();
   }
 
@@ -40,13 +47,11 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    // const tasks = [this.holdLpPointService.start(), this.bridgePointService.start()];
-    const tasks = [this.bridgePointService.start()];
+    const tasks = [this.bridgeActiveService.start(), this.bridgePointService.start()];
     return Promise.all(tasks);
   }
 
   private stopWorkers() {
-    // return Promise.all([this.holdLpPointService.stop(), this.bridgePointService.stop()]);
-    return Promise.all([this.bridgePointService.stop()]);
+    return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 }
