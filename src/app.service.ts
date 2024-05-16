@@ -13,13 +13,12 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger;
 
   public constructor(
-
     private readonly bridgePointService: BridgePointService,
 
     private readonly bridgeActiveService: BridgeActiveService,
     private readonly configService: ConfigService,
     private readonly adapterService: AdapterService,
-    private readonly tvlPointService: TvlPointService,
+    private readonly tvlPointService: TvlPointService
   ) {
     this.logger = new Logger(AppService.name);
   }
@@ -30,12 +29,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // second params is utc+8
     // await this.holdLpPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
 
-    await this.adapterService.loadLastBlockNumber(1671452, 1671452);
-    await this.tvlPointService.handleHoldPoint(1671452, new Date("2024-05-16 09:19").toISOString());
     this.startWorkers();
-    // runMigrations(this.dataSource, this.logger).then(() => {
-    //   this.startWorkers();
-    // });
   }
 
   public onModuleDestroy() {

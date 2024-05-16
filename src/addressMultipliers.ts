@@ -478,4 +478,14 @@ export default [
       },
     ],
   },
+  // aqua
+  {
+    address: "0x85f1858Da8ae9447e4Bb1b6721b4abCacFCde1c7", //wmnt
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
 ];
