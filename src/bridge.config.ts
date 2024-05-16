@@ -43,11 +43,11 @@ export default [
     ],
     pointsRule: defaultPointsRule,
   },
-  {
-    id: "owlet",
-    addresses: ["0x5e809A85Aa182A9921EDD10a4163745bb3e36284".toLocaleLowerCase()],
-    pointsRule: defaultPointsRule,
-  },
+//   {
+//     id: "owlet",
+//     addresses: ["0x5e809A85Aa182A9921EDD10a4163745bb3e36284".toLocaleLowerCase()],
+//     pointsRule: defaultPointsRule,
+//   },
   {
     id: "orbiter",
     addresses: [
@@ -60,3 +60,5 @@ export default [
     pointsRule: defaultPointsRule,
   },
 ];
+
+

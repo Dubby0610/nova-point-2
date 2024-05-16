@@ -17,4 +17,7 @@ export class BlockAddressPointOfLp extends BaseEntity {
 
   @Column("decimal")
   public holdPoint: number;
+
+  @Column("varchar")
+  public type: string;
 }

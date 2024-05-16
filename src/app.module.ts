@@ -14,6 +14,7 @@ import { CoingeckoTokenOffChainDataProvider } from "./token/tokenOffChainData/pr
 import { PortalsFiTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/portalsFi/portalsFiTokenOffChainDataProvider";
 import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOffChainDataSaver.service";
 import { BridgePointService } from "./points/bridgePoint.service";
+import { BridgeActiveService } from "./points/bridgeActive.service";
 import {
   BatchRepository,
   BlockRepository,
@@ -52,7 +53,7 @@ import {
   BalanceOfLp,
   Project,
   Cache,
-  TransactionDataOfPoints
+  TransactionDataOfPoints,
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -77,8 +78,11 @@ import { AddressFirstDeposit } from "./entities/addressFirstDeposit.entity";
 import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository, TxDataOfPointsRepository } from "./repositories";
-import { HoldLpPointService } from "./points/holdLpPoint.service";
-import { ScheduleModule } from '@nestjs/schedule';
+import { TvlPointService } from "./points/tvlPoint.service";
+import { VolPointService } from "./points/volPoint.service";
+import { TxNumPointService } from "./points/txNumPoint.service";
+import { BoosterService } from "./booster/booster.service";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -145,7 +149,10 @@ import { ScheduleModule } from '@nestjs/schedule';
         };
       },
     }),
-    TypeOrmModule.forFeature([PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache, TransactionDataOfPoints], "lrt"),
+    TypeOrmModule.forFeature(
+      [PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache, TransactionDataOfPoints],
+      "lrt"
+    ),
 
     TypeOrmModule.forRootAsync({
       name: "explorer",
@@ -207,11 +214,15 @@ import { ScheduleModule } from '@nestjs/schedule';
     PointsOfLpRepository,
     BlockAddressPointOfLpRepository,
     AdapterService,
-    HoldLpPointService,
+    TvlPointService,
     ProjectRepository,
     CacheRepository,
     BridgePointService,
-    TxDataOfPointsRepository
+    BoosterService,
+    VolPointService,
+    TxNumPointService,
+    TxDataOfPointsRepository,
+    BridgeActiveService,
   ],
 })
-export class AppModule { }
+export class AppModule {}

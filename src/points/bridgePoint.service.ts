@@ -1,11 +1,16 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
 import waitFor from "../utils/waitFor";
-import { CacheRepository, ProjectRepository, TransferRepository } from "../repositories";
+import {
+  BlockAddressPointOfLpRepository,
+  CacheRepository,
+  PointsOfLpRepository,
+  ProjectRepository,
+  TransferRepository,
+} from "../repositories";
 import BigNumber from "bignumber.js";
 import { ConfigService } from "@nestjs/config";
 import BridgeConfig from "src/bridge.config";
-import { HoldLpPointService } from "./holdLpPoint.service";
 
 interface TransferItem {
   address: string;
@@ -55,15 +60,17 @@ const symbiosisBaseContractAddress = "0x8Dc71561414CDcA6DcA7C1dED1ABd04AF474D189
 @Injectable()
 export class BridgePointService extends Worker {
   private readonly logger: Logger;
+  private readonly type: string = "bridgeTxNum";
   private readonly bridgeConfig = [];
   private readonly bridgeAddress: string[] = [];
   private lastTransferBlockNumber: number = 0;
   private readonly startBlock: number;
 
   public constructor(
+    private readonly pointsOfLpRepository: PointsOfLpRepository,
+    private readonly blockAddressPointOfLpRepository: BlockAddressPointOfLpRepository,
     private readonly transferRepository: TransferRepository,
     private readonly cacheRepository: CacheRepository,
-    private readonly holdLpPointService: HoldLpPointService,
     private readonly projectRepository: ProjectRepository,
     private readonly configService: ConfigService
   ) {
@@ -89,12 +96,10 @@ export class BridgePointService extends Worker {
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
-
     await waitFor(() => !this.currentProcessPromise, interval * 1000, interval * 1000);
     if (!this.currentProcessPromise) {
       return;
     }
-
     return this.runProcess();
   }
 
@@ -154,7 +159,7 @@ export class BridgePointService extends Worker {
       const nextTransferPointsKey = `${PREFIX_NEXT_TRANSFERPOINTS}-${bridge.id}`;
       await this.cacheRepository.setValue(nextTransferPointsKey, nextTransferPoints.toString());
       // transferPoints save to pgsql
-      await this.holdLpPointService.updateHoldPoint(
+      await this.updateUserPoint(
         transfer.blockNumber,
         transferBridgeAddress,
         transfer.address.toLocaleLowerCase(),
@@ -223,7 +228,7 @@ export class BridgePointService extends Worker {
         blockNumber: transfer.blockNumber,
         number: transfer.number,
         timestamp: Number(transfer.timestamp),
-        amount: BigInt(transfer.amount.toString()),
+        amount: BigInt(transfer.amount ?? "0"),
       };
     });
     transfers.sort((a, b) => a.number - b.number);
@@ -247,5 +252,27 @@ export class BridgePointService extends Worker {
   //get bridgeAddress daily key
   public getBridgeAddressDailyKey(date: Date, bridgeId: string): string {
     return `${bridgeId}-${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  }
+
+  async updateUserPoint(blockNumber: number, pairAddress: string, from: string, holdPoint: BigNumber) {
+    const fromBlockAddressPoint = {
+      blockNumber: blockNumber,
+      address: from,
+      pairAddress: pairAddress,
+      holdPoint: holdPoint.toNumber(),
+      type: this.type,
+    };
+    let fromAddressPoint = await this.pointsOfLpRepository.getPointByAddress(from, pairAddress);
+    if (!fromAddressPoint) {
+      fromAddressPoint = {
+        id: 0,
+        address: from,
+        pairAddress: pairAddress,
+        stakePoint: 0,
+      };
+    }
+    fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + holdPoint.toNumber();
+    this.logger.log(`PairAddrss ${pairAddress}, Address ${from} get hold point: ${holdPoint}`);
+    await this.blockAddressPointOfLpRepository.upsertUserPoints(fromBlockAddressPoint, fromAddressPoint);
   }
 }

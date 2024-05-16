@@ -15,7 +15,6 @@ This comparison is crucial to ensure the accuracy and consistency of the data be
 
 Once the verification is successful, zkLink will start distributing Nova points to users.
 
-
 ## Points
 
 ### General Formula:
@@ -30,7 +29,7 @@ $$
 Ecosystem Points = Vol_{\text{\scriptsize u,t}} Points + TVL_{\text{\scriptsize u,t}} Points + TxNum_{\text{\scriptsize u,t }}Points
 $$
 
-1. Vol signifies the total volume of trades executed by a user over a period of time.
+1. Vol<sub>u,t</sub> signifies the total volume of trades executed by a user over a period of time.
 
    - DEX, PERPs, Lending, Bridge:
      The total trading/lending/bridging volume by the user based on the formula above.
@@ -43,8 +42,7 @@ $$
    Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of 
    time.
 
-   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is 
-   USDC/ETH/WETH ect.
+   These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is USDC/ETH/WETH etc.
 
    `TVL points = sum_all tokens ( user’s token balance * price * token multiplier ) * project booster`
 
@@ -149,7 +147,8 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 | nonce           | A unique identifier for a transaction, primarily used to distinguish cases where a single transaction contains multiple swap or similar transactions | 23                                                                 | Yes              | Yes                |
 | symbol          | token symbol                                                                                                                                         | WETH                                                               | No               | No                 |
 
-****Important Notes: **
+#### Important Notes:
+
 1. contractAddress refers to the releveant pool address at which protocol stores the assets.
 2. tokenAddress refers to the address at which users stake the assets.
 
@@ -157,22 +156,24 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 
 For TVL points calculation, you need to provide the balance portion quantity of different tokens locked by all users in the protocol pool at the corresponding block height.
 
-| Data Field   | Notes                                               | Example                                    | Required |
-| ------------ | --------------------------------------------------- | ------------------------------------------ | -------- |
-| timestamp    | block timestamp                                     | 1370000000                                 | Yes      |
-| userAddress  | User account                                        | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
-| tokenAddress | The ERC20 token address involved in the transaction | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
-| poolAddress  | Each pool’s contract address                        | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
-| balance      | Historical balances raw data. 0.1 ETH               | 100000000000000000                         | Yes      |
-| symbol       | token symbol                                        | WETH                                       | No       |
-
+| Data Field   | Notes                                                                                                  | Example                                    | Required |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ | -------- |
+| timestamp    | block timestamp                                                                                        | 1370000000                                 | Yes      |
+| userAddress  | User account                                                                                           | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
+| tokenAddress | Underlying token address. eg: WETH address                                                             | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
+| poolAddress  | Each pool’s contract address                                                                           | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
+| balance      | Refer to [TVL_u](#tvl_u-example) & [Important Note](#important-notes), should be raw data, eg: 0.1 ETH | 100000000000000000                         | Yes      |
+| symbol       | token symbol                                                                                           | WETH                                       | No       |
 
 ## Testing & Validation
 
-Teams can use these test scripts to validate the csv results such that it meets our requirements. (TBD)
+You can validate whether the script can output a CSV file that meets the data requirements by executing `runScript`. If the execution is successful, a CSV file with the corresponding block height will be generated in the `data` root folder under the directory you created.
 
 ```bash
-cd src/adapters/<project folder>/ && node ../testScript.js <project folder>
+# @params folderName: The name of the folder where the script will be executed.
+# @params startBlock: The starting block number.
+# @params endBlock: The ending block number. If you only generate TVL data and do not export the `getUserTransactionData` method, you can use any number.
+cd src/adapters && node runScript.js <projectFolder> <startBlock> <endBlock>
 ```
 
 We will conduct a sampling verification of your CSV results. Teams are required to provide detailed methods of verification, including the approach and information utilized in the verification process.

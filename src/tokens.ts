@@ -20,6 +20,10 @@ export default [
         multiplier: 2,
         timestamp: 0,
       },
+      {
+        multiplier: 5,
+        timestamp: 1715594400,
+      },
     ],
   },
   {
@@ -89,6 +93,10 @@ export default [
       {
         multiplier: 2.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 5,
+        timestamp: 1715594400,
       },
     ],
   },
@@ -200,6 +208,10 @@ export default [
         multiplier: 3,
         timestamp: 0,
       },
+      {
+        multiplier: 5,
+        timestamp: 1715594400,
+      },
     ],
   },
   {
@@ -274,6 +286,10 @@ export default [
       {
         multiplier: 3,
         timestamp: 0,
+      },
+      {
+        multiplier: 5,
+        timestamp: 1715594400,
       },
     ],
   },
@@ -899,8 +915,8 @@ export default [
     address: [
       {
         chain: "Ethereum",
-        l1Address: "0x8a053350ca5F9352a16deD26ab333e2D251DAd7c", //add
-        l2Address: "0xB5B8C247C740d53b6Fbab10f1C17922788baeD54", //add
+        l1Address: "0x8a053350ca5F9352a16deD26ab333e2D251DAd7c",
+        l2Address: "0xB5B8C247C740d53b6Fbab10f1C17922788baeD54",
       },
     ],
     decimals: 18,
@@ -931,6 +947,26 @@ export default [
     multipliers: [
       {
         multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "Ethereum",
+        l1Address: "0x9Dc7e196092DaC94f0c76CFB020b60FA75B97C5b",
+        l2Address: "0xfa70fD01EbD5aa64f31E5D3575C444919C79275E",
+      },
+    ],
+    decimals: 18,
+    symbol: "rnETH",
+    cgPriceId: "ethereum",
+    type: "LRT",
+    yieldType: ["NOVA Points", "Native Yield"],
+    multipliers: [
+      {
+        multiplier: 1,
         timestamp: 0,
       },
     ],
@@ -988,6 +1024,10 @@ export default [
         multiplier: 3,
         timestamp: 0,
       },
+      {
+        multiplier: 5,
+        timestamp: 1715594400,
+      },
     ],
   },
   {
@@ -1027,6 +1067,110 @@ export default [
       {
         multiplier: 1,
         timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "zkLinkNova",
+        l1Address: "",
+        l2Address: "0xFb8dBdc644eb54dAe0D7A9757f1e6444a07F8067",
+      },
+    ],
+    symbol: "BTCT",
+    decimals: 18,
+    cgPriceId: "bitcoin",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 1,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "Arbitrum",
+        l1Address: "0x3647c54c4c2C65bC7a2D63c0Da2809B399DBBDC0",
+        l2Address: "0x6923B01D6FA1524aC1AF1b85F0140FBF4E7c66e4",
+      },
+    ],
+    decimals: 18,
+    symbol: "solvBTC",
+    cgPriceId: "bitcoin",
+    type: "Native",
+    yieldType: ["NOVA Points", "Native Yield"],
+    multipliers: [
+      {
+        multiplier: 1.5,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "zkLinkNova",
+        l1Address: "",
+        l2Address: "0xbEAf16cFD8eFe0FC97C2a07E349B9411F5dC272C",
+      },
+    ],
+    symbol: "solvBTC.m",
+    decimals: 18,
+    cgPriceId: "bitcoin",
+    type: "Native",
+    yieldType: ["NOVA Points", "Native Yield"],
+    multipliers: [
+      {
+        multiplier: 1.5,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "zkLinkNova",
+        l1Address: "",
+        l2Address: "0x85D431A3a56FDf2d2970635fF627f386b4ae49CC",
+      },
+    ],
+    symbol: "M-BTC",
+    decimals: 18,
+    cgPriceId: "bitcoin",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 1.5,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "Nova",
+        l1Address: "",
+        l2Address: "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169",
+      },
+    ],
+    decimals: 18,
+    symbol: "WETH",
+    cgPriceId: "ethereum",
+    type: "zkLinkNova",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+      {
+        multiplier: 5,
+        timestamp: 1715594400,
       },
     ],
   },
