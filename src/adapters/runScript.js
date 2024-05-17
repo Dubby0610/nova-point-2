@@ -44,7 +44,6 @@ const { getUserTransactionData, getUserTVLData } = require(indexPath);
 
 if (getUserTransactionData) {
   getUserTransactionData(Number(lastBlockNumber), Number(curBlockNumber)).then((result) => {
-    const allCsvRows = [];
     const keyMap = new Map();
     try {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
@@ -76,7 +75,7 @@ if (getUserTransactionData) {
         }
       }
 
-      const resultTmp = result.map((item) => {
+      const allCsvRows = result.map((item) => {
         return {
           userAddress: item.userAddress,
           contractAddress: item.contractAddress,
@@ -91,8 +90,6 @@ if (getUserTransactionData) {
         };
       });
 
-      // Accumulate CSV rows for all blocks
-      allCsvRows.push(...resultTmp);
       const file = `${folderName}/data/tx.${curBlockNumber}.csv`;
       // Write to file when batch size is reached or at the end of loop
       fs.mkdirSync(`${folderName}/data`, { recursive: true });
@@ -115,7 +112,6 @@ if (getUserTransactionData) {
 
 if (getUserTVLData) {
   getUserTVLData(Number(curBlockNumber)).then((result) => {
-    const allCsvRows = [];
     const keyMap = new Map();
     try {
       // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
@@ -142,7 +138,7 @@ if (getUserTVLData) {
         }
       }
 
-      const resultTmp = result.map((item) => {
+      const allCsvRows = result.map((item) => {
         return {
           userAddress: item.userAddress,
           poolAddress: item.poolAddress,
@@ -154,7 +150,6 @@ if (getUserTVLData) {
       });
 
       // Accumulate CSV rows for all blocks
-      allCsvRows.push(...resultTmp);
       const file = `${folderName}/data/tvl.${curBlockNumber}.csv`;
       fs.mkdirSync(`${folderName}/data`, { recursive: true });
 

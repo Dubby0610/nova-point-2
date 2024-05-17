@@ -1,19 +1,19 @@
-import { UserBalance, Response, UserSupplied, Pool } from './types';
+import { fetchGraphQLData } from './fetch';
+import { UserBalance, UserSupplied, Pool } from './types';
 import { JsonRpcProvider } from 'ethers'
-
-
 
 export const getUserPositionsAtBlock = async (
   blockNumber: number,
 ): Promise<UserBalance[]> => {
+  const pageSize = 1000;
   let result: UserSupplied[] = [];
-
   let skip = 0;
   let fetchNext = true;
-  let poolList: Pool[] = []
+  let poolList: Pool[] = [];
+
   while (fetchNext) {
     const query = `query MyQuery {
-      userPositions(where: {validate: true, id_not: "0x000000000000000000000000000000000000dead"}, block: {number: ${blockNumber}}, skip: ${skip}) {
+      userPositions(where: {validate: true, id_not: "0x000000000000000000000000000000000000dead"}, block: {number: ${blockNumber}}, skip: ${skip}, first: ${pageSize}) {
         id
         balance
         positions {
@@ -31,22 +31,16 @@ export const getUserPositionsAtBlock = async (
       }
     }`;
 
-    const response = await fetch('https://graph.zklink.io/subgraphs/name/layerbank-points', {
-      method: 'POST',
-      body: JSON.stringify({ query }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const { data } = await response.json();
+    const data = await fetchGraphQLData(query);
     if (!data) {
-      console.log("No Data Yet!")
+      console.log("No Data Yet!");
       break;
     }
 
-    const { userPositions, pools } = data as Response
-    poolList = pools
+    const { userPositions, pools } = data
+    poolList = pools;
     const res = userPositions.map(data => {
-      const userAddress = data.id
+      const userAddress = data.id;
 
       const balance = data.positions.map((item) => {
         return {
@@ -56,26 +50,26 @@ export const getUserPositionsAtBlock = async (
           blockNumber: blockNumber,
           supplied: BigInt(item.supplied),
           pool: item.pool,
-        }
-      })
+        };
+      });
 
-      return balance
-    })
+      return balance;
+    });
 
-    result.push(...res.flat())
+    result.push(...res.flat());
 
-    if (userPositions.length < 100) {
+    if (userPositions.length < pageSize) {
       fetchNext = false;
     } else {
-      console.log(`GET DATA FROM ${skip}`)
-      skip += 100
+      console.log(`GET DATA FROM ${skip}`);
+      skip += pageSize;
     }
   }
 
-  const timestamp = await getTimestampAtBlock(blockNumber)
+  const timestamp = await getTimestampAtBlock(blockNumber);
 
   const userBalanceList = result.map(position => {
-    const pool = poolList.find(i => i.id === position.pool)
+    const pool = poolList.find(i => i.id === position.pool);
     if (!pool) {
       return {
         userAddress: position.userAddress,
@@ -83,21 +77,20 @@ export const getUserPositionsAtBlock = async (
         tokenAddress: position.tokenAddress,
         blockNumber: position.blockNumber,
         balance: BigInt(0),
-        timestamp: timestamp
-      }
+        timestamp: timestamp,
+      };
     }
 
-    const { balance, totalSupplied } = pool
+    const { balance, totalSupplied } = pool;
     return {
       userAddress: position.userAddress,
       poolAddress: position.poolAddress,
       tokenAddress: position.tokenAddress,
       blockNumber: position.blockNumber,
       balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied),
-      timestamp: timestamp
-    }
-
-  })
+      timestamp: timestamp,
+    };
+  });
 
   return userBalanceList;
 };
