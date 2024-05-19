@@ -37,4 +37,4 @@ $ npm run migration:run
 
 ## License
 
-[MIT licensed](LICENSE).
+[MIT licensed](./LICENSE).
