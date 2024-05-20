@@ -49,9 +49,9 @@ export class AdapterService extends Worker {
     // return this.runProcess();
   }
 
-  public async loadLastBlockNumber(lastBlockNumber?: number, curBlockNumber?: number) {
+  public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
     if (lastBlockNumber && curBlockNumber) {
-      await this.runCommandsInAllDirectories(lastBlockNumber, curBlockNumber);
+      await this.runCommandsInAllDirectories(curBlockNumber, lastBlockNumber);
     } else {
       const lastBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
@@ -65,7 +65,7 @@ export class AdapterService extends Worker {
       }
       const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
       await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
-      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, adapterTxSyncBlockNumber.toString())
+      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, lastBlock.number.toString())
     }
 
   }
