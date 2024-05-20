@@ -47,31 +47,31 @@ $$
 
 **How to get user’s token balance for TVL point calculation**
 
-For TVL point calculation, we take into consideration the balance of tokens locked in the contracts in every 8 hour snapshot. 
-In most cases, for each token, the balance of tokens is calculated by multiplying the share percentage of the pool by the pool’s token balance. 
+For TVL point calculation, we take into consideration the balance of tokens locked in the contracts in every 8 hour snapshot.
+In most cases, for each token, the balance of tokens is calculated by multiplying the share percentage of the pool by the pool’s token balance.
 
 `User’s Token Balance = User’s LP share percentage * Pool balance`
 
-This means that the subgraph should listen for events where the user's percentage share in the contract changes based on the actions such as Transfer, Mint, Stake, Deposit, etc. And the pool’s balance might change due to the user's trading or borrowing activities. Pool balance here is equivalent to the contract TVL. 
+This means that the subgraph should listen for events where the user's percentage share in the contract changes based on the actions such as Transfer, Mint, Stake, Deposit, etc. And the pool’s balance might change due to the user's trading or borrowing activities. Pool balance here is equivalent to the contract TVL.
 
 **Illustrated examples of balance calculation on Nova**
 
 **Case 1: for lending protocols**
 
 Imagine that A deposits 10 ETH to the liquidity pool (LP). Then B comes in and borrows 2 ETH out of the 10 ETH in the LP. Due to the decrease in the contract’s balance, A will only receive points for the 8 ETH left in the pool.
-For most lending protocols, as the liquidity pool is mixed, we assume liquidity providers are providing liquidity on a pro-rata basis. For example, if user A provides 10 ETH to an ETH liquidity pool, and gets back 10 ETH.LP tokens. Now if there’re 100 ETH.LP tokens in total supply, then user A has 10/100 = 10 % of the liquidity pool. And if 20 ETH were borrowed, and there are 80 ETH left in the pool, then user A’s balance will be `10%* 80= 8 ETH` 
+For most lending protocols, as the liquidity pool is mixed, we assume liquidity providers are providing liquidity on a pro-rata basis. For example, if user A provides 10 ETH to an ETH liquidity pool, and gets back 10 ETH.LP tokens. Now if there’re 100 ETH.LP tokens in total supply, then user A has 10/100 = 10 % of the liquidity pool. And if 20 ETH were borrowed, and there are 80 ETH left in the pool, then user A’s balance will be `10%* 80= 8 ETH`
 
 `User A’s token balance: User A’s LP share percentage * Pool balance = 10% * 80 = 8ETH`
 
 **Case 2: For uniswap V2 liquidity pool**
 
-Imagine that user A deposits 1 ETH and 3000 USDC in a swap liquidity pool, and gets back 1 ETH-USDC LP token, which presents to the tokens deposited. Assuming the total supply of ETH-USDC LP token is 100, and there are 100 ETH and 300,000 USDC in the pool, then user A has 1/100= 1% of the liquidity pool. Afterwards, as the ETH price fluctuates, the pool now has 60 ETH and 500,000 USDC (due to x*y=k mechanism), user A now has 1%*60=0.6 ETH and 1%* 500,000=5000 USDC.
+Imagine that user A deposits 1 ETH and 3000 USDC in a swap liquidity pool, and gets back 1 ETH-USDC LP token, which presents to the tokens deposited. Assuming the total supply of ETH-USDC LP token is 100, and there are 100 ETH and 300,000 USDC in the pool, then user A has 1/100= 1% of the liquidity pool. Afterwards, as the ETH price fluctuates, the pool now has 60 ETH and 500,000 USDC (due to x*y=k mechanism), user A now has 1%*60=0.6 ETH and 1%\* 500,000=5000 USDC.
 
 **Case 3: For uniswap V3 liquidity pool**
 
 As uniswap V3, as users can provide customized liquidity and get their unique LP NFT, we will calculate points for the balance owned by the user’s total NFTs.
 
-NOTE: Team can to specify the conditions for the percentage of user's LP share such as users' paticipation in a specific contract interaction. However, the formula to calculate user's token balance is always the user's percentage of LP share multiplies by the pool balance of the underlying token in the contract. ie `User's LP share percentage * Pool balance` 
+NOTE: Team can to specify the conditions for the percentage of user's LP share such as users' paticipation in a specific contract interaction. However, the formula to calculate user's token balance is always the user's percentage of LP share multiplies by the pool balance of the underlying token in the contract. ie `User's LP share percentage * Pool balance`
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
    - For Dex/Perps/Lending protocol, there is no limit to the tx volume.
@@ -185,4 +185,4 @@ Important Note: If we are unable to verify the authenticity of CSV data, then th
 
 ## Contribution
 
-Fork a copy of your own repository, complete the adapter, and finally submit your PR to the **main** branch
+Fork a copy of your repository, complete the adapter, and finally submit your PR to the **main** branch. When submitting your PR, please select the **Adapters Template** and fill in all the required information in the template.
