@@ -16,13 +16,13 @@ Please provide the following information based on the type of points calculation
 
 1. Dapp Description:
 
-Eddy Finance is an OmniChain DEX with a focus on increasing capital efficiency on zkLink Nova. By seamlessly creating and aggregating AMM, StableSwap, and CLAMM pools, Eddy Finance ensures users access the best prices across a diverse array of assets, all while mitigating slippage.
-Moreover, Eddy Finance enables utilised Omnichain Smart Contracts to connect chains natively. This enables users to securely transfer native assets across multiple chains—including Bitcoin, EVM, and Cosmos chains—without the need for cumbersome wrapping, resulting in heightened security, minimal gas fees, and unparalleled throughput.
+    Eddy Finance is an OmniChain DEX with a focus on increasing capital efficiency on zkLink Nova. By seamlessly creating and aggregating AMM, StableSwap, and CLAMM pools, Eddy Finance ensures users access the best prices across a diverse array of assets, all while mitigating slippage.
+    Moreover, Eddy Finance enables utilised Omnichain Smart Contracts to connect chains natively. This enables users to securely transfer native assets across multiple chains—including Bitcoin, EVM, and Cosmos chains—without the need for cumbersome wrapping, resulting in heightened security, minimal gas fees, and unparalleled throughput.
 
 2. User Points Calculation Criteria:
 
-Users performing swaps on the below contract for any token(all pairs) on Eddy finance dApp (https://app.eddy.finance/swap) on zklink network would be eligible for zklink points
-*0x35f998694e553b772e0c22dc9ceb9be0a1bf8528*
+    Users performing swaps on the below contract for any token(all pairs) on Eddy finance dApp (https://app.eddy.finance/swap) on zklink network would be eligible for zklink points
+    `0x35f998694e553b772e0c22dc9ceb9be0a1bf8528`
 
 
 3. Solidity Contract Signature Involved in Transactions:
@@ -42,7 +42,7 @@ Users performing swaps on the below contract for any token(all pairs) on Eddy fi
 
 4. Conditions for User Points Calculation:
 
-Users triggering EddySwap event in the contract *0x35f998694e553b772e0c22dc9ceb9be0a1bf8528* would be eligible for points
+    Users triggering EddySwap event in the contract *0x35f998694e553b772e0c22dc9ceb9be0a1bf8528* would be eligible for points
 
 5. Quantity Calculation Rule:
 
