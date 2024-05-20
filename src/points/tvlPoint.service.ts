@@ -204,9 +204,6 @@ export class TvlPointService extends Worker {
       const balance = balanceList[index];
       const address = hexTransformer.from(balance.address);
       const pairAddress = hexTransformer.from(balance.pairAddress);
-      if (!addressMap.has(address)) {
-        addressMap.set(address, true)
-      }
 
       const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
@@ -221,6 +218,10 @@ export class TvlPointService extends Worker {
       const addressTvl = await this.calculateAddressTvl(value, tokenPriceMap, blockTs);
       if (addressTvl.holdBasePoint.isZero()) {
         continue;
+      }
+      const [address] = key.split('-')
+      if (!addressMap.has(address)) {
+        addressMap.set(address, true)
       }
       addressTvlMap.set(key, addressTvl);
     }
