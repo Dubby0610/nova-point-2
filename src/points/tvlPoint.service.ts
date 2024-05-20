@@ -197,7 +197,7 @@ export class TvlPointService extends Worker {
   ): Promise<Map<string, BlockAddressTvl>> {
     // If the score for this block height already exists,
     // it should not be calculated again
-    const pointAddresses = await this.blockAddressPointOfLpRepository.getBlockAddressPointOfLpByBlock(blockNumber) //
+    const alreadyCalculatedPointsKey = await this.blockAddressPointOfLpRepository.getBlockAddressPointKeyByBlock(blockNumber)
 
     const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
     const blockNumbers = [blockNumber];
@@ -212,7 +212,7 @@ export class TvlPointService extends Worker {
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
-        if (!pointAddresses.includes(address)) {
+        if (!alreadyCalculatedPointsKey.includes(key)) {
           balanceMap.set(key, [balance]);
         }
       }
