@@ -14,11 +14,46 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 
 const SUBGRAPH_ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string;
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const fetchGraphQLData = async (query: string): Promise<Response> => {
+  let response;
+  let data;
+  let retry = true;
+
+  while (retry) {
+    try {
+      response = await fetch(SUBGRAPH_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      data = await response.json();
+      if (data.errors) {
+        throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
+      }
+
+      retry = false;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      console.log('Retrying in 5 seconds...');
+      await delay(5000);
+    }
+  }
+
+  return data;
+};
+
 async function querySubgraphUpToBlock(blockNumber: number): Promise<StakeData[]> {
   let allStakes: StakeData[] = [];
   let skip = 0;
   let fetchMore = true;
-  const first = 100;
+  const first = 1000;
 
   while (fetchMore) {
     const query = `
@@ -32,13 +67,8 @@ async function querySubgraphUpToBlock(blockNumber: number): Promise<StakeData[]>
               timestamp
           }
       }`;
-    const response = await fetch(SUBGRAPH_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query })
-    });
 
-    const data: Response = await response.json();
+    const data = await fetchGraphQLData(query);
     const stakes = data.data.userStakes || [];
 
     allStakes = allStakes.concat(stakes);
