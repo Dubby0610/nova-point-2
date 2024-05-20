@@ -195,6 +195,10 @@ export class TvlPointService extends Worker {
     blockTs: number,
     tokenPriceMap: Map<string, BigNumber>
   ): Promise<Map<string, BlockAddressTvl>> {
+    // If the score for this block height already exists,
+    // it should not be calculated again
+    const pointAddresses = await this.blockAddressPointOfLpRepository.getBlockAddressPointOfLpByBlock(blockNumber) //
+
     const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
     const blockNumbers = [blockNumber];
     const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
@@ -208,7 +212,9 @@ export class TvlPointService extends Worker {
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
-        balanceMap.set(key, [balance]);
+        if (!pointAddresses.includes(address)) {
+          balanceMap.set(key, [balance]);
+        }
       }
     }
     for (const [key, value] of balanceMap) {
