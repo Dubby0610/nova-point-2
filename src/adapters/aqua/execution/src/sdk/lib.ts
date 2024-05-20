@@ -1,19 +1,18 @@
-import { UserBalance, Response, UserSupplied, AquaCToken } from './types';
-import { JsonRpcProvider } from 'ethers'
+import { fetchGraphQLData } from "./fetch";
+import { UserBalance, UserSupplied, AquaCToken } from "./types";
+import { JsonRpcProvider } from "ethers";
 
+export const getUserPositionsAtBlock = async (blockNumber: number): Promise<UserBalance[]> => {
+  const pageSize = 1000
 
-
-export const getUserPositionsAtBlock = async (
-  blockNumber: number,
-): Promise<UserBalance[]> => {
   let result: UserSupplied[] = [];
-
   let skip = 0;
   let fetchNext = true;
-  let pools: AquaCToken[] = []
+  let pools: AquaCToken[] = [];
+
   while (fetchNext) {
     const query = `query MyQuery {
-      userPositions(block: {number: ${blockNumber}}, skip: ${skip}) {
+      userPositions(block: {number: ${blockNumber}}, skip: ${skip}, first: ${pageSize}) {
         id
         positions {
           decimal
@@ -33,22 +32,16 @@ export const getUserPositionsAtBlock = async (
       }
     }`;
 
-    const response = await fetch('https://graph.zklink.io/subgraphs/name/aqua-points', {
-      method: 'POST',
-      body: JSON.stringify({ query }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const { data } = await response.json();
+    const data = await fetchGraphQLData(query);
     if (!data) {
-      console.log("No Data Yet!")
+      console.log("No Data Yet!");
       break;
     }
 
-    const { userPositions, aquaCTokens } = data as Response
-    pools = aquaCTokens
-    const res = userPositions.map(data => {
-      const userAddress = data.id
+    const { userPositions, aquaCTokens } = data;
+    pools = aquaCTokens;
+    const res = userPositions.map((data) => {
+      const userAddress = data.id;
 
       const balance = data.positions.map((item) => {
         return {
@@ -57,25 +50,27 @@ export const getUserPositionsAtBlock = async (
           tokenAddress: item.token,
           blockNumber: blockNumber,
           supplied: BigInt(item.supplied),
-          pool: item.pool
-        }
-      })
+          pool: item.pool,
+        };
+      });
 
-      return balance
-    })
+      return balance;
+    });
 
-    result.push(...res.flat())
+    result.push(...res.flat());
 
-    if (userPositions.length < 100) {
+    if (userPositions.length < pageSize) {
       fetchNext = false;
     } else {
-      console.log(`GET DATA FROM ${skip}`)
-      skip += 100
+      console.log(`GET DATA FROM ${skip}`);
+      skip += pageSize;
     }
   }
-  const timestamp = await getTimestampAtBlock(blockNumber)
-  const userBalanceList = result.map(position => {
-    const pool = pools.find(i => i.id === position.pool)
+
+  const timestamp = await getTimestampAtBlock(blockNumber);
+
+  const userBalanceList = result.map((position) => {
+    const pool = pools.find((i) => i.id === position.pool);
     if (!pool) {
       return {
         userAddress: position.userAddress,
@@ -83,27 +78,27 @@ export const getUserPositionsAtBlock = async (
         poolAddress: position.poolAddress,
         blockNumber: position.blockNumber,
         balance: BigInt(0),
-        timestamp
-      }
+        timestamp,
+      };
     }
 
-    const { balance, totalSupplied } = pool
+    const { balance, totalSupplied } = pool;
     return {
       userAddress: position.userAddress,
       tokenAddress: position.tokenAddress,
       poolAddress: position.poolAddress,
       blockNumber: position.blockNumber,
-      balance: BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : position.supplied * BigInt(balance) / BigInt(totalSupplied),
-      timestamp
-    }
-
-  })
+      balance:
+        BigInt(totalSupplied) === BigInt(0) ? BigInt(0) : (position.supplied * BigInt(balance)) / BigInt(totalSupplied),
+      timestamp,
+    };
+  });
 
   return userBalanceList;
 };
 
 export const getTimestampAtBlock = async (blockNumber: number) => {
-  const provider = new JsonRpcProvider('https://rpc.zklink.io')
-  const block = await provider.getBlock(blockNumber)
+  const provider = new JsonRpcProvider("https://rpc.zklink.io");
+  const block = await provider.getBlock(blockNumber);
   return Number(block?.timestamp);
 };
