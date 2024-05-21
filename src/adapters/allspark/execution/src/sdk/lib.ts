@@ -15,7 +15,6 @@ export async function getUserTXAtBlock(startBlock: number, endBlock: number) {
       contractAddress: item.contractAddress,
       tokenAddress: item.tokenAddress,
       decimals: item.decimals,
-      price: item.price,
       quantity: BigInt(item.quantity),
       txHash: item.txHash,
       nonce: item.nonce,
