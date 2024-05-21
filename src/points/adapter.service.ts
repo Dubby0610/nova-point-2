@@ -49,6 +49,11 @@ export class AdapterService extends Worker {
     // return this.runProcess();
   }
 
+  public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
+    await this.executeCommandInDirectory(name, curBlockNumber, lastBlockNumber);
+    this.logger.log(`compensatePointsData at block ${curBlockNumber}`)
+  }
+
   public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
     if (lastBlockNumber && curBlockNumber) {
       await this.runCommandsInAllDirectories(curBlockNumber, lastBlockNumber);
@@ -87,12 +92,6 @@ export class AdapterService extends Worker {
   }
 
   private async executeCommandInDirectory(dir: string, curBlockNumber: number, lastBlockNumber: number): Promise<void> {
-    // Check if the provided folder contains index.ts file
-    const indexPath = join(this.adaptersPath, dir, "execution/dist/index.js");
-    if (!existsSync(indexPath)) {
-      this.logger.log(`Folder '${dir}' does not contain index.ts file.`);
-    }
-
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
     const command = `node runScript.js ${dir} ${curBlockNumber} ${lastBlockNumber}`;
