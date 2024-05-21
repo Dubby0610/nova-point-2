@@ -39,7 +39,7 @@ async function getUserTransactionData (startBlock, endBlock) {
       price: price,
       quantity: Number(item.sizeDelta)/1e30,
       txHash: item.txhash,
-      nonce: item.blockNumber,
+      nonce: item.blockNumber * Math.random(),  // randomise it so it's unique
       symbol: symbol
     }
   })
