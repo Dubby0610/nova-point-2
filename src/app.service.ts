@@ -59,8 +59,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   private async compensateLayerBankPoints() {
     const startTime = Date.now()
 
-    await this.adapterService.compensatePointsData('layerbank', 400372, 0); // 400372 2024-04-10 02:00:00
-    await this.tvlPointService.handleHoldPoint(400372, new Date(1712685600 * 1000).toISOString());
+
     await this.adapterService.compensatePointsData('layerbank', 414617, 0); // 414617 2024-04-10 10:00:00
     await this.tvlPointService.handleHoldPoint(414617, new Date(1712714400 * 1000).toISOString());
     await this.adapterService.compensatePointsData('layerbank', 428830, 0); // 428830 2024-04-10 18:00:00
@@ -166,6 +165,9 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
     await this.adapterService.compensatePointsData('layerbank', 880364, 0); // 880364 2024-04-25 02:00:00
     await this.tvlPointService.handleHoldPoint(880364, new Date(1713981600 * 1000).toISOString()); // 880364 2024-04-25 02:00:00
+
+    await this.adapterService.compensatePointsData('layerbank', 887780, 0); // 880364 2024-04-25 10:00:00
+    await this.tvlPointService.handleHoldPoint(887780, new Date(1714010400 * 1000).toISOString()); // 880364 2024-04-25 10:00:00
 
     this.logger.log(`Points compensation completed, spending total time: ${Date.now() - startTime}`)
   }
