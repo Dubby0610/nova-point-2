@@ -83,15 +83,10 @@ export class TvlPointService extends Worker {
     this.logger.log(`Early bird multiplier: ${earlyBirdMultiplier}`);
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
     const blockTs = currentStatisticalBlock.timestamp.getTime();
-    const addressTvlMap = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
+    const [addressMap, addressTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
     this.logger.log(`Address tvl map size: ${addressTvlMap.size}`);
-    let addresses: Array<string> = [];
-    for (const key of addressTvlMap.keys()) {
-      const [address, _] = key.split("-");
-      if (!addresses.includes(address)) {
-        addresses.push(address);
-      }
-    }
+    let addresses = [...addressMap.keys()]
+
     this.logger.log(`Address list size: ${addresses.length}`);
     // get all first deposit time
     const addressFirstDepositList = await this.addressFirstDepositRepository.getAllAddressesFirstDeposits(addresses);
@@ -194,8 +189,13 @@ export class TvlPointService extends Worker {
     blockNumber: number,
     blockTs: number,
     tokenPriceMap: Map<string, BigNumber>
-  ): Promise<Map<string, BlockAddressTvl>> {
+  ): Promise<[Map<string, boolean>, Map<string, BlockAddressTvl>]> {
+    // If the score for this block height already exists,
+    // it should not be calculated again
+    const alreadyCalculatedPointsKey = await this.blockAddressPointOfLpRepository.getBlockAddressPointKeyByBlock(blockNumber)
+
     const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
+    const addressMap: Map<string, boolean> = new Map()
     const blockNumbers = [blockNumber];
     const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
     this.logger.log(`The all address list length: ${balanceList.length}`);
@@ -204,11 +204,14 @@ export class TvlPointService extends Worker {
       const balance = balanceList[index];
       const address = hexTransformer.from(balance.address);
       const pairAddress = hexTransformer.from(balance.pairAddress);
+
       const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
-        balanceMap.set(key, [balance]);
+        if (!alreadyCalculatedPointsKey.includes(key)) {
+          balanceMap.set(key, [balance]);
+        }
       }
     }
     for (const [key, value] of balanceMap) {
@@ -216,9 +219,13 @@ export class TvlPointService extends Worker {
       if (addressTvl.holdBasePoint.isZero()) {
         continue;
       }
+      const [address] = key.split('-')
+      if (!addressMap.has(address)) {
+        addressMap.set(address, true)
+      }
       addressTvlMap.set(key, addressTvl);
     }
-    return addressTvlMap;
+    return [addressMap, addressTvlMap];
   }
 
   // find the latest multiplier before the block timestamp

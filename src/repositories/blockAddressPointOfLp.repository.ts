@@ -10,6 +10,20 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
     super(BlockAddressPointOfLp, unitOfWork);
   }
 
+  public async getBlockAddressPointKeyByBlock(
+    block: number
+  ): Promise<string[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.transaction(async (entityManager) => {
+      const blockAddressPoints = await entityManager.getRepository(BlockAddressPointOfLp).find({
+        where: { blockNumber: block },
+        select: ["address", "pairAddress"]
+      })
+      return blockAddressPoints.map(point => `${point.address}-${point.pairAddress}`);
+    });
+    return result;
+  }
+
   public async upsertUserPoints(
     receiverBlocBlockAddressPoint: QueryDeepPartialEntity<BlockAddressPointOfLp>,
     receiverAddressPoint: QueryDeepPartialEntity<PointsOfLp>

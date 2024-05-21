@@ -25,10 +25,11 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
   public async onModuleInit() {
     // example:
-    // await this.adapterService.loadLastBlockNumber(1376336, 1476336);
+    // await this.adapterService.loadLastBlockNumber(1476336, 1376336);
     // second params is utc+8
     // await this.holdLpPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
-
+    await this.adapterService.loadLastBlockNumber(1685534, 1629154)
+    await this.tvlPointService.handleHoldPoint(1685534, new Date(1715851196 * 1000).toISOString());
     this.startWorkers();
   }
 

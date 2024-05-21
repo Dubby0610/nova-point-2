@@ -5,7 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import { promises as promisesFs, appendFileSync, existsSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
-import { BalanceOfLpRepository, BlockRepository, CacheRepository, ProjectRepository, TxDataOfPointsRepository } from "src/repositories";
+import { BalanceOfLpRepository, BlockRepository, CacheRepository, ProjectRepository, TxDataOfPointsRepository } from "../repositories";
 import * as csv from "csv-parser";
 import * as fs from "fs";
 import { Cron } from "@nestjs/schedule";
@@ -49,22 +49,23 @@ export class AdapterService extends Worker {
     // return this.runProcess();
   }
 
-  public async loadLastBlockNumber(lastBlockNumber?: number, curBlockNumber?: number) {
-    const lastBlock = await this.blockRepository.getLastBlock({
-      select: { number: true, timestamp: true },
-    });
-    const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
-    if (lastBalanceOfLp && lastBlock.number <= lastBalanceOfLp.blockNumber) {
-      this.logger.log(
-        `Had adapted balance, Last block number: ${lastBlock.number}, Last balance of lp block number: ${lastBalanceOfLp.blockNumber}`
-      );
-      return;
-    }
+  public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
     if (lastBlockNumber && curBlockNumber) {
-      await this.runCommandsInAllDirectories(lastBlockNumber, curBlockNumber);
+      await this.runCommandsInAllDirectories(curBlockNumber, lastBlockNumber);
     } else {
+      const lastBlock = await this.blockRepository.getLastBlock({
+        select: { number: true, timestamp: true },
+      });
+      const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
+      if (lastBalanceOfLp && lastBlock.number <= lastBalanceOfLp.blockNumber) {
+        this.logger.log(
+          `Had adapted balance, Last block number: ${lastBlock.number}, Last balance of lp block number: ${lastBalanceOfLp.blockNumber}`
+        );
+        return;
+      }
       const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
       await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
+      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, lastBlock.number.toString())
     }
 
   }
@@ -79,7 +80,6 @@ export class AdapterService extends Worker {
       for (const dir of dirs) {
         await this.executeCommandInDirectory(dir, curBlockNumber, lastBlockNumber);
       }
-      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, curBlockNumber.toString())
       this.logger.log(`All commands executed, project count : ${dirs.length}.`);
     } catch (error) {
       this.logger.error("Failed to read directories:", error.stack);

@@ -488,4 +488,15 @@ export default [
       },
     ],
   },
+
+  // interport
+  {
+    address: "0xEF902012C4a227461BdefF8Fa26b596eA125C711", 
+    multipliers: [
+      {
+        multiplier: 2,
+        timestamp: 0,
+      },
+    ],
+  },
 ];

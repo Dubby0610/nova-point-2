@@ -1,0 +1,18 @@
+{
+  "name": "zk_l3_graph",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "clean": "graph clean",
+    "test": "graph test"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.71.1",
+    "@graphprotocol/graph-ts": "0.35.1",
+    "prettier": "^3.2.5"
+  },
+  "devDependencies": {
+    "matchstick-as": "0.6.0"
+  }
+}

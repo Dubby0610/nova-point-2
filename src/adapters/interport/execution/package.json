@@ -1,0 +1,27 @@
+{
+  "name": "interport",
+  "version": "1.0.0",
+  "description": "Interport Finance - DeFi platform",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node dist/index.js",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "clear": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.12.1",
+    "fast-csv": "^5.0.1"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.6",
+    "@types/node": "^20.12.10",
+    "typescript": "^5.4.5"
+  }
+}
