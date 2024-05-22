@@ -2,6 +2,9 @@ import { Injectable, Logger } from "@nestjs/common";
 import { TokenRepository } from "../repositories";
 import { Token as TokenEntity } from "../entities";
 import tokens from "../tokens";
+import { ConfigService } from "@nestjs/config";
+import { tokenBooster as tokenBoosterConfig } from "src/config/tokenBooster";
+import { utils } from "ethers";
 
 export interface TokenL1Address {
   chain: string;
@@ -29,6 +32,7 @@ export class TokenService {
 
   constructor(
     private readonly tokenRepository: TokenRepository,
+    private readonly configService: ConfigService
   ) {
     this.logger = new Logger(TokenService.name);
     this.supportTokens = [];
@@ -63,6 +67,13 @@ export class TokenService {
 
   public getSupportToken(tokenAddress: string): Token | undefined {
     return this.supportTokenL2AddressMap.get(tokenAddress.toLowerCase());
+  }
+
+  public getPoolTokenBooster(projectName: keyof typeof tokenBoosterConfig, tokenAddress: string): number {
+    const tokenBooster = this.configService.get<typeof tokenBoosterConfig>('tokenBooster');
+    const projectBooster = tokenBooster[projectName];
+
+    return projectBooster[utils.getAddress(tokenAddress)] ?? 0
   }
 
   public getTokenMultiplier(token: Token, blockTs: number): number {

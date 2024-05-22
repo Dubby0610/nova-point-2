@@ -95,18 +95,14 @@ export class AdapterService extends Worker {
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
     const command = `node runScript.js ${dir} ${curBlockNumber} ${lastBlockNumber}`;
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+  
     try {
       const { stdout, stderr } = await this.execCommand(command, this.adaptersPath);
-      appendFileSync(this.logFilePath, `${now}\nAdapter: ${dir}\n${stdout}\n${stderr}`);
       this.logger.log(`Execute succeed : ${command}`);
       // read output.csv file and save data to db
       await this.saveTVLDataToDb(dir, curBlockNumber);
       await this.saveTXDataToDb(dir, curBlockNumber)
     } catch (error) {
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nError executing command: ${error.stack}`);
       this.logger.error(`Error executing command in ${dir}: `, error.stack);
     }
   }
@@ -127,12 +123,9 @@ export class AdapterService extends Worker {
   private async saveTVLDataToDb(dir: string, blockNumber: number): Promise<void> {
     // read output.csv file and save data to db
     const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tvl.${blockNumber}.csv`);
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+   
     if (!existsSync(outputPath)) {
       this.logger.error(`Folder '${dir}' does not contain tvl.${blockNumber}.csv file.`);
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tvl.csv file.`);
       return;
     }
 
@@ -183,13 +176,9 @@ export class AdapterService extends Worker {
   private async saveTXDataToDb(dir: string, blockNumber: number): Promise<void> {
     // read output.csv file and save data to db
     const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tx.${blockNumber}.csv`);
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+
     if (!existsSync(outputPath)) {
       this.logger.error(`Folder '${dir}' does not contain tx.${blockNumber}.csv file.`);
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tx.csv file.`);
-      return;
     }
 
     const results = [];
