@@ -57,3 +57,13 @@ export const getTimestampAtBlock = async (blockNumber: number) => {
   const block = await provider.getBlock(blockNumber);
   return Number(block?.timestamp);
 };
+
+export const getOneSideBoosterByToken = (token: string) => {
+  const boosterMap: { [key: string]: bigint } = {
+    "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169": 25n,
+    "0xDa4AaEd3A53962c83B35697Cd138cc6df43aF71f": 25n,
+    "0x2F8A25ac62179B31D62D7F80884AE57464699059": 25n,
+    "0x1a1A3b2ff016332e866787B311fcB63928464509": 25n
+  }
+  return boosterMap[token] ?? 10n
+}

@@ -2,6 +2,7 @@ import { UserTVLData } from './sdk/types';
 import {
   getAllLidsAtBlock,
   getAmountsForLiquidity,
+  getOneSideBoosterByToken,
   getPoolState,
   getPositionDetailsAtBlock,
   getTimestampAtBlock,
@@ -20,11 +21,12 @@ const processLid = async (lid: bigint, blockNumber: number, timestamp: number) =
     sqrtPriceLowerX96,
     sqrtPriceUpperX96
   );
+
   const data0 = {
     userAddress: details.ownerAddress,
     tokenAddress: details.token0,
     poolAddress: details.poolAddress,
-    balance: amount1 !== 0n ? amount0 : amount0 / 2n,
+    balance: amount1 !== 0n ? amount0 : amount0 * getOneSideBoosterByToken(details.token0) / 100n,
     blockNumber: blockNumber,
     timestamp: timestamp
   }
@@ -33,7 +35,7 @@ const processLid = async (lid: bigint, blockNumber: number, timestamp: number) =
     userAddress: details.ownerAddress,
     tokenAddress: details.token1,
     poolAddress: details.poolAddress,
-    balance: amount0 !== 0n ? amount1 : amount1 / 2n,
+    balance: amount0 !== 0n ? amount1 : amount1 * getOneSideBoosterByToken(details.token0) / 100n,
     blockNumber: blockNumber,
     timestamp: timestamp
   }
