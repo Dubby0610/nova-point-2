@@ -69,10 +69,14 @@ export class TokenService {
   }
 
   public getPoolTokenBooster(projectName: keyof typeof projectTokenBoosterConfig, tokenAddress: string): number {
-    const projectTokenBooster = this.configService.get<typeof projectTokenBoosterConfig>('tokenBooster');
+    const projectTokenBooster = this.configService.get<typeof projectTokenBoosterConfig>('projectTokenBooster');
     const tokenBooster = projectTokenBooster[projectName];
+    if (!tokenBooster) {
+      this.logger.error(`missing project config ${projectName.toString()}`)
+    }
 
-    return tokenBooster[tokenAddress.toLowerCase()] ?? 0
+    return tokenBooster?.[tokenAddress.toLowerCase()] ?? 0
+
   }
 
   public getTokenMultiplier(token: Token, blockTs: number): number {
