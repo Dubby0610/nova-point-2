@@ -3,8 +3,7 @@ import { TokenRepository } from "../repositories";
 import { Token as TokenEntity } from "../entities";
 import tokens from "../tokens";
 import { ConfigService } from "@nestjs/config";
-import { tokenBooster as tokenBoosterConfig } from "src/config/tokenBooster";
-import { utils } from "ethers";
+import { projectTokenBooster as projectTokenBoosterConfig } from "src/config/projectTokenBooster";
 
 export interface TokenL1Address {
   chain: string;
@@ -69,11 +68,11 @@ export class TokenService {
     return this.supportTokenL2AddressMap.get(tokenAddress.toLowerCase());
   }
 
-  public getPoolTokenBooster(projectName: keyof typeof tokenBoosterConfig, tokenAddress: string): number {
-    const tokenBooster = this.configService.get<typeof tokenBoosterConfig>('tokenBooster');
-    const projectBooster = tokenBooster[projectName];
+  public getPoolTokenBooster(projectName: keyof typeof projectTokenBoosterConfig, tokenAddress: string): number {
+    const projectTokenBooster = this.configService.get<typeof projectTokenBoosterConfig>('tokenBooster');
+    const tokenBooster = projectTokenBooster[projectName];
 
-    return projectBooster[utils.getAddress(tokenAddress)] ?? 0
+    return tokenBooster[tokenAddress.toLowerCase()] ?? 0
   }
 
   public getTokenMultiplier(token: Token, blockTs: number): number {

@@ -1,4 +1,4 @@
-import { tokenBooster } from "./tokenBooster";
+import { projectTokenBooster } from "./projectTokenBooster";
 
 export type NetworkKey = string;
 export default () => {
@@ -23,7 +23,7 @@ export default () => {
         port: parseInt(PORT, 10) || 3001,
         adapterInterval: parseInt(ADAPTER_INTERVAL, 10) || 3600,
         startBlock: parseInt(START_BLOCK, 10) || 600000,
-        tokenBooster: tokenBooster,
+        projectTokenBooster: projectTokenBooster,
         tokens: {
             enableTokenOffChainDataSaver: ENABLE_TOKEN_OFFCHAIN_DATA_SAVER === "true",
             updateTokenOffChainDataInterval: parseInt(UPDATE_TOKEN_OFFCHAIN_DATA_INTERVAL, 10) || 86_400_000,

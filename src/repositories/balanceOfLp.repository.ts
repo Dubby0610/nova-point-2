@@ -3,7 +3,7 @@ import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { BalanceOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
-import { tokenBooster } from "src/config/tokenBooster";
+import { projectTokenBooster } from "src/config/projectTokenBooster";
 
 export interface BalanceOfLpDto {
   address: Buffer;
@@ -13,13 +13,8 @@ export interface BalanceOfLpDto {
   blockNumber?: number;
 }
 
-export interface EnhancedBalanceOfLp {
-  address: Buffer;
-  pairAddress: Buffer;
-  tokenAddress?: Buffer;
-  balance?: string;
-  blockNumber?: number;
-  projectName: keyof typeof tokenBooster;
+export type EnhancedBalanceOfLp = BalanceOfLpDto & {
+  projectName: keyof typeof projectTokenBooster;
 }
 
 export const selectBalancesOfLpByBlockScript = `

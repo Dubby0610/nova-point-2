@@ -1,4 +1,3 @@
-import { utils } from "ethers";
 const booster = {
     layerbank: {
         "0x000000000000000000000000000000000000800A": 10, // ETH 0xb666582f612692525c4027d2a8280ac06a055a95
@@ -48,7 +47,7 @@ const normalizeTokenBooster = (config: any) => {
             for (const address in config[key]) {
                 if (config[key].hasOwnProperty(address)) {
                     try {
-                        const normalizedAddress = utils.getAddress(address);
+                        const normalizedAddress = address.toLowerCase()
                         newConfig[key][normalizedAddress] = config[key][address];
                     } catch (error) {
                         console.error(`Invalid address: ${address}`);
@@ -60,4 +59,4 @@ const normalizeTokenBooster = (config: any) => {
     return newConfig;
 };
 
-export const tokenBooster = normalizeTokenBooster(booster)
+export const projectTokenBooster = normalizeTokenBooster(booster)
