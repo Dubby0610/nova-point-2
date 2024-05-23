@@ -10,32 +10,23 @@ import {
 
 
 const processLid = async (lid: bigint, blockNumber: number, timestamp: number) => {
-  const details = await getPositionDetailsAtBlock(lid, blockNumber);
-  const sqrtPriceX96 = await getPoolState(details.poolAddress, blockNumber)
-  const sqrtPriceLowerX96 = BigInt(Math.floor(Math.sqrt(1.0001 ** Number(details.tickLower)) * (2 ** 96)));
-  const sqrtPriceUpperX96 = BigInt(Math.floor(Math.sqrt(1.0001 ** Number(details.tickUpper)) * (2 ** 96)));
-
-  const { amount0, amount1 } = getAmountsForLiquidity(
-    BigInt(details.liquidity),
-    BigInt(sqrtPriceX96),
-    sqrtPriceLowerX96,
-    sqrtPriceUpperX96
-  );
+  const position = await getPositionDetailsAtBlock(lid, blockNumber);
+  const { amount0, amount1 } = await getAmountsForLiquidity(position, blockNumber);
 
   const data0 = {
-    userAddress: details.ownerAddress,
-    tokenAddress: details.token0,
-    poolAddress: details.poolAddress,
-    balance: amount1 !== 0n ? amount0 : amount0 * getOneSideBoosterByToken(details.token0) / 100n,
+    userAddress: position.ownerAddress,
+    tokenAddress: position.token0,
+    poolAddress: position.poolAddress,
+    balance: amount1 !== 0n ? amount0 : amount0 * getOneSideBoosterByToken(position.token0) / 100n,
     blockNumber: blockNumber,
     timestamp: timestamp
   }
 
   const data1 = {
-    userAddress: details.ownerAddress,
-    tokenAddress: details.token1,
-    poolAddress: details.poolAddress,
-    balance: amount0 !== 0n ? amount1 : amount1 * getOneSideBoosterByToken(details.token0) / 100n,
+    userAddress: position.ownerAddress,
+    tokenAddress: position.token1,
+    poolAddress: position.poolAddress,
+    balance: amount0 !== 0n ? amount1 : amount1 * getOneSideBoosterByToken(position.token0) / 100n,
     blockNumber: blockNumber,
     timestamp: timestamp
   }
@@ -76,5 +67,7 @@ export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]
   const res = await getUserPositionsAtBlock(blockNumber)
   return res
 };
+
+// getUserTVLData(1978853)
 
 

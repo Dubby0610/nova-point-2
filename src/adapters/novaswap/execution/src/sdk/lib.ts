@@ -2,6 +2,7 @@ import { ethers, JsonRpcProvider } from "ethers";
 import positionManagerABI from '../abi/nonfungiblePositionManager.json'
 import poolFactoryABI from '../abi/poolFactory.json'
 import poolABI from '../abi/pool.json'
+import { PositionMath } from "../utils/positionMath";
 
 const provider = new JsonRpcProvider("https://rpc.zklink.io");
 const positionManagerAddress = '0x18bC9fcD4C14DDdd0086FF4b661D97CF42505075';
@@ -39,16 +40,18 @@ export const getPositionDetailsAtBlock = async (tokenId: bigint, blockNumber: nu
   return { tokenId, ownerAddress, liquidity, token0, token1, tickLower, tickUpper, tokensOwed0, tokensOwed1, poolAddress };
 }
 
-export const getPoolState = async (poolAddress: string, blockTag: number) => {
+export const getPoolState = async (poolAddress: string, blockTag: number): Promise<{ sqrtPriceX96: bigint, tick: bigint }> => {
   const pool = new ethers.Contract(poolAddress, poolABI, provider);
-  const { sqrtPriceX96 } = await pool.slot0({ blockTag });
-  return sqrtPriceX96;
+  const poolState = await pool.slot0({ blockTag });
+  return poolState
 }
 
-export const getAmountsForLiquidity = (liquidity: bigint, sqrtPriceX96: bigint, sqrtPriceLowerX96: bigint, sqrtPriceUpperX96: bigint) => {
-  const Q96 = 2n ** 96n
-  const amount0 = liquidity * Q96 * (sqrtPriceUpperX96 - sqrtPriceX96) / sqrtPriceX96 / sqrtPriceUpperX96;
-  const amount1 = liquidity * (sqrtPriceX96 - sqrtPriceLowerX96) / (Q96);
+export const getAmountsForLiquidity = async (position: Awaited<ReturnType<typeof getPositionDetailsAtBlock>>, blockNumber: number) => {
+  const { sqrtPriceX96, tick } = await getPoolState(position.poolAddress, blockNumber)
+  const { tickLower, tickUpper, liquidity } = position
+
+  let amount0 = PositionMath.getToken0Amount(Number(tick), Number(tickLower), Number(tickUpper), sqrtPriceX96, liquidity);
+  let amount1 = PositionMath.getToken1Amount(Number(tick), Number(tickLower), Number(tickUpper), sqrtPriceX96, liquidity);
 
   return { amount0, amount1 };
 }
