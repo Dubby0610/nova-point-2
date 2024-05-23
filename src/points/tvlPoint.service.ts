@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
-import { ConfigService } from "@nestjs/config";
 import BigNumber from "bignumber.js";
 import { Worker } from "../common/worker";
 import {
@@ -11,25 +10,19 @@ import {
   BlockAddressPointOfLpRepository,
   AddressFirstDepositRepository,
 } from "../repositories";
-import { TokenMultiplier, TokenService } from "../token/token.service";
+import { TokenService } from "../token/token.service";
 import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./depositPoint.service";
 import { hexTransformer } from "../transformers/hex.transformer";
-import { BalanceOfLpDto } from "../repositories/balanceOfLp.repository";
+import { EnhancedBalanceOfLp } from "../repositories/balanceOfLp.repository";
 import { PointsOfLp, AddressFirstDeposit } from "src/entities";
-import addressMultipliers from "../addressMultipliers";
 import { BoosterService } from "../booster/booster.service";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
-type BlockAddressTvl = {
-  tvl: BigNumber;
-  holdBasePoint: BigNumber;
-};
 
 @Injectable()
 export class TvlPointService extends Worker {
   private readonly logger: Logger;
   private readonly type: string = "tvl";
-  private readonly addressMultipliersCache: Map<string, TokenMultiplier[]>;
 
   public constructor(
     private readonly tokenService: TokenService,
@@ -40,14 +33,10 @@ export class TvlPointService extends Worker {
     private readonly balanceOfLpRepository: BalanceOfLpRepository,
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
     private readonly boosterService: BoosterService,
-    private readonly configService: ConfigService
   ) {
     super();
     this.logger = new Logger(TvlPointService.name);
-    this.addressMultipliersCache = new Map<string, TokenMultiplier[]>();
-    for (const m of addressMultipliers) {
-      this.addressMultipliersCache.set(m.address.toLowerCase(), m.multipliers);
-    }
+
   }
 
   @Cron("0 2,10,18 * * *")
@@ -83,7 +72,7 @@ export class TvlPointService extends Worker {
     this.logger.log(`Early bird multiplier: ${earlyBirdMultiplier}`);
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
     const blockTs = currentStatisticalBlock.timestamp.getTime();
-    const [addressMap, addressTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
+    const [addressMap, addressTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, tokenPriceMap);
     this.logger.log(`Address tvl map size: ${addressTvlMap.size}`);
     let addresses = [...addressMap.keys()]
 
@@ -121,16 +110,14 @@ export class TvlPointService extends Worker {
       const addressTvl = addressTvlMap.get(key);
       if (!addressTvl) continue
       // get the last multiplier before the block timestamp
-      const addressMultiplier = this.getAddressMultiplier(pairAddress, blockTs);
       const addressFirstDeposit = addressFirstDepositMap[address.toLowerCase()];
       const firstDepositTime = addressFirstDeposit?.firstDepositTime;
       const loyaltyBooster = this.boosterService.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
 
-      const newHoldPoint = addressTvl?.holdBasePoint
+      const newHoldPoint = addressTvl
         .multipliedBy(earlyBirdMultiplier)
         // use pairAddress caculate the groupBooster addressMultiplier loyaltyBooster
         .multipliedBy(groupBooster)
-        .multipliedBy(addressMultiplier)
         .multipliedBy(loyaltyBooster);
       let fromBlockAddressPoint = {};
       if (exeBlockTimestamp) {
@@ -187,19 +174,18 @@ export class TvlPointService extends Worker {
 
   async getAddressTvlMap(
     blockNumber: number,
-    blockTs: number,
     tokenPriceMap: Map<string, BigNumber>
-  ): Promise<[Map<string, boolean>, Map<string, BlockAddressTvl>]> {
+  ): Promise<[Map<string, boolean>, Map<string, BigNumber>]> {
     // If the score for this block height already exists,
     // it should not be calculated again
     const alreadyCalculatedPointsKey = await this.blockAddressPointOfLpRepository.getBlockAddressPointKeyByBlock(blockNumber)
 
-    const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
+    const addressTvlMap: Map<string, BigNumber> = new Map();
     const addressMap: Map<string, boolean> = new Map()
     const blockNumbers = [blockNumber];
     const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
     this.logger.log(`The all address list length: ${balanceList.length}`);
-    let balanceMap = new Map<string, BalanceOfLpDto[]>();
+    let balanceMap = new Map<string, EnhancedBalanceOfLp[]>();
     for (let index = 0; index < balanceList.length; index++) {
       const balance = balanceList[index];
       const address = hexTransformer.from(balance.address);
@@ -215,8 +201,8 @@ export class TvlPointService extends Worker {
       }
     }
     for (const [key, value] of balanceMap) {
-      const addressTvl = await this.calculateAddressTvl(value, tokenPriceMap, blockTs);
-      if (addressTvl.holdBasePoint.isZero()) {
+      const addressTvl = await this.calculateAddressTvl(value, tokenPriceMap);
+      if (addressTvl.isZero()) {
         continue;
       }
       const [address] = key.split('-')
@@ -228,49 +214,31 @@ export class TvlPointService extends Worker {
     return [addressMap, addressTvlMap];
   }
 
-  // find the latest multiplier before the block timestamp
-  public getAddressMultiplier(address: string, blockTs: number): BigNumber {
-    const multipliers = this.addressMultipliersCache.get(address.toLowerCase());
-    if (!multipliers || multipliers.length == 0) {
-      return new BigNumber(1);
-    }
-    multipliers.sort((a, b) => b.timestamp - a.timestamp);
-    for (const m of multipliers) {
-      if (blockTs >= m.timestamp * 1000) {
-        return new BigNumber(m.multiplier);
-      }
-    }
-    return new BigNumber(multipliers[multipliers.length - 1].multiplier);
-  }
+
 
   async calculateAddressTvl(
-    addressBalances: BalanceOfLpDto[],
+    addressBalances: EnhancedBalanceOfLp[],
     tokenPrices: Map<string, BigNumber>,
-    blockTs: number
-  ): Promise<BlockAddressTvl> {
-    let tvl: BigNumber = new BigNumber(0);
+  ): Promise<BigNumber> {
     let holdBasePoint: BigNumber = new BigNumber(0);
-    for (const addressBalance of addressBalances) {
+    for (const balanceInfo of addressBalances) {
       // filter not support token
-      const tokenAddress: string = hexTransformer.from(addressBalance.tokenAddress);
+      const tokenAddress: string = hexTransformer.from(balanceInfo.tokenAddress);
       const tokenInfo = this.tokenService.getSupportToken(tokenAddress);
       if (!tokenInfo) {
         continue;
       }
+
       const tokenPrice = getTokenPrice(tokenInfo, tokenPrices);
       const ethPrice = getETHPrice(tokenPrices);
-      const tokenAmount = new BigNumber(addressBalance.balance).dividedBy(new BigNumber(10).pow(tokenInfo.decimals));
+      const tokenAmount = new BigNumber(balanceInfo.balance).dividedBy(new BigNumber(10).pow(tokenInfo.decimals));
       const tokenTvl = tokenAmount.multipliedBy(tokenPrice).dividedBy(ethPrice);
       // base point = Token Multiplier * Token Amount * Token Price / ETH_Price
-      const tokenMultiplier = this.tokenService.getTokenMultiplier(tokenInfo, blockTs);
-      const tokenHoldBasePoint = tokenTvl.multipliedBy(new BigNumber(tokenMultiplier));
-      tvl = tvl.plus(tokenTvl);
+      const tokenMultiplier = this.tokenService.getPoolTokenBooster(balanceInfo.projectName, tokenAddress)
+      const tokenHoldBasePoint = tokenTvl.multipliedBy(tokenMultiplier)
       holdBasePoint = holdBasePoint.plus(tokenHoldBasePoint);
     }
-    return {
-      tvl,
-      holdBasePoint,
-    };
+    return holdBasePoint;
   }
 
   async getTokenPriceMap(blockNumber: number): Promise<Map<string, BigNumber>> {
