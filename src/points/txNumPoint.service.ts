@@ -13,7 +13,6 @@ import {
 } from "../repositories";
 import { PointsOfLp, AddressFirstDeposit } from "src/entities";
 import { TransactionDataOfPointsDto } from "../repositories/txDataOfPoints.repository";
-import dappConfig from "src/dapp.config";
 
 const txNumberLastBlockNumberKey = "txNumberLastBlockNumberKey";
 const transactionDataBlockNumberKey = "transactionDataBlockNumber";
@@ -22,7 +21,7 @@ const transactionDataBlockNumberKey = "transactionDataBlockNumber";
 export class TxNumPointService extends Worker {
   private readonly logger: Logger;
   private readonly type: string = "txNum";
-  private readonly projectName: string[] = [];
+  private readonly projectNames: string[] = [];
 
   public constructor(
     private readonly cacheRepository: CacheRepository,
@@ -35,7 +34,9 @@ export class TxNumPointService extends Worker {
   ) {
     super();
     this.logger = new Logger(TxNumPointService.name);
-    this.projectName = dappConfig.txNum;
+    const projectTxBooster = this.configService.get('projectTxBooster')
+    this.projectNames = Object.keys(projectTxBooster[this.type])
+
   }
 
   @Cron("0 2,10,18 * * *")
@@ -49,11 +50,11 @@ export class TxNumPointService extends Worker {
   }
 
   async handleCalculatePoint() {
-    if (this.projectName.length == 0) {
+    if (this.projectNames.length == 0) {
       this.logger.log(`None project calculate ${this.type} points.`);
       return;
     }
-    this.logger.log(`There projects calculate ${this.type} points, ${JSON.stringify(this.projectName)}`);
+    this.logger.log(`There projects calculate ${this.type} points, ${JSON.stringify(this.projectNames)}`);
     const lastBlockNumberStr = await this.cacheRepository.getValue(txNumberLastBlockNumberKey);
     const lastBlockNumber = lastBlockNumberStr ? Number(lastBlockNumberStr) : 0;
     const endBlockNumberStr = await this.cacheRepository.getValue(transactionDataBlockNumberKey);
@@ -61,7 +62,7 @@ export class TxNumPointService extends Worker {
     const volDetails: TransactionDataOfPointsDto[] = await this.transactionDataOfPointsRepository.getListByBlockNumber(
       lastBlockNumber,
       endBlockNumber,
-      this.projectName
+      this.projectNames
     );
     if (volDetails.length === 0) {
       this.logger.error(`volume details is empty, from lastBlockNumber: ${lastBlockNumber}`);
@@ -111,7 +112,7 @@ export class TxNumPointService extends Worker {
       const itemPoolAddress = item.contractAddress;
       const basePoint = new BigNumber(1);
       // group booster
-      const groupBooster = this.boosterService.getGroupBooster(itemProjectName);
+      const projectBooster = this.boosterService.getProjectBooster(itemProjectName, this.type);
       // loyalty booster
       let loyaltyBooster = new BigNumber(1);
       const addressFirstDeposit = addressFirstDepositMap[itemUserAddress];
@@ -123,7 +124,7 @@ export class TxNumPointService extends Worker {
           `get address first deposit empty, address is : ${itemUserAddress}, fistDeposit is : ${JSON.stringify(addressFirstDeposit)}`
         );
       }
-      const newHoldPoint = basePoint.multipliedBy(groupBooster).multipliedBy(loyaltyBooster).multipliedBy(groupBooster);
+      const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster).multipliedBy(0.01)
 
       const fromBlockAddressPointKey = `${itemUserAddress}-${itemPoolAddress}-${itemBlockNumber}-${this.type}`;
       if (!blockAddressPointMap.has(fromBlockAddressPointKey)) {

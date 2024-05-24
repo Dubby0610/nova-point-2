@@ -1,0 +1,23 @@
+{
+  "name": "logx-adapter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "clear": "rm -rf dist"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.8",
+    "ethers": "^6.12.1"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.6",
+    "@types/node": "^20.12.10",
+    "typescript": "^5.4.5"
+  }
+}

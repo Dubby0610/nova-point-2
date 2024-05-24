@@ -3,7 +3,7 @@ import { TokenRepository } from "../repositories";
 import { Token as TokenEntity } from "../entities";
 import tokens from "../tokens";
 import { ConfigService } from "@nestjs/config";
-import { projectTokenBooster as projectTokenBoosterConfig } from "src/config/projectTokenBooster";
+import projectTokenBooster from "src/config/projectTokenBooster";
 
 export interface TokenL1Address {
   chain: string;
@@ -68,9 +68,9 @@ export class TokenService {
     return this.supportTokenL2AddressMap.get(tokenAddress.toLowerCase());
   }
 
-  public getPoolTokenBooster(projectName: keyof typeof projectTokenBoosterConfig, tokenAddress: string): number {
-    const projectTokenBooster = this.configService.get<typeof projectTokenBoosterConfig>('projectTokenBooster');
-    const tokenBooster = projectTokenBooster[projectName];
+  public getPoolTokenBooster(projectName: keyof typeof projectTokenBooster, tokenAddress: string): number {
+    const projectTokenBoosterConfig = this.configService.get<typeof projectTokenBooster>('projectTokenBooster');
+    const tokenBooster = projectTokenBoosterConfig[projectName];
     if (!tokenBooster) {
       this.logger.error(`missing project config ${projectName.toString()}`)
     }

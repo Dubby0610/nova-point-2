@@ -81,4 +81,4 @@ const normalizeTokenBooster = (config: any) => {
     return newConfig;
 };
 
-export const projectTokenBooster = normalizeTokenBooster(booster)
+export default normalizeTokenBooster(booster)

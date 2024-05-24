@@ -32,12 +32,12 @@ export class TxDataOfPointsRepository extends BaseRepository<TransactionDataOfPo
   public async getListByBlockNumber(
     startBlockNumber: number,
     endBlockNumber: number,
-    projectName: string[]
+    projectNames: string[]
   ): Promise<TransactionDataOfPointsDto[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
       `SELECT a.*, b.name AS "projectName" FROM public."transactionDataOfPoints" AS a LEFT JOIN project AS b ON a."contractAddress"= b."pairAddress" WHERE a."blockNumber" >= $1 AND a."blockNumber" < $2 AND b.name = ANY($3);`,
-      [startBlockNumber, endBlockNumber, projectName]
+      [startBlockNumber, endBlockNumber, projectNames]
     );
     return result.map((row: any) => {
       row.userAddress = "0x" + row.userAddress.toString("hex").toLowerCase();
