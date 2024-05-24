@@ -106,13 +106,13 @@ export class TxNumPointService extends Worker {
     for (let i = 0; i < volDetails.length; i++) {
       const item = volDetails[i];
       const itemBlockNumber = item.blockNumber;
-      const itemProjectName = item.projectNames;
+      const itemProjectName = item.projectName;
       const itemTimestamp = item.timestamp.getTime();
       const itemUserAddress = item.userAddress;
       const itemPoolAddress = item.contractAddress;
       const basePoint = new BigNumber(1);
       // group booster
-      const groupBooster = this.boosterService.getGroupBooster(itemProjectName, this.type);
+      const projectBooster = this.boosterService.getProjectBooster(itemProjectName, this.type);
       // loyalty booster
       let loyaltyBooster = new BigNumber(1);
       const addressFirstDeposit = addressFirstDepositMap[itemUserAddress];
@@ -124,7 +124,7 @@ export class TxNumPointService extends Worker {
           `get address first deposit empty, address is : ${itemUserAddress}, fistDeposit is : ${JSON.stringify(addressFirstDeposit)}`
         );
       }
-      const newHoldPoint = basePoint.multipliedBy(groupBooster).multipliedBy(loyaltyBooster).multipliedBy(0.01)
+      const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster).multipliedBy(0.01)
 
       const fromBlockAddressPointKey = `${itemUserAddress}-${itemPoolAddress}-${itemBlockNumber}-${this.type}`;
       if (!blockAddressPointMap.has(fromBlockAddressPointKey)) {

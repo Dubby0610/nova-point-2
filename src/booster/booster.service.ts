@@ -19,13 +19,13 @@ export class BoosterService {
 
   /**
    *
-   * @param groupName
+   * @param projectName
    * @param timestamp  seconds
    * @returns
    */
-  public getGroupBooster(groupName: string, type: string): BigNumber {
+  public getProjectBooster(projectName: string, type: string): BigNumber {
     const projectTxBooster = this.configService.get('projectTxBooster')
-    const booster = projectTxBooster[type][groupName] ?? 1
+    const booster = projectTxBooster[type][projectName] ?? 1
     return booster
   }
 
