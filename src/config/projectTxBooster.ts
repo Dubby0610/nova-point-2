@@ -3,6 +3,6 @@ export default {
     logx: 1
   },
   txNum: {
-    allspark: 100
+    allspark: 50
   },
 };
