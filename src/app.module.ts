@@ -4,7 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { HttpModule, HttpService } from "@nestjs/axios";
 import { PrometheusModule } from "@willsoto/nestjs-prometheus";
-import config from "./config";
+import config from "./config/index";
 import { HealthModule } from "./health/health.module";
 import { AppService } from "./app.service";
 import { TokenService } from "./token/token.service";
@@ -225,4 +225,4 @@ import { ScheduleModule } from "@nestjs/schedule";
     BridgeActiveService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

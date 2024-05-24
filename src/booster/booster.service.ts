@@ -59,7 +59,10 @@ export class BoosterService {
   }
 
   public getEarlyBirdMultiplier(blockTs: Date): BigNumber {
-    // 1st week: 2,second week:1.5,third,forth week ~ within 1 month :1.2,1 month later: 1,
+    // 1st week: 2
+    // 2nd week: 1.5
+    // 3rd ~ within 1 month: 1.2
+    // 1 month later: 1
     const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
     const startDate = this.pointsPhase1StartTime;
     const diffInMilliseconds = blockTs.getTime() - startDate.getTime();
