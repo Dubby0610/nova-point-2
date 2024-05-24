@@ -58,6 +58,9 @@ const booster = {
         "0x380dd3344288bd6efd7c3597b2b6114b722a0e65": 10, // ARPA
         "0xbb68f4548a1c26b6611cbb8087c25a616edd8569": 10, // mswETH
         "0x829a939ee105cc3607428c237e463feb051e9780": 10, // wUSDM.manta
+    },
+    logx: {
+        "0x2F8A25ac62179B31D62D7F80884AE57464699059": 10, //USDT
     }
 } as const;
 
