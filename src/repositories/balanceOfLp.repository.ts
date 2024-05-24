@@ -3,7 +3,7 @@ import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { BalanceOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
-import { projectTokenBooster } from "src/config/projectTokenBooster";
+import projectTokenBooster from "src/config/projectTokenBooster";
 
 export interface BalanceOfLpDto {
   address: Buffer;

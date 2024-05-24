@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
-import waitFor from "../utils/waitFor";
 import { ConfigService } from "@nestjs/config";
 import { promises as promisesFs, appendFileSync, existsSync } from "fs";
 import { join } from "path";
@@ -217,7 +216,7 @@ export class AdapterService extends Worker {
         tokenAddress = NOVA_CHAIN_ETHADDRESS;
       }
       return {
-        timestamp: row.timestamp,
+        timestamp: new Date(row.timestamp * 1000),
         userAddress: row.userAddress,
         contractAddress: row.contractAddress,
         tokenAddress: tokenAddress,
@@ -235,7 +234,7 @@ export class AdapterService extends Worker {
     try {
       await this.transactionDataOfPoints.addManyIgnoreConflicts(dataToInsert);
     } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} data to db: ${e.stack}`);
+      this.logger.error(`Error inserting ${rows.length} data to db: ${e}`);
     }
   }
 }

@@ -79,7 +79,7 @@ import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository, TxDataOfPointsRepository } from "./repositories";
 import { TvlPointService } from "./points/tvlPoint.service";
-import { VolPointService } from "./points/volPoint.service";
+import { TxVolPointService } from "./points/txVolPoint.service";
 import { TxNumPointService } from "./points/txNumPoint.service";
 import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
@@ -219,7 +219,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     CacheRepository,
     BridgePointService,
     BoosterService,
-    VolPointService,
+    TxVolPointService,
     TxNumPointService,
     TxDataOfPointsRepository,
     BridgeActiveService,
