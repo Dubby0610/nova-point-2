@@ -36,6 +36,28 @@ const booster = {
     interport: {
         "0x2F8A25ac62179B31D62D7F80884AE57464699059": 10, // USDT
         "0x1a1A3b2ff016332e866787B311fcB63928464509": 10, // USDC
+    },
+    novaswap: {
+        "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169": 20, // WETH
+        "0xDa4AaEd3A53962c83B35697Cd138cc6df43aF71f": 20, // WBTC
+        "0x2F8A25ac62179B31D62D7F80884AE57464699059": 20, // USDT
+        "0x1a1A3b2ff016332e866787B311fcB63928464509": 20, // USDC
+        "0x1B49eCf1A8323Db4abf48b2F5EFaA33F7DdAB3FC": 10, // pufETH.eth
+        "0xEbc45Ef3B6D7E31573DAa9BE81825624725939f9": 10, // WBTC.eth
+        "0x93D79E21a68f66D79449fbF4fB4Ed025ABAcc2F6": 10, // nETH.eth
+        "0xfa70fD01EbD5aa64f31E5D3575C444919C79275E": 10, // rnETH.eth
+        "0xDeEC33dc735Baf36b473598C33BCD077A0f32049": 10, // STONE.manta
+        "0x86339d32837345974609c66c52884fcb26a76b8c": 10, // WMNT
+        "0xf5d3953a33f78e0412a8988fd77b4920aa968b0b": 10, // MANTA.manta
+        "0x3fdb1939dab8e2d4f7a04212f142469cd52d6402": 10, // ezETH.arb
+        "0xda7fa837112511f6e353091d7e388a4c45ce7d6c": 10, // ezETH.eth
+        "0x8fee71ab3ffd6f8aec8cd2707da20f4da2bf583d": 10, // ezETH.linea
+        "0xb5b8c247c740d53b6fbab10f1c17922788baed54": 10, // mmETH
+        "0x35d5f1b41319e0ebb5a10e55c3bd23f121072da8": 10, // weETH.eth
+        "0xcb70533c9635060275f1a97539dda2e3f8bfac42": 10, // ARB.arb
+        "0x380dd3344288bd6efd7c3597b2b6114b722a0e65": 10, // ARPA
+        "0xbb68f4548a1c26b6611cbb8087c25a616edd8569": 10, // mswETH
+        "0x829a939ee105cc3607428c237e463feb051e9780": 10, // wUSDM.manta
     }
 } as const;
 
