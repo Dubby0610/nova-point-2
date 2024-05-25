@@ -50,21 +50,21 @@ export class AdapterService extends Worker {
 
   public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
     await this.executeCommandInDirectory(name, curBlockNumber, lastBlockNumber);
-    this.logger.log(`compensatePointsData at block ${curBlockNumber}`)
+    this.logger.log(`compensatePointsData ${name} at block ${curBlockNumber}`)
   }
 
   public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
     if (lastBlockNumber && curBlockNumber) {
       await this.runCommandsInAllDirectories(curBlockNumber, lastBlockNumber);
     } else {
-      const lastBlock = await this.blockRepository.getLastBlock({
+      const currentBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
       })
       const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-      this.logger.log(`Adapter start from ${lastBlock.number} to ${adapterTxSyncBlockNumber}`)
-      await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
-      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, lastBlock.number.toString())
-      this.logger.log(`Adapter end from ${lastBlock.number} to ${adapterTxSyncBlockNumber}`)
+      this.logger.log(`Adapter start from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
+      await this.runCommandsInAllDirectories(currentBlock.number, Number(adapterTxSyncBlockNumber));
+      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, currentBlock.number.toString())
+      this.logger.log(`Adapter end from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
     }
 
   }
