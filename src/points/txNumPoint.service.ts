@@ -153,7 +153,7 @@ export class TxNumPointService extends Worker {
         });
       } else {
         const fromAddressPoint = addressPointMap.get(fromAddressPointKey);
-        fromAddressPoint.stakePoint += newHoldPoint.toNumber();
+        fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
       }
     }
 
