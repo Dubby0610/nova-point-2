@@ -6,8 +6,10 @@ export const fetchGraphQLData = async (query: string): Promise<Response> => {
   let data;
   let errors;
   let retry = true;
+  let retryCount = 0;
+  const maxRetries = 10;
 
-  while (retry) {
+  while (retry && retryCount < maxRetries) {
     try {
       const response = await fetch("https://graph.zklink.io/subgraphs/name/aqua-points", {
         method: "POST",
@@ -20,13 +22,19 @@ export const fetchGraphQLData = async (query: string): Promise<Response> => {
         retry = false;
       }
     } catch (error) {
+      retryCount++;
       console.error("Fetch error:", error);
     }
 
     if (errors) {
       console.error("Errors detected, retrying in 5 seconds...", errors);
       await delay(5000);
+      retryCount++;
     }
+  }
+
+  if (retryCount >= maxRetries) {
+    console.error("Maximum retry limit reached");
   }
 
   return data;

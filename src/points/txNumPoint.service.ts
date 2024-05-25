@@ -41,7 +41,7 @@ export class TxNumPointService extends Worker {
 
   @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
-    this.logger.log(`${TxNumPointService.name} initialized`);
+    this.logger.log(`${TxNumPointService.name} start...`);
     try {
       await this.handleCalculatePoint();
     } catch (error) {
@@ -54,11 +54,12 @@ export class TxNumPointService extends Worker {
       this.logger.log(`None project calculate ${this.type} points.`);
       return;
     }
-    this.logger.log(`There projects calculate ${this.type} points, ${JSON.stringify(this.projectNames)}`);
     const lastBlockNumberStr = await this.cacheRepository.getValue(txNumberLastBlockNumberKey);
     const lastBlockNumber = lastBlockNumberStr ? Number(lastBlockNumberStr) : 0;
     const endBlockNumberStr = await this.cacheRepository.getValue(transactionDataBlockNumberKey);
     const endBlockNumber = endBlockNumberStr ? Number(endBlockNumberStr) : 0;
+    this.logger.log(`${TxNumPointService.name} points from ${lastBlockNumber} to ${endBlockNumber}`);
+
     const volDetails: TransactionDataOfPointsDto[] = await this.transactionDataOfPointsRepository.getListByBlockNumber(
       lastBlockNumber,
       endBlockNumber,
@@ -152,16 +153,17 @@ export class TxNumPointService extends Worker {
         });
       } else {
         const fromAddressPoint = addressPointMap.get(fromAddressPointKey);
-        fromAddressPoint.stakePoint += newHoldPoint.toNumber();
+        fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
       }
     }
 
     const blockAddressPointArr = Array.from(blockAddressPointMap.values());
     const addressPointArr = Array.from(addressPointMap.values());
     await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
-    this.logger.log(`Finish volpoint blockAddressPointArr, length: ${blockAddressPointArr.length}`);
+    this.logger.log(`Finish ${TxNumPointService.name} blockAddressPointArr, length: ${blockAddressPointArr.length}`);
     await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
-    this.logger.log(`Finish volpoint addressPointArr, length: ${addressPointArr.length}`);
+    this.logger.log(`Finish ${TxNumPointService.name} addressPointArr, length: ${addressPointArr.length}`);
     await this.cacheRepository.setValue(txNumberLastBlockNumberKey, endBlockNumberStr);
+    this.logger.log(`${TxNumPointService.name} end at ${endBlockNumberStr}`);
   }
 }
