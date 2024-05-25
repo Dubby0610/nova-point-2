@@ -59,17 +59,12 @@ export class AdapterService extends Worker {
     } else {
       const lastBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
-      });
-      const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
-      if (lastBalanceOfLp && lastBlock.number <= lastBalanceOfLp.blockNumber) {
-        this.logger.log(
-          `Had adapted balance, Last block number: ${lastBlock.number}, Last balance of lp block number: ${lastBalanceOfLp.blockNumber}`
-        );
-        return;
-      }
+      })
       const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
+      this.logger.log(`Adapter start from ${lastBlock.number} to ${adapterTxSyncBlockNumber}`)
       await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
       this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, lastBlock.number.toString())
+      this.logger.log(`Adapter end from ${lastBlock.number} to ${adapterTxSyncBlockNumber}`)
     }
 
   }
@@ -84,7 +79,7 @@ export class AdapterService extends Worker {
       for (const dir of dirs) {
         await this.executeCommandInDirectory(dir, curBlockNumber, lastBlockNumber);
       }
-      this.logger.log(`All commands executed, project count : ${dirs.length}.`);
+      this.logger.log(`All commands executed from ${curBlockNumber} to ${lastBlockNumber} , project count : ${dirs.length}.`);
     } catch (error) {
       this.logger.error("Failed to read directories:", error.stack);
     }
@@ -124,30 +119,34 @@ export class AdapterService extends Worker {
 
   // read output.csv file and save data to db
   private async saveTVLDataToDb(dir: string, blockNumber: number): Promise<void> {
-    // read output.csv file and save data to db
-    const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tvl.${blockNumber}.csv`);
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
-    if (!existsSync(outputPath)) {
-      this.logger.error(`Folder '${dir}' does not contain tvl.${blockNumber}.csv file.`);
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tvl.csv file.`);
-      return;
-    }
+    return new Promise((resolve) => {
+      // read output.csv file and save data to db
+      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tvl.${blockNumber}.csv`);
+      const nowT = new Date();
+      nowT.setHours(nowT.getHours() + 8);
+      const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+      if (!existsSync(outputPath)) {
+        this.logger.warn(`Folder '${dir}' does not contain tvl.${blockNumber}.csv file.`);
+        appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tvl.csv file.`);
+        resolve()
+        return;
+      }
 
-    const results = [];
-    fs.createReadStream(outputPath)
-      .pipe(csv())
-      .on("data", (row) => results.push(row))
-      .on("end", async () => {
-        if (results.length > 0) {
-          await this.insertTVLDataToDb(results, dir);
-        }
-        // fs.unlinkSync(outputPath);
-        this.logger.log(
-          `Adapter:${dir}\tCSV file successfully processed, ${results.length} rows inserted into db.`
-        );
-      });
+      const results = [];
+      fs.createReadStream(outputPath)
+        .pipe(csv())
+        .on("data", (row) => results.push(row))
+        .on("end", async () => {
+          if (results.length > 0) {
+            await this.insertTVLDataToDb(results, dir);
+          }
+          // fs.unlinkSync(outputPath);
+          this.logger.log(
+            `Adapter:${dir} tvl CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
+          );
+          resolve()
+        });
+    })
   }
 
   // insert into db
@@ -175,33 +174,37 @@ export class AdapterService extends Worker {
     try {
       await this.balanceOfLpRepository.addManyIgnoreConflicts(dataToInsert);
     } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} data to db: ${e.stack}`);
+      this.logger.error(`Error inserting ${rows.length} tvl data to db: ${e.stack}`);
     }
   }
 
   private async saveTXDataToDb(dir: string, blockNumber: number): Promise<void> {
-    // read output.csv file and save data to db
-    const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tx.${blockNumber}.csv`);
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
-    if (!existsSync(outputPath)) {
-      this.logger.error(`Folder '${dir}' does not contain tx.${blockNumber}.csv file.`);
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tx.csv file.`);
-      return;
-    }
+    return new Promise((resolve) => {
+      // read output.csv file and save data to db
+      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tx.${blockNumber}.csv`);
+      const nowT = new Date();
+      nowT.setHours(nowT.getHours() + 8);
+      const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+      if (!existsSync(outputPath)) {
+        this.logger.warn(`Folder '${dir}' does not contain tx.${blockNumber}.csv file.`);
+        appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tx.csv file.`);
+        resolve()
+        return;
+      }
 
-    const results = [];
-    fs.createReadStream(outputPath)
-      .pipe(csv())
-      .on("data", (row) => results.push(row))
-      .on("end", async () => {
-        await this.insertTXDataToDb(results, dir);
-        fs.unlinkSync(outputPath);
-        this.logger.log(
-          `Adapter:${dir}\tCSV file successfully processed, ${results.length} rows inserted into db.`
-        );
-      });
+      const results = [];
+      fs.createReadStream(outputPath)
+        .pipe(csv())
+        .on("data", (row) => results.push(row))
+        .on("end", async () => {
+          await this.insertTXDataToDb(results, dir);
+          fs.unlinkSync(outputPath);
+          this.logger.log(
+            `Adapter:${dir} tx CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
+          );
+          resolve()
+        });
+    })
   }
 
   // insert into db
@@ -234,7 +237,7 @@ export class AdapterService extends Worker {
     try {
       await this.transactionDataOfPoints.addManyIgnoreConflicts(dataToInsert);
     } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} data to db: ${e}`);
+      this.logger.error(`Error inserting ${rows.length} tx data to db: ${e}`);
     }
   }
 }
