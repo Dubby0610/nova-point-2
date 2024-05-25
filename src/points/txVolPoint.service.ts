@@ -141,7 +141,7 @@ export class TxVolPointService extends Worker {
         });
       } else {
         const fromBlockAddressPoint = blockAddressPointMap.get(fromBlockAddressPointKey);
-        fromBlockAddressPoint.holdPoint += newHoldPoint.toNumber();
+        fromBlockAddressPoint.holdPoint = Number(fromBlockAddressPoint.holdPoint) + newHoldPoint.toNumber();
       }
 
       const fromAddressPointKey = `${itemUserAddress}-${itemPoolAddress}`;
@@ -151,11 +151,11 @@ export class TxVolPointService extends Worker {
           id: 0,
           address: itemUserAddress,
           pairAddress: itemPoolAddress,
-          stakePoint: newHoldPoint.toNumber(),
+          stakePoint: newHoldPoint,
         });
       } else {
         const fromAddressPoint = addressPointMap.get(fromAddressPointKey);
-        fromAddressPoint.stakePoint += newHoldPoint.toNumber();
+        fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
       }
     }
 
