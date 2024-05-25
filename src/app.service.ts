@@ -8,6 +8,7 @@ import { BridgeActiveService } from "./points/bridgeActive.service";
 import { AdapterService } from "./points/adapter.service";
 import { TvlPointService } from "./points/tvlPoint.service";
 import { TxVolPointService } from "./points/txVolPoint.service";
+import { TxNumPointService } from "./points/txNumPoint.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -20,7 +21,8 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly configService: ConfigService,
     private readonly adapterService: AdapterService,
     private readonly tvlPointService: TvlPointService,
-    private readonly txVolPointService: TxVolPointService
+    private readonly txVolPointService: TxVolPointService,
+    private readonly txNumPointService: TxNumPointService,
   ) {
     this.logger = new Logger(AppService.name);
   }
@@ -59,34 +61,17 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async compensatePoints() {
-    // 1981167 1967134
-    await this.adapterService.compensatePointsData('aqua', 1981167, 1967134);
-    await this.adapterService.compensatePointsData('layerbank', 1981167, 1967134);
-    await this.tvlPointService.handleHoldPoint(1981167, new Date("2024-05-23 07:19:56Z").toISOString())
-    // 1995180 1981167
-    await this.adapterService.compensatePointsData('aqua', 1995180, 1981167);
-    await this.adapterService.compensatePointsData('layerbank', 1995180, 1981167);
-    await this.tvlPointService.handleHoldPoint(1995180, new Date("2024-05-24 01:19:55Z").toISOString())
-    // 2009169 1995180
-    await this.adapterService.compensatePointsData('aqua', 2009169, 1995180);
-    // await this.adapterService.compensatePointsData('layerbank', 2009169, 1995180);
-    await this.adapterService.compensatePointsData('logx', 2009169, 1995180);
-    await this.adapterService.compensatePointsData('novaswap', 2009169, 1995180);
-    await this.tvlPointService.handleHoldPoint(2009169, new Date("2024-05-24 09:19:56Z").toISOString())
-    // 2023225 2009169
-    await this.adapterService.compensatePointsData('aqua', 2023225, 2009169);
-    // await this.adapterService.compensatePointsData('layerbank', 2023225, 2009169);
-    await this.adapterService.compensatePointsData('logx', 2023225, 2009169);
-    await this.adapterService.compensatePointsData('novaswap', 2023225, 2009169);
-    await this.tvlPointService.handleHoldPoint(2023225, new Date("2024-05-24 17:19:54Z").toISOString());
-    // 2037300 2023225
-    // await this.adapterService.compensatePointsData('aqua', 2037300, 2023225);
-    // await this.adapterService.compensatePointsData('layerbank', 2037300, 2023225);
-    await this.adapterService.compensatePointsData('logx', 2037300, 2023225);
-    await this.adapterService.compensatePointsData('novaswap', 2037300, 2023225);
-    await this.tvlPointService.handleHoldPoint(2037300, new Date("2024-05-25 01:19:55Z").toISOString());
 
+    await this.adapterService.compensatePointsData('aqua', 2051369, 2037300);
+    await this.adapterService.compensatePointsData('interport', 2051369, 2037300);
+    await this.adapterService.compensatePointsData('izumi', 2051369, 2037300);
+    await this.adapterService.compensatePointsData('layerbank', 2051369, 2037300);
+    await this.adapterService.compensatePointsData('logx', 2051369, 2037300);
+    await this.adapterService.compensatePointsData('novaswap', 2051369, 2037300);
+
+    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-25 09:21:55Z").toISOString());
     await this.txVolPointService.handleCalculatePoint()
+    await this.txNumPointService.handleCalculatePoint()
   }
 
 }
