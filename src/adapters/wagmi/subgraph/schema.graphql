@@ -45,6 +45,33 @@ type Pool @entity {
   tick: BigInt
 }
 
+type Multipool @entity {
+  # pool address
+  id: ID!
+  # allow indexing by tokens
+  token0: Token!
+  # allow indexing by tokens
+  token1: Token!
+
+  multipoolToken: String!
+
+  pidId: BigInt!
+}
+
+type MultipoolPosition @entity {
+  # Positions created through NonfungiblePositionManager
+  # {Multipool.address}-{Owner}
+  id: ID!
+  # owner of the NFT
+  owner: String!
+  # pool position is within
+  multipool: Multipool!
+
+  balance: BigInt!
+
+  staked: BigInt!
+}
+
 type Position @entity {
   # Positions created through NonfungiblePositionManager
   # NFT token id

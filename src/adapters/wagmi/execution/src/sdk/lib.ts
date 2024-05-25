@@ -1,10 +1,10 @@
-import { UserTVLData, UserTxData, SwapResponse, UserV3PositionsResponse, UserV3Position } from "./types";
+import { UserTVLData, UserTxData, SwapResponse, UserV3PositionsResponse, UserV3Position, UserMultipoolPosition, UserMultipoolPositionsResponse } from "./types";
 import { Contract, JsonRpcProvider, parseUnits , ZeroAddress} from "ethers";
 import path from "path";
 import { fetchGraphQLData } from "./fetch";
 import { MULTICALL_ADDRESS, RPC_URL } from "./constants";
 import MulticallAbi from './abis/Multicall.json';
-import { encodeSlot0, decodeSlot0 } from "./utils/encoder";
+import { encodeSlot0, decodeSlot0, encodeEstimateWithdrawalAmounts, decodeEstimateWithdrawalAmounts } from "./utils/encoder";
 import { PositionMath } from "@real-wagmi/v3-sdk";
 
 require("dotenv").config({ path: path.join(__dirname, "../../.env") });
@@ -82,11 +82,11 @@ const getAllUserV3Position = async (blockNumber: number) => {
   return result;
 };
 
-async function transformUserPositions(posiitons: UserV3Position[], blockNumber: number, timestamp: number): Promise<UserTVLData[]> {
+const transformUserPositions = async (positions: UserV3Position[], blockNumber: number, timestamp: number): Promise<UserTVLData[]> => {
   const provider = new JsonRpcProvider(RPC_URL);
   const multicall = new Contract(MULTICALL_ADDRESS, MulticallAbi, provider);
   
-  const poolAddresses = [...new Set(posiitons.map((position) => position.pool.id))];
+  const poolAddresses = [...new Set(positions.map((position) => position.pool.id))];
   const [,slot0Calls] = await multicall.multicall.staticCall(poolAddresses.map((address) => ({target: address, gasLimit: 100_000n, callData: encodeSlot0()}), { blockTag: blockNumber }));
   const pools = poolAddresses.reduce((acc, address, index) => {
     const slot0Result = slot0Calls[index];
@@ -101,7 +101,7 @@ async function transformUserPositions(posiitons: UserV3Position[], blockNumber: 
   }, {} as Record<string, { tickCurrent: number, sqrtRatioX96: bigint,  }>);
   
 
-  return posiitons.reduce((acc, position) => {
+  return positions.reduce((acc, position) => {
     const pool = pools[position.pool.id];
     if(pool) {
       const amount0 = PositionMath.getToken0Amount(pool.tickCurrent, position.tickLower, position.tickUpper, pool.sqrtRatioX96, position.liquidity);
@@ -131,12 +131,118 @@ async function transformUserPositions(posiitons: UserV3Position[], blockNumber: 
   }, [] as UserTVLData[]);
 }
 
+const getAllUserMultipoolPositions = async (blockNumber: number) => {
+  let result: UserMultipoolPosition[] = [];
+  let skip = 0;
+  const pageSize = 1000;
+  let fetchNext = true;
+
+  while (fetchNext) {
+    const query = `
+      query MyQuery{
+        multipoolPositions(
+          block: {number: ${blockNumber}},
+          first: ${pageSize},
+          skip: ${skip},
+        ) {
+          balance
+          multipool {
+            id
+            token1 {
+              id
+              name
+              symbol
+            }
+            token0 {
+              name
+              id
+              symbol
+            }
+          }
+          owner
+          staked
+        }
+      }`;
+
+    const data = await fetchGraphQLData<UserMultipoolPositionsResponse>(query);
+
+    const { multipoolPositions } = data;
+    const res = multipoolPositions.map((data) : UserMultipoolPosition => {
+      return {
+        owner: data.owner,
+        balance: BigInt(data.balance) + BigInt(data.staked),
+        multipool: {
+          id: data.multipool.id,
+          token0: data.multipool.token0,
+          token1: data.multipool.token1,
+        },
+      };
+    });
+
+    result.push(...res);
+
+    if (multipoolPositions.length < pageSize) {
+      fetchNext = false;
+    } else {
+      console.log(`GET DATA FROM ${skip}`);
+      skip += pageSize;
+    }
+  }
+
+  return result;
+}
+
+const transformUserMultipoolPositions = async (positions: UserMultipoolPosition[], blockNumber: number, timestamp: number) : Promise<UserTVLData[]> => {
+  const provider = new JsonRpcProvider(RPC_URL);
+  const multicall = new Contract(MULTICALL_ADDRESS, MulticallAbi, provider);
+
+  const calls = positions.map((position) => ({
+    target: '0x8F901D3c80e6f72b6Ca118076697608C18ee48fe', 
+    gasLimit: 300_000n, 
+    callData: encodeEstimateWithdrawalAmounts(position.multipool.token0.id, position.multipool.token1.id, position.balance)
+  }));
+
+  const [, results] = await multicall.multicall.staticCall(calls, { blockTag: blockNumber });
+
+  return positions.reduce((acc, position, index) => {
+    const result = results[index];
+    if(result.success) {
+      const [amount0, amount1] = decodeEstimateWithdrawalAmounts(result.returnData) as unknown as [bigint, bigint];
+      if(amount0 > 0n){
+        acc.push({
+          userAddress: position.owner,
+          poolAddress: position.multipool.id,
+          tokenAddress: position.multipool.token0.id,
+          blockNumber,
+          balance: amount0,
+          timestamp,
+        });
+      }
+
+      if(amount1 > 0n){
+        acc.push({
+          userAddress: position.owner,
+          poolAddress: position.multipool.id,
+          tokenAddress: position.multipool.token1.id,
+          blockNumber,
+          balance: amount1,
+          timestamp,
+        });
+      }
+    }
+    return acc;
+  }, [] as UserTVLData[]);
+}
+
 export const getUserPositionsAtBlock = async (blockNumber: number): Promise<UserTVLData[]> => {
   const timestamp = await getTimestampAtBlock(blockNumber);
   console.log(`GET DATA FROM ${blockNumber} AT ${timestamp}`);
   const v3PositionsRow = await getAllUserV3Position(blockNumber);
   const v3Positions = await transformUserPositions(v3PositionsRow, blockNumber, timestamp);
-  return v3Positions;
+
+  const multipoolPositionsRow = await getAllUserMultipoolPositions(blockNumber);
+  const multipoolPositions = await transformUserMultipoolPositions(multipoolPositionsRow, blockNumber, timestamp);
+  return [...v3Positions, ...multipoolPositions];
 };
 
 const getAllUserSwaps = async (startBlock: number, endBlock: number) => {

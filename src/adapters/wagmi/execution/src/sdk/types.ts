@@ -73,3 +73,26 @@ export type UserV3Position = {
         token1: TokenInfo;
     }
 }
+
+export type UserMultipoolPosition = {
+    owner: string;
+    balance: bigint;
+    multipool: {
+        id: string;
+        token0: TokenInfo;
+        token1: TokenInfo;
+    }
+}
+
+export type UserMultipoolPositionsResponse = {
+    multipoolPositions: Array<{
+        owner: string;
+        balance: string;
+        staked: string;
+        multipool: {
+            id: string;
+            token0: TokenInfo;
+            token1: TokenInfo;
+        }
+    }>
+}

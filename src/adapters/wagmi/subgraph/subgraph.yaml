@@ -62,6 +62,60 @@ dataSources:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
       file: ./src/mappings/position-manager.ts
+  - kind: ethereum/contract
+    name: FactoryMultipool
+    network: zklink-nova
+    source:
+      address: "0x8F901D3c80e6f72b6Ca118076697608C18ee48fe"
+      abi: FactoryMultipool
+      startBlock: 1598188
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+        - Token
+      abis:
+        - name: FactoryMultipool
+          file: ./abis/multipool/FactoryMultipool.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: MultipoolDispatcher
+          file: ./abis/multipool/MultipoolDispatcher.json
+      eventHandlers:
+        - event: CreateMultipool(address,address,address,address)
+          handler: handleMultiPoolCreated
+      file: ./src/mappings/factory-multipool.ts
+  - kind: ethereum/contract
+    name: MultipoolDispatcher
+    network: zklink-nova
+    source:
+      address: "0x1D236503285770b58f12C6AFc7896fAd713F9334"
+      abi: MultipoolDispatcher
+      startBlock: 1598188
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+        - Token
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: MultipoolDispatcher
+          file: ./abis/multipool/MultipoolDispatcher.json
+      eventHandlers:
+        - event: Deposit(address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(address,uint256,uint256)
+          handler: handleWithdraw
+      file: ./src/mappings/multipool-dispatcher.ts
 
 templates:
   - kind: ethereum/contract
@@ -97,3 +151,27 @@ templates:
           handler: handleBurn
         - event: Collect(indexed address,address,indexed int24,indexed int24,uint128,uint128)
           handler: handleCollect
+  - kind: ethereum/contract
+    name: Multipool
+    network: zklink-nova
+    source:
+      abi: Multipool
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+      abis:
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: MultipoolDispatcher
+          file: ./abis/multipool/MultipoolDispatcher.json
+      eventHandlers:
+        - event: Deposit(address,address,uint256,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(address,address,uint256,uint256,uint256)
+          handler: handleWithdraw
+      file: ./src/mappings/multipool-core.ts
