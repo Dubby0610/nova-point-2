@@ -9,6 +9,8 @@ export function handleMultiPoolCreated(event: CreateMultipool): void{
     const token1 = getOrCreateToken(event.params.token1);
 
     const multipoolTokenAddress = getMultipoolToken(event.params.multipool);
+    const multipoolToken = getOrCreateToken(multipoolTokenAddress);
+
     const pidId = getPidId(event.params.multipool);
-    createMultipool(token0, token1, event.params.multipool, multipoolTokenAddress, pidId);
+    createMultipool(token0, token1, event.params.multipool, multipoolToken, pidId);
 }
