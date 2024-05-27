@@ -4,7 +4,7 @@ import path from "path";
 import { fetchGraphQLData } from "./fetch";
 import { MULTICALL_ADDRESS, RPC_URL } from "./constants";
 import MulticallAbi from './abis/Multicall.json';
-import { encodeSlot0, decodeSlot0, encodeEstimateWithdrawalAmounts, decodeEstimateWithdrawalAmounts } from "./utils/encoder";
+import { encodeSlot0, decodeSlot0, encodeEstimateWithdrawalAmounts, decodeEstimateWithdrawalAmounts, encodeEstimateClaim, decodeEstimateClaim } from "./utils/encoder";
 import { PositionMath } from "@real-wagmi/v3-sdk";
 
 require("dotenv").config({ path: path.join(__dirname, "../../.env") });
@@ -158,6 +158,7 @@ const getAllUserMultipoolPositions = async (blockNumber: number) => {
               id
               symbol
             }
+            pidId
           }
           owner
           staked
@@ -175,6 +176,7 @@ const getAllUserMultipoolPositions = async (blockNumber: number) => {
           id: data.multipool.id,
           token0: data.multipool.token0,
           token1: data.multipool.token1,
+          pidId: BigInt(data.multipool.pidId),
         },
       };
     });
@@ -196,36 +198,45 @@ const transformUserMultipoolPositions = async (positions: UserMultipoolPosition[
   const provider = new JsonRpcProvider(RPC_URL);
   const multicall = new Contract(MULTICALL_ADDRESS, MulticallAbi, provider);
 
-  const calls = positions.map((position) => ({
+  const withdrawalCalls = positions.map((position) => ({
     target: '0x8F901D3c80e6f72b6Ca118076697608C18ee48fe', 
     gasLimit: 300_000n, 
     callData: encodeEstimateWithdrawalAmounts(position.multipool.token0.id, position.multipool.token1.id, position.balance)
   }));
 
-  const [, results] = await multicall.multicall.staticCall(calls, { blockTag: blockNumber });
+  const estimateClaimCCalls = positions.map((position) => ({
+    target: '0x1D236503285770b58f12C6AFc7896fAd713F9334', 
+    gasLimit: 500_000n,
+    callData: encodeEstimateClaim(position.multipool.pidId, position.owner)
+  }));
+
+  const [, withdrawalResults] = await multicall.multicall.staticCall(withdrawalCalls, { blockTag: blockNumber });
+  const [, estimateClaimResults] = await multicall.multicall.staticCall(estimateClaimCCalls, { blockTag: blockNumber });
 
   return positions.reduce((acc, position, index) => {
-    const result = results[index];
-    if(result.success) {
-      const [amount0, amount1] = decodeEstimateWithdrawalAmounts(result.returnData) as unknown as [bigint, bigint];
-      if(amount0 > 0n){
+    const withdrawalResult = withdrawalResults[index];
+    const estimateClaimResult = estimateClaimResults[index];
+    if(withdrawalResult.success && estimateClaimResult.success) {
+      const [amount0, amount1] = decodeEstimateWithdrawalAmounts(withdrawalResult.returnData) as unknown as [bigint, bigint];
+      const [estimateClaim] = decodeEstimateClaim(estimateClaimResult.returnData) as unknown as [{ withdrawnFee0: bigint, withdrawnFee1: bigint }];
+      if(amount0 > 0n || estimateClaim.withdrawnFee0 > 0n){
         acc.push({
           userAddress: position.owner,
           poolAddress: position.multipool.id,
           tokenAddress: position.multipool.token0.id,
           blockNumber,
-          balance: amount0,
+          balance: amount0 + estimateClaim.withdrawnFee0,
           timestamp,
         });
       }
 
-      if(amount1 > 0n){
+      if(amount1 > 0n || estimateClaim.withdrawnFee1 > 0n){
         acc.push({
           userAddress: position.owner,
           poolAddress: position.multipool.id,
           tokenAddress: position.multipool.token1.id,
           blockNumber,
-          balance: amount1,
+          balance: amount1 + estimateClaim.withdrawnFee1,
           timestamp,
         });
       }

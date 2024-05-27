@@ -81,6 +81,7 @@ export type UserMultipoolPosition = {
         id: string;
         token0: TokenInfo;
         token1: TokenInfo;
+        pidId: bigint;
     }
 }
 
@@ -93,6 +94,7 @@ export type UserMultipoolPositionsResponse = {
             id: string;
             token0: TokenInfo;
             token1: TokenInfo;
+            pidId: string;
         }
     }>
 }

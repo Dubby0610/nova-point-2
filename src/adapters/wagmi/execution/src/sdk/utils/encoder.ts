@@ -1,6 +1,7 @@
 import { Interface } from 'ethers';
 import PoolAbi from '../abis/Pool.json';
 import FactoryMultipoolAbi from '../abis/FactoryMultipool.json';
+import MultipoolDispatcherAbi from '../abis/MultipoolDispatcher.json';
 
 export const encodeSlot0 = (): string => {
   const iface = new Interface(PoolAbi);
@@ -24,4 +25,16 @@ export const decodeEstimateWithdrawalAmounts = (data: string): string[] => {
   const iface = new Interface(FactoryMultipoolAbi);
 
   return iface.decodeFunctionResult('estimateWithdrawalAmounts', data);
+};
+
+export const encodeEstimateClaim = (pid: bigint, userAddress: string): string => {
+  const iface = new Interface(MultipoolDispatcherAbi);
+
+  return iface.encodeFunctionData('estimateClaim', [pid, userAddress]);
+};
+
+export const decodeEstimateClaim = (data: string): string[] => {
+  const iface = new Interface(MultipoolDispatcherAbi);
+
+  return iface.decodeFunctionResult('estimateClaim', data);
 };
