@@ -45,7 +45,7 @@ class RubicQueriesManager {
     }
     `
     const response = await fetch(
-      "http://3.114.68.110:8000/subgraphs/name/rubic-finance", 
+      "http://3.114.68.110:8000/subgraphs/name/rubic-finance-1", 
     {
       method: 'POST',
       body: JSON.stringify({ query }),
@@ -75,7 +75,7 @@ class RubicQueriesManager {
     }
     `
     const response = await fetch(
-      "http://3.114.68.110:8000/subgraphs/name/rubic-finance", 
+      "http://3.114.68.110:8000/subgraphs/name/rubic-finance-1", 
     {
       method: 'POST',
       body: JSON.stringify({ query }),
@@ -100,12 +100,12 @@ class RubicQueriesManager {
       blockNumber: el.blockNumber,
       contractAddress: RUBIC_MULTI_PROXY_ADDRESS,
       decimals,
-      nonce: tx.nonce.toString(),
+      nonce: tx!.nonce.toString(),
       quantity: BigInt(el.fromAmount),
       timestamp: el.blockTimestamp,
       tokenAddress: el.fromAssetId,
       txHash: el.transactionHash,
-      userAddress: tx.from
+      userAddress: tx!.from
     }
   }
 
@@ -118,7 +118,7 @@ class RubicQueriesManager {
       blockNumber: el.blockNumber,
       contractAddress: RUBIC_MULTI_PROXY_ADDRESS,
       decimals,
-      nonce: tx.nonce.toString(),
+      nonce: tx!.nonce.toString(),
       quantity: BigInt(el.bridgeData_minAmount),
       timestamp: el.blockTimestamp,
       tokenAddress: el.bridgeData_sendingAssetId,
