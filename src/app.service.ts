@@ -32,7 +32,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // await this.adapterService.loadLastBlockNumber(1476336, 1376336);
     // second params is utc+8
     // await this.tvlPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
-    this.compensatePoints()
+    // this.compensatePoints()
 
 
     this.startWorkers();
@@ -62,16 +62,9 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
   private async compensatePoints() {
 
-    await this.adapterService.compensatePointsData('aqua', 2051369, 2037300);
     await this.adapterService.compensatePointsData('interport', 2051369, 2037300);
-    await this.adapterService.compensatePointsData('izumi', 2051369, 2037300);
-    await this.adapterService.compensatePointsData('layerbank', 2051369, 2037300);
-    await this.adapterService.compensatePointsData('logx', 2051369, 2037300);
-    await this.adapterService.compensatePointsData('novaswap', 2051369, 2037300);
 
     await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-25 09:21:55Z").toISOString());
-    await this.txVolPointService.handleCalculatePoint()
-    await this.txNumPointService.handleCalculatePoint()
   }
 
 }

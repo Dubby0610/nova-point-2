@@ -1,0 +1,22 @@
+{
+  "name": "execution",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node dist/index.js",
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "clear": "rm -rf dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tsconfig/recommended": "^1.0.6",
+    "@types/node": "^20.12.12",
+    "ethers": "^6.12.1",
+    "typescript": "^5.4.5"
+  }
+}
