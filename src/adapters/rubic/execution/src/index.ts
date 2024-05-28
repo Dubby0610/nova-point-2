@@ -2,7 +2,7 @@ import { RubicSwappedGenericSchema, RubicSwappedGenericsRes, RubicTransferStarte
 import { JsonRpcProvider, ethers } from 'ethers'
 import ERC20_ABI from "./ERC20.json"
 
-const RUBIC_MULTI_PROXY_ADDRESS = '0x6AA981bFF95eDfea36Bdae98C26B274FfcafE8d3'
+const RUBIC_MULTI_PROXY_ADDRESS = '0x1a979E2386595837BaAB90Ba12B2E2a71C652576'
 const ZK_LINK_CHAIN_ID = 810180;
 
 export const getUserTransactionData = async (startBlock: number, endBlock: number): Promise<UserTxData[]> => {
@@ -27,7 +27,7 @@ class RubicQueriesManager {
 
   constructor(start: number, end: number) {
     this._startBlock = start;
-    this._endBlock = start;
+    this._endBlock = end;
   }
 
   public async queryRubicSwappedGenerics(): Promise<UserTxData[]> {
@@ -45,7 +45,7 @@ class RubicQueriesManager {
     }
     `
     const response = await fetch(
-      "http://3.114.68.110:8000/subgraphs/name/rubic-finance-1", 
+      "http://3.114.68.110:8000/subgraphs/name/rubic-finance-2", 
     {
       method: 'POST',
       body: JSON.stringify({ query }),
@@ -75,7 +75,7 @@ class RubicQueriesManager {
     }
     `
     const response = await fetch(
-      "http://3.114.68.110:8000/subgraphs/name/rubic-finance-1", 
+      "http://3.114.68.110:8000/subgraphs/name/rubic-finance-2", 
     {
       method: 'POST',
       body: JSON.stringify({ query }),
