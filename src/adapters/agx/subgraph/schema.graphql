@@ -1,0 +1,36 @@
+type Pool @entity(immutable: false) {
+  # ALP contract address 
+  id: Bytes!
+  # total supplied
+  totalSupplied: BigInt!
+}
+
+type UserPosition @entity(immutable: false) {
+  # account
+  id: Bytes!
+
+  balance: BigInt!
+}
+
+type SwapTx @entity(immutable: true) {
+  # tx
+  id: Bytes!
+
+  account: Bytes!
+
+  tokenAddress: Bytes!
+
+  amount: BigInt!
+
+  price: BigInt!
+
+  decimal: BigInt!
+
+  nonce: BigInt!
+
+  transactionHash: Bytes!
+
+  blockNumber: BigInt!
+
+  timestamp: BigInt!
+}

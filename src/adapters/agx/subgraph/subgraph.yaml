@@ -1,0 +1,52 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: agx-lp
+    network: zklink-nova
+    source:
+      abi: ALP
+      address: '0x2511a5540FbB5a19de2e516a7797B72e1B27b256'
+      startBlock: 12649
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/index.ts
+      entities:
+        - Pool
+        - PoolTokenPosition
+      abis:
+        - name: ALP
+          file: ./abis/ALP.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+
+  - kind: ethereum
+    name: agx-swap
+    network: zklink-nova
+    source:
+      abi: Router
+      address: '0x8b63A63514598e920Df1c8eCEa91D660F17F7a94'
+      startBlock: 12644
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/index.ts
+      entities:
+        - SwapTx
+      abis:
+        - name: Router
+          file: ./abis/Router.json
+        - name: VaultPriceFeed
+          file: ./abis/VaultPriceFeed.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20BytesMethod
+          file: ./abis/ERC20BytesMethod.json
+      eventHandlers:
+        - event: Swap(address,address,address,uint256,uint256)
+          handler: handleSwap
