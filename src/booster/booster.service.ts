@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import BigNumber from "bignumber.js";
-import groupBooster from "./groupBooster.json";
 import { ConfigService } from "@nestjs/config";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
@@ -20,22 +19,14 @@ export class BoosterService {
 
   /**
    *
-   * @param groupName
+   * @param projectName
    * @param timestamp  seconds
    * @returns
    */
-  public getGroupBooster(groupName: string, timestamp: number = 0): BigNumber {
-    const multipliers = groupBooster[groupName]?.multipliers ?? [];
-    if (!multipliers || multipliers.length == 0) {
-      return new BigNumber(1);
-    }
-    multipliers.sort((a, b) => b.timestamp - a.timestamp);
-    for (const m of multipliers) {
-      if (timestamp >= m.timestamp) {
-        return new BigNumber(m.multiplier);
-      }
-    }
-    return new BigNumber(multipliers[multipliers.length - 1].multiplier);
+  public getProjectBooster(projectName: string, type: string): BigNumber {
+    const projectTxBooster = this.configService.get('projectTxBooster')
+    const booster = projectTxBooster[type][projectName] ?? 1
+    return booster
   }
 
   public getLoyaltyBooster(timestamp: number, firstDepositTs: number | null): BigNumber {
@@ -59,7 +50,10 @@ export class BoosterService {
   }
 
   public getEarlyBirdMultiplier(blockTs: Date): BigNumber {
-    // 1st week: 2,second week:1.5,third,forth week ~ within 1 month :1.2,1 month later: 1,
+    // 1st week: 2
+    // 2nd week: 1.5
+    // 3rd ~ within 1 month: 1.2
+    // 1 month later: 1
     const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
     const startDate = this.pointsPhase1StartTime;
     const diffInMilliseconds = blockTs.getTime() - startDate.getTime();

@@ -7,6 +7,8 @@ import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { AdapterService } from "./points/adapter.service";
 import { TvlPointService } from "./points/tvlPoint.service";
+import { TxVolPointService } from "./points/txVolPoint.service";
+import { TxNumPointService } from "./points/txNumPoint.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -18,7 +20,9 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly bridgeActiveService: BridgeActiveService,
     private readonly configService: ConfigService,
     private readonly adapterService: AdapterService,
-    private readonly tvlPointService: TvlPointService
+    private readonly tvlPointService: TvlPointService,
+    private readonly txVolPointService: TxVolPointService,
+    private readonly txNumPointService: TxNumPointService,
   ) {
     this.logger = new Logger(AppService.name);
   }
@@ -27,9 +31,10 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // example:
     // await this.adapterService.loadLastBlockNumber(1476336, 1376336);
     // second params is utc+8
-    // await this.holdLpPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
-    await this.adapterService.loadLastBlockNumber(1685534, 1629154)
-    await this.tvlPointService.handleHoldPoint(1685534, new Date(1715851196 * 1000).toISOString());
+    // await this.tvlPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
+    // this.compensatePoints()
+
+
     this.startWorkers();
   }
 
@@ -54,4 +59,12 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   private stopWorkers() {
     return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
+
+  private async compensatePoints() {
+
+    await this.adapterService.compensatePointsData('interport', 2051369, 2037300);
+
+    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-25 09:21:55Z").toISOString());
+  }
+
 }

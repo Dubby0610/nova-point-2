@@ -10,8 +10,10 @@ export const fetchGraphQLData = async <T>(query: string): Promise<T> => {
   let response;
   let data;
   let retry = true;
+  let retryCount = 0;
+  const maxRetries = 10;
 
-  while (retry) {
+  while (retry && retryCount < maxRetries) {
     try {
       response = await fetch(SUBGRAPH_ENDPOINT, {
         method: "POST",
@@ -20,11 +22,13 @@ export const fetchGraphQLData = async <T>(query: string): Promise<T> => {
       });
 
       if (!response.ok) {
+        retryCount++;
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       data = await response.json();
       if (data.errors) {
+        retryCount++
         throw new Error(`GraphQL error: ${JSON.stringify(data.errors)}`);
       }
 
@@ -32,8 +36,13 @@ export const fetchGraphQLData = async <T>(query: string): Promise<T> => {
     } catch (error) {
       console.error("Fetch error:", error);
       console.log("Retrying in 5 seconds...");
-      await delay(5000); // 延时5秒后重试
+      await delay(5000);
+      retryCount++
     }
+  }
+
+  if (retryCount >= maxRetries) {
+    console.error("Maximum retry limit reached");
   }
 
   return data.data;

@@ -13,16 +13,15 @@ import {
 } from "../repositories";
 import { PointsOfLp, AddressFirstDeposit } from "src/entities";
 import { TransactionDataOfPointsDto } from "../repositories/txDataOfPoints.repository";
-import dappConfig from "src/dapp.config";
 
 const volLastBlockNumberKey = "volLastBlockNumber";
 const transactionDataBlockNumberKey = "transactionDataBlockNumber";
 
 @Injectable()
-export class VolPointService extends Worker {
+export class TxVolPointService extends Worker {
   private readonly logger: Logger;
-  private readonly type: string = "vol";
-  private readonly projectName: string[] = [];
+  private readonly type: string = "txVol";
+  private readonly projectNames: string[] = [];
 
   public constructor(
     private readonly cacheRepository: CacheRepository,
@@ -34,13 +33,14 @@ export class VolPointService extends Worker {
     private readonly configService: ConfigService
   ) {
     super();
-    this.logger = new Logger(VolPointService.name);
-    this.projectName = dappConfig.vol;
+    this.logger = new Logger(TxVolPointService.name);
+    const projectTxBooster = this.configService.get('projectTxBooster')
+    this.projectNames = Object.keys(projectTxBooster[this.type])
   }
 
   @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
-    this.logger.log(`${VolPointService.name} initialized`);
+    this.logger.log(`${TxVolPointService.name} start...`);
     try {
       await this.handleCalculatePoint();
     } catch (error) {
@@ -49,19 +49,20 @@ export class VolPointService extends Worker {
   }
 
   async handleCalculatePoint() {
-    if (this.projectName.length == 0) {
+    if (this.projectNames.length == 0) {
       this.logger.log(`None project calculate ${this.type} points.`);
       return;
     }
-    this.logger.log(`There projects calculate ${this.type} points, ${JSON.stringify(this.projectName)}`);
+
     const lastBlockNumberStr = await this.cacheRepository.getValue(volLastBlockNumberKey);
     const lastBlockNumber = lastBlockNumberStr ? Number(lastBlockNumberStr) : 0;
     const endBlockNumberStr = await this.cacheRepository.getValue(transactionDataBlockNumberKey);
     const endBlockNumber = endBlockNumberStr ? Number(endBlockNumberStr) : 0;
+    this.logger.log(`${TxVolPointService.name} points from ${lastBlockNumber} to ${endBlockNumber}`);
     const volDetails: TransactionDataOfPointsDto[] = await this.transactionDataOfPointsRepository.getListByBlockNumber(
       lastBlockNumber,
       endBlockNumber,
-      this.projectName
+      this.projectNames
     );
     if (volDetails.length === 0) {
       this.logger.error(`volume details is empty, from lastBlockNumber: ${lastBlockNumber}`);
@@ -114,7 +115,7 @@ export class VolPointService extends Worker {
         .multipliedBy(BigNumber(item.price));
       const basePoint = itemVolume;
       // group booster
-      const groupBooster = this.boosterService.getGroupBooster(itemProjectName);
+      const projectBooster = this.boosterService.getProjectBooster(itemProjectName, this.type);
       // loyalty booster
       let loyaltyBooster = new BigNumber(1);
       const addressFirstDeposit = addressFirstDepositMap[itemUserAddress];
@@ -126,7 +127,7 @@ export class VolPointService extends Worker {
           `get address first deposit empty, address is : ${itemUserAddress}, fistDeposit is : ${JSON.stringify(addressFirstDeposit)}`
         );
       }
-      const newHoldPoint = basePoint.multipliedBy(groupBooster).multipliedBy(loyaltyBooster).multipliedBy(groupBooster);
+      const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster).multipliedBy(0.001)
 
       const fromBlockAddressPointKey = `${itemUserAddress}-${itemPoolAddress}-${itemBlockNumber}-${this.type}`;
       if (!blockAddressPointMap.has(fromBlockAddressPointKey)) {
@@ -140,7 +141,7 @@ export class VolPointService extends Worker {
         });
       } else {
         const fromBlockAddressPoint = blockAddressPointMap.get(fromBlockAddressPointKey);
-        fromBlockAddressPoint.holdPoint += newHoldPoint.toNumber();
+        fromBlockAddressPoint.holdPoint = Number(fromBlockAddressPoint.holdPoint) + newHoldPoint.toNumber();
       }
 
       const fromAddressPointKey = `${itemUserAddress}-${itemPoolAddress}`;
@@ -150,20 +151,21 @@ export class VolPointService extends Worker {
           id: 0,
           address: itemUserAddress,
           pairAddress: itemPoolAddress,
-          stakePoint: newHoldPoint.toNumber(),
+          stakePoint: newHoldPoint,
         });
       } else {
         const fromAddressPoint = addressPointMap.get(fromAddressPointKey);
-        fromAddressPoint.stakePoint += newHoldPoint.toNumber();
+        fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
       }
     }
 
     const blockAddressPointArr = Array.from(blockAddressPointMap.values());
     const addressPointArr = Array.from(addressPointMap.values());
     await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
-    this.logger.log(`Finish volpoint blockAddressPointArr, length: ${blockAddressPointArr.length}`);
+    this.logger.log(`Finish ${TxVolPointService.name} blockAddressPointArr, length: ${blockAddressPointArr.length}`);
     await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
-    this.logger.log(`Finish volpoint addressPointArr, length: ${addressPointArr.length}`);
+    this.logger.log(`Finish ${TxVolPointService.name} addressPointArr, length: ${addressPointArr.length}`);
     await this.cacheRepository.setValue(volLastBlockNumberKey, endBlockNumberStr);
+    this.logger.log(`Finish ${TxVolPointService.name} end at ${endBlockNumberStr}`);
   }
 }

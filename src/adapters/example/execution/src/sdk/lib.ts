@@ -73,7 +73,7 @@ const getAllUserPosition = async (blockNumber: number) => {
 
     result.push(...res.flat());
 
-    if (userPositions.length < 100) {
+    if (userPositions.length < pageSize) {
       fetchNext = false;
     } else {
       console.log(`GET DATA FROM ${skip}`);

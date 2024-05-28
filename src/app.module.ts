@@ -4,7 +4,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { HttpModule, HttpService } from "@nestjs/axios";
 import { PrometheusModule } from "@willsoto/nestjs-prometheus";
-import config from "./config";
+import config from "./config/index";
 import { HealthModule } from "./health/health.module";
 import { AppService } from "./app.service";
 import { TokenService } from "./token/token.service";
@@ -79,7 +79,7 @@ import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository, TxDataOfPointsRepository } from "./repositories";
 import { TvlPointService } from "./points/tvlPoint.service";
-import { VolPointService } from "./points/volPoint.service";
+import { TxVolPointService } from "./points/txVolPoint.service";
 import { TxNumPointService } from "./points/txNumPoint.service";
 import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
@@ -219,10 +219,10 @@ import { ScheduleModule } from "@nestjs/schedule";
     CacheRepository,
     BridgePointService,
     BoosterService,
-    VolPointService,
+    TxVolPointService,
     TxNumPointService,
     TxDataOfPointsRepository,
     BridgeActiveService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

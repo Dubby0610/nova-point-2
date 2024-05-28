@@ -4,6 +4,9 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
+    "create": "graph create interport-points --node http://127.0.0.1:8020",
+    "deploy": "graph deploy interport-points --node http://127.0.0.1:8020 --ipfs http://127.0.0.1:5001",
+    "remove": "graph remove interport-points --node http://127.0.0.1:8020",
     "clean": "graph clean",
     "test": "graph test"
   },

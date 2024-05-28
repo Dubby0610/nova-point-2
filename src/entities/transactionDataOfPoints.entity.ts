@@ -18,7 +18,7 @@ export class TransactionDataOfPoints extends BaseEntity {
   @PrimaryColumn({ type: "smallint" })
   public readonly decimals: number;
 
-  @Column({ type: "varchar", length: 100 })
+  @Column({ type: "varchar", length: 100, nullable: true })
   public readonly price: string;
 
   @Column({ type: "bigint", transformer: bigIntNumberTransformer })
@@ -27,7 +27,8 @@ export class TransactionDataOfPoints extends BaseEntity {
   @Column({ type: "varchar", length: 100 })
   public readonly nonce: string;
 
-  public readonly timestamp: string;
+  @Column({ type: "timestamp" })
+  public readonly timestamp: Date;
 
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   public readonly txHash: string;

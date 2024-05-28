@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
-import waitFor from "../utils/waitFor";
 import { ConfigService } from "@nestjs/config";
 import { promises as promisesFs, appendFileSync, existsSync } from "fs";
 import { join } from "path";
@@ -49,23 +48,23 @@ export class AdapterService extends Worker {
     // return this.runProcess();
   }
 
+  public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
+    await this.executeCommandInDirectory(name, curBlockNumber, lastBlockNumber);
+    this.logger.log(`compensatePointsData ${name} at block ${curBlockNumber}`)
+  }
+
   public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
     if (lastBlockNumber && curBlockNumber) {
       await this.runCommandsInAllDirectories(curBlockNumber, lastBlockNumber);
     } else {
-      const lastBlock = await this.blockRepository.getLastBlock({
+      const currentBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
-      });
-      const lastBalanceOfLp = await this.balanceOfLpRepository.getLastOrderByBlock();
-      if (lastBalanceOfLp && lastBlock.number <= lastBalanceOfLp.blockNumber) {
-        this.logger.log(
-          `Had adapted balance, Last block number: ${lastBlock.number}, Last balance of lp block number: ${lastBalanceOfLp.blockNumber}`
-        );
-        return;
-      }
+      })
       const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-      await this.runCommandsInAllDirectories(lastBlock.number, Number(adapterTxSyncBlockNumber));
-      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, lastBlock.number.toString())
+      this.logger.log(`Adapter start from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
+      await this.runCommandsInAllDirectories(currentBlock.number, Number(adapterTxSyncBlockNumber));
+      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, currentBlock.number.toString())
+      this.logger.log(`Adapter end from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
     }
 
   }
@@ -80,19 +79,13 @@ export class AdapterService extends Worker {
       for (const dir of dirs) {
         await this.executeCommandInDirectory(dir, curBlockNumber, lastBlockNumber);
       }
-      this.logger.log(`All commands executed, project count : ${dirs.length}.`);
+      this.logger.log(`All commands executed from ${curBlockNumber} to ${lastBlockNumber} , project count : ${dirs.length}.`);
     } catch (error) {
       this.logger.error("Failed to read directories:", error.stack);
     }
   }
 
   private async executeCommandInDirectory(dir: string, curBlockNumber: number, lastBlockNumber: number): Promise<void> {
-    // Check if the provided folder contains index.ts file
-    const indexPath = join(this.adaptersPath, dir, "execution/dist/index.js");
-    if (!existsSync(indexPath)) {
-      this.logger.log(`Folder '${dir}' does not contain index.ts file.`);
-    }
-
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
     const command = `node runScript.js ${dir} ${curBlockNumber} ${lastBlockNumber}`;
@@ -126,30 +119,34 @@ export class AdapterService extends Worker {
 
   // read output.csv file and save data to db
   private async saveTVLDataToDb(dir: string, blockNumber: number): Promise<void> {
-    // read output.csv file and save data to db
-    const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tvl.${blockNumber}.csv`);
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
-    if (!existsSync(outputPath)) {
-      this.logger.error(`Folder '${dir}' does not contain tvl.${blockNumber}.csv file.`);
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tvl.csv file.`);
-      return;
-    }
+    return new Promise((resolve) => {
+      // read output.csv file and save data to db
+      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tvl.${blockNumber}.csv`);
+      const nowT = new Date();
+      nowT.setHours(nowT.getHours() + 8);
+      const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+      if (!existsSync(outputPath)) {
+        this.logger.warn(`Folder '${dir}' does not contain tvl.${blockNumber}.csv file.`);
+        appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tvl.csv file.`);
+        resolve()
+        return;
+      }
 
-    const results = [];
-    fs.createReadStream(outputPath)
-      .pipe(csv())
-      .on("data", (row) => results.push(row))
-      .on("end", async () => {
-        if (results.length > 0) {
-          await this.insertTVLDataToDb(results, dir);
-        }
-        // fs.unlinkSync(outputPath);
-        this.logger.log(
-          `Adapter:${dir}\tCSV file successfully processed, ${results.length} rows inserted into db.`
-        );
-      });
+      const results = [];
+      fs.createReadStream(outputPath)
+        .pipe(csv())
+        .on("data", (row) => results.push(row))
+        .on("end", async () => {
+          if (results.length > 0) {
+            await this.insertTVLDataToDb(results, dir);
+          }
+          // fs.unlinkSync(outputPath);
+          this.logger.log(
+            `Adapter:${dir} tvl CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
+          );
+          resolve()
+        });
+    })
   }
 
   // insert into db
@@ -177,33 +174,37 @@ export class AdapterService extends Worker {
     try {
       await this.balanceOfLpRepository.addManyIgnoreConflicts(dataToInsert);
     } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} data to db: ${e.stack}`);
+      this.logger.error(`Error inserting ${rows.length} tvl data to db: ${e.stack}`);
     }
   }
 
   private async saveTXDataToDb(dir: string, blockNumber: number): Promise<void> {
-    // read output.csv file and save data to db
-    const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tx.${blockNumber}.csv`);
-    const nowT = new Date();
-    nowT.setHours(nowT.getHours() + 8);
-    const now = nowT.toISOString().replace("T", " ").slice(0, 19);
-    if (!existsSync(outputPath)) {
-      this.logger.error(`Folder '${dir}' does not contain tx.${blockNumber}.csv file.`);
-      appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tx.csv file.`);
-      return;
-    }
+    return new Promise((resolve) => {
+      // read output.csv file and save data to db
+      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `tx.${blockNumber}.csv`);
+      const nowT = new Date();
+      nowT.setHours(nowT.getHours() + 8);
+      const now = nowT.toISOString().replace("T", " ").slice(0, 19);
+      if (!existsSync(outputPath)) {
+        this.logger.warn(`Folder '${dir}' does not contain tx.${blockNumber}.csv file.`);
+        appendFileSync(this.logFilePath, `${now}\nAdapter:${dir}\nDoes not contain tx.csv file.`);
+        resolve()
+        return;
+      }
 
-    const results = [];
-    fs.createReadStream(outputPath)
-      .pipe(csv())
-      .on("data", (row) => results.push(row))
-      .on("end", async () => {
-        await this.insertTXDataToDb(results, dir);
-        fs.unlinkSync(outputPath);
-        this.logger.log(
-          `Adapter:${dir}\tCSV file successfully processed, ${results.length} rows inserted into db.`
-        );
-      });
+      const results = [];
+      fs.createReadStream(outputPath)
+        .pipe(csv())
+        .on("data", (row) => results.push(row))
+        .on("end", async () => {
+          await this.insertTXDataToDb(results, dir);
+          fs.unlinkSync(outputPath);
+          this.logger.log(
+            `Adapter:${dir} tx CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
+          );
+          resolve()
+        });
+    })
   }
 
   // insert into db
@@ -218,7 +219,7 @@ export class AdapterService extends Worker {
         tokenAddress = NOVA_CHAIN_ETHADDRESS;
       }
       return {
-        timestamp: row.timestamp,
+        timestamp: new Date(row.timestamp * 1000),
         userAddress: row.userAddress,
         contractAddress: row.contractAddress,
         tokenAddress: tokenAddress,
@@ -236,7 +237,7 @@ export class AdapterService extends Worker {
     try {
       await this.transactionDataOfPoints.addManyIgnoreConflicts(dataToInsert);
     } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} data to db: ${e.stack}`);
+      this.logger.error(`Error inserting ${rows.length} tx data to db: ${e}`);
     }
   }
 }
