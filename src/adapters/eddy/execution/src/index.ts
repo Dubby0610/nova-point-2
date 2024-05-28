@@ -47,7 +47,7 @@ export const getUserTransactionData = async (startBlock: number, endBlock: numbe
     const formattedSwaps = allSwaps.map((eachSwap: any) => {
         const tradingVolume = getTradingVolumeForToken(eachSwap.tokenIn, eachSwap.amountIn, eachSwap.priceOfTokenIn);
         return {
-            timestmap: eachSwap.blockTimestamp,
+            timestamp: eachSwap.blockTimestamp,
             userAddress: eachSwap.walletAddress,
             contractAddress: EddySwapRouter,
             tokenAddress: eachSwap.tokenIn,
