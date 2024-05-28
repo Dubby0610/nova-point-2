@@ -1,0 +1,30 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: schema.graphql
+dataSources:
+  - kind: ethereum
+    name: EddySwapRouter
+    network: zklink-nova
+    source:
+      address: "0x35F998694e553B772E0c22dC9CEb9bE0a1Bf8528"
+      abi: EddySwapRouter
+      startBlock: 1615591
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - EddySwap
+        - OwnershipTransferred
+      abis:
+        - name: EddySwapRouter
+          file: EddySwapRouter/abis/EddySwapRouter.json
+      eventHandlers:
+        - event: EddySwap(address,address,address,uint256,uint256,uint256,uint256,indexed
+            string,uint256)
+          handler: handleEddySwap
+        - event: OwnershipTransferred(indexed address,indexed address)
+          handler: handleOwnershipTransferred
+      file: EddySwapRouter/EddySwapRouter.wasm
