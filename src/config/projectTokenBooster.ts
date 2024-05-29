@@ -61,6 +61,13 @@ const booster = {
     },
     logx: {
         "0x2F8A25ac62179B31D62D7F80884AE57464699059": 10, //USDT
+    },
+    agx: {
+        "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169": 20, // WETH
+        "0xDa4AaEd3A53962c83B35697Cd138cc6df43aF71f": 20, // WBTC
+        "0x2F8A25ac62179B31D62D7F80884AE57464699059": 20, // USDT
+        "0x1a1A3b2ff016332e866787B311fcB63928464509": 20, // USDC
+        "0x1B49eCf1A8323Db4abf48b2F5EFaA33F7DdAB3FC": 10, // pufETH.eth
     }
 } as const;
 
