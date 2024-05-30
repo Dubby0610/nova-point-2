@@ -1,5 +1,5 @@
 import { RubicSwappedGenericSchema, RubicSwappedGenericsRes, RubicTransferStartedSchema, RubicTransferStartedsRes, UserTxData } from "./types"
-import { ethers } from 'ethers'
+import { ethers , JsonRpcProvider} from 'ethers'
 import ERC20_ABI from "./ERC20.json"
 import path from "path";
 
@@ -29,7 +29,7 @@ export const getUserTransactionData = async (startBlock: number, endBlock: numbe
 };
 
 class RubicQueriesManager {
-  private _provider = new ethers.providers.JsonRpcProvider('https://rpc.zklink.io')
+  private _provider = new JsonRpcProvider('https://rpc.zklink.io')
 
   private _retry: {count: number} = {count: 0}
 
