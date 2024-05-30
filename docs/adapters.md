@@ -39,8 +39,7 @@ $$
      In this sense, the total trading volume can signify total transaction volume in gameFi. - To prevent sybil attack, a multiplier of 1/x where x = 1000, 2000,..., N is used for each specific protocol. The multiplier is incorporated into the constant b.
 
 2. TVL<sub>u,t</sub> (Total Locked Value):
-   Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of 
-   time.
+   Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of time.
 
    These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is USDC/ETH/WETH etc.
 
