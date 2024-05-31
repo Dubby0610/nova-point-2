@@ -37,8 +37,7 @@ const processLid = async (lid: bigint, blockNumber: number, timestamp: number) =
 const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
   const timestamp = await getTimestampAtBlock(blockNumber)
   const lids = await getAllLidsAtBlock(blockNumber)
-  const data = []
-
+  const tvlMap = new Map()
 
   for (const lid of lids) {
     let success = false;
@@ -46,11 +45,23 @@ const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
       try {
         const [data0, data1] = await processLid(lid, blockNumber, timestamp)
         if (data0.balance !== 0n) {
-          data.push(data0)
+          const uniqueKey = `${data0.userAddress}_${data0.tokenAddress}_${data0.poolAddress}`
+          if(!tvlMap.get(uniqueKey)) {
+            tvlMap.set(uniqueKey, data0)
+          } else {
+            const data = tvlMap.get(uniqueKey)
+            data.balance = data.balance + data0.balance
+          }
         }
 
         if (data1.balance !== 0n) {
-          data.push(data1)
+          const uniqueKey = `${data1.userAddress}_${data1.tokenAddress}_${data1.poolAddress}`
+          if(!tvlMap.get(uniqueKey)) {
+            tvlMap.set(uniqueKey, data1)
+          } else {
+            const data = tvlMap.get(uniqueKey)
+            data.balance = data.balance + data1.balance
+          }
         }
 
         success = true;
@@ -60,7 +71,7 @@ const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
     }
   }
 
-  return data
+  return Array.from(tvlMap.values())
 };
 
 export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]> => {
