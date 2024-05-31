@@ -1,3 +1,3 @@
-export const VaultContractAddress = '0x04A29E2911D4865d609fbF105Ff54211213f0862'
-export const ReaderContractAddress = '0x2892a5888d168C52C1EDA628d7E91CE99B922973'
-export const RouteContractAddress = '0x8b63A63514598e920Df1c8eCEa91D660F17F7a94'
+export const VaultContractAddress = '0xc48F99afe872c2541f530C6c87E3A6427e0C40d5'
+export const ReaderContractAddress = '0x7d9df010c7d34B55F17d6A5266F3b849bAd6b4a8'
+export const RouteContractAddress = '0x0616B9e771863d5a288EC7b3cd53E48f217650e1'

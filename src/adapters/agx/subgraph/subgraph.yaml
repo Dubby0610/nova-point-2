@@ -7,8 +7,8 @@ dataSources:
     network: zklink-nova
     source:
       abi: ALP
-      address: '0x2511a5540FbB5a19de2e516a7797B72e1B27b256'
-      startBlock: 12649
+      address: '0x663f9Bbd7c3E7e08bd24df2BF47577B2299EAE38'
+      startBlock: 2162721
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -29,8 +29,8 @@ dataSources:
     network: zklink-nova
     source:
       abi: Router
-      address: '0x8b63A63514598e920Df1c8eCEa91D660F17F7a94'
-      startBlock: 12644
+      address: '0x0616B9e771863d5a288EC7b3cd53E48f217650e1'
+      startBlock: 2162642
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
