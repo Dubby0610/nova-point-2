@@ -41,7 +41,7 @@ export class BoosterService {
     const millisecondsPerDay = 24 * 60 * 60 * 1000;
     const diffInMilliseconds = timestamp - firstDepositTs;
     const loyaltyDays = new BigNumber(Math.floor(diffInMilliseconds / millisecondsPerDay));
-    const loyaltyBooster = loyaltyDays.multipliedBy(LOYALTY_BOOSTER_FACTOR);
+    const loyaltyBooster = BigNumber.min(0.5, loyaltyDays.multipliedBy(LOYALTY_BOOSTER_FACTOR))
     return loyaltyBooster.plus(1);
   }
 

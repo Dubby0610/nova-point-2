@@ -104,7 +104,7 @@ export class TvlPointService extends Worker {
     // loop all address to calculate hold point
     let blockAddressPointArr = [];
     let addressPointArr = [];
-    let groupBooster = new BigNumber(1.5);
+    let groupBooster = new BigNumber(1);
     for (const key of addressTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
       const addressTvl = addressTvlMap.get(key);
