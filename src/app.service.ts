@@ -62,15 +62,15 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
   private async compensatePoints() {
     await this.adapterService.compensatePointsData('novaswap', 2228865, 2215814);
-    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-29 17:22:55Z").toISOString());
+    await this.tvlPointService.handleHoldPoint(2228865, new Date("2024-05-29 17:22:55Z").toISOString());
     await this.adapterService.compensatePointsData('novaswap', 2242907, 2228865);
-    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-30 01:22:55Z").toISOString());
+    await this.tvlPointService.handleHoldPoint(2242907, new Date("2024-05-30 01:22:55Z").toISOString());
     await this.adapterService.compensatePointsData('novaswap', 2256932, 2242907);
-    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-30 09:22:55Z").toISOString());
+    await this.tvlPointService.handleHoldPoint(2256932, new Date("2024-05-30 09:22:55Z").toISOString());
     await this.adapterService.compensatePointsData('novaswap', 2270939, 2256932);
-    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-30 17:22:55Z").toISOString());
+    await this.tvlPointService.handleHoldPoint(2270939, new Date("2024-05-30 17:22:55Z").toISOString());
     await this.adapterService.compensatePointsData('novaswap', 2284939, 2270939);
-    await this.tvlPointService.handleHoldPoint(2051369, new Date("2024-05-31 01:22:55Z").toISOString());
+    await this.tvlPointService.handleHoldPoint(2284939, new Date("2024-05-31 01:22:55Z").toISOString());
   }
 
 }
