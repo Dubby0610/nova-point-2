@@ -71,6 +71,8 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     await this.tvlPointService.handleHoldPoint(2270939, new Date("2024-05-30 17:22:55Z").toISOString());
     await this.adapterService.compensatePointsData('novaswap', 2284939, 2270939);
     await this.tvlPointService.handleHoldPoint(2284939, new Date("2024-05-31 01:22:55Z").toISOString());
+    await this.adapterService.compensatePointsData('novaswap', 2298943, 2284939);
+    await this.tvlPointService.handleHoldPoint(2298943, new Date("2024-05-31 09:22:55Z").toISOString());
   }
 
 }
