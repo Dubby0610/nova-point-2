@@ -27,6 +27,7 @@ import {
   AddressFirstDepositRepository,
   ProjectRepository,
   CacheRepository,
+  RedistributeBalanceRepository,
 } from "./repositories";
 import {
   Batch,
@@ -54,6 +55,8 @@ import {
   Project,
   Cache,
   TransactionDataOfPoints,
+  RedistributeBalance,
+  RedistributeBalanceHistory,
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -83,6 +86,7 @@ import { TxVolPointService } from "./points/txVolPoint.service";
 import { TxNumPointService } from "./points/txNumPoint.service";
 import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
+import { HourlyHoldingService } from "./points/redistributeBalance.service";
 
 @Module({
   imports: [
@@ -150,7 +154,7 @@ import { ScheduleModule } from "@nestjs/schedule";
       },
     }),
     TypeOrmModule.forFeature(
-      [PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache, TransactionDataOfPoints],
+      [PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache, TransactionDataOfPoints, RedistributeBalance, RedistributeBalanceHistory],
       "lrt"
     ),
 
@@ -223,6 +227,8 @@ import { ScheduleModule } from "@nestjs/schedule";
     TxNumPointService,
     TxDataOfPointsRepository,
     BridgeActiveService,
+    HourlyHoldingService,
+    RedistributeBalanceRepository
   ],
 })
 export class AppModule { }

@@ -1,6 +1,5 @@
-import { Entity, Column, PrimaryColumn, Index, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, PrimaryColumn, Index } from "typeorm";
 import { BaseEntity } from "./base.entity";
-import { Block } from "./block.entity";
 import { bigIntNumberTransformer } from "../transformers/bigIntNumber.transformer";
 import { hexTransformer } from "../transformers/hex.transformer";
 
