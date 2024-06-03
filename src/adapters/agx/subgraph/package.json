@@ -6,9 +6,9 @@
     "build": "graph build",
     "clean": "graph clean",
     "test": "graph test",
-    "create-local": "graph create agx-points --node https://sepolia.graph.zklink.io/node",
-    "deploy-local": "graph deploy agx-points --ipfs https://sepolia.ipfs.zklink.io --node https://sepolia.graph.zklink.io/node",
-    "remove-local": "graph remove --node https://sepolia.graph.zklink.io/node agx-points"
+    "create-local": "graph create agx-points --node https://localhost:8020",
+    "deploy-local": "graph deploy agx-points --ipfs http://3.114.68.110:5001 --node https://localhost:8020",
+    "remove-local": "graph remove --node https://localhost:8020 agx-points"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.68.5",

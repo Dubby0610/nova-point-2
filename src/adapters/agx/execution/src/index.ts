@@ -11,7 +11,7 @@ import VaultABI from './abi/Vault.json'
 import ReaderABI from './abi/Reader.json'
 
 export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]> => {
-  const provider = new JsonRpcProvider("https://sepolia.rpc.zklink.io");
+  const provider = new JsonRpcProvider("https://rpc.zklink.io");
 
   const timestamp = await getTimestampAtBlock(blockNumber);
 

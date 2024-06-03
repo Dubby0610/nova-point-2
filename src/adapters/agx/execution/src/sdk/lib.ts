@@ -17,7 +17,9 @@ export const getVaultTotalSupplied = async () => {
 
   const data = await fetchGraphQLData<{ pools: Pool[] }>(query);
 
-  return data.pools[0].totalSupplied;
+  if(data.pools.length === 0) return '1'
+
+  return data.pools[0]?.totalSupplied ?? '0';
 };
 
 export const getSwapTxList = async (startBlock: number, endBlock: number) => {
