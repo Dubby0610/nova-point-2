@@ -1,6 +1,18 @@
 import { fetchGraphQLData } from "./fetch";
-import { UserBalance, UserSupplied, AquaCToken } from "./types";
+import { UserBalance, UserSupplied } from "./types";
 import { JsonRpcProvider } from "ethers";
+
+const getAllPools = async(blockNumber:number)=> {
+  const query = `query Pools {
+    pools(first: 1000, block: {number: ${blockNumber}}) {
+      balance
+      id
+      totalSupplied
+    }
+  }`
+  const data = await fetchGraphQLData(query);
+  return data.pools
+}
 
 export const getUserPositionsAtBlock = async (blockNumber: number): Promise<UserBalance[]> => {
   const pageSize = 1000
@@ -8,27 +20,18 @@ export const getUserPositionsAtBlock = async (blockNumber: number): Promise<User
   let result: UserSupplied[] = [];
   let skip = 0;
   let fetchNext = true;
-  let pools: AquaCToken[] = [];
+  const pools = await getAllPools(blockNumber)
 
   while (fetchNext) {
     const query = `query MyQuery {
       userPositions(block: {number: ${blockNumber}}, skip: ${skip}, first: ${pageSize}) {
         id
         positions {
-          decimal
-          blockNumber
           id
           pool
           supplied
           token
-          transactionHash
         }
-      }
-      aquaCTokens(block: {number: ${blockNumber}}) {
-        balance
-        blockNumber
-        id
-        totalSupplied
       }
     }`;
 
@@ -38,8 +41,7 @@ export const getUserPositionsAtBlock = async (blockNumber: number): Promise<User
       break;
     }
 
-    const { userPositions, aquaCTokens } = data;
-    pools = aquaCTokens;
+    const { userPositions } = data;
     const res = userPositions.map((data) => {
       const userAddress = data.id;
 
