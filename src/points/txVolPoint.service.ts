@@ -151,7 +151,7 @@ export class TxVolPointService extends Worker {
           id: 0,
           address: itemUserAddress,
           pairAddress: itemPoolAddress,
-          stakePoint: newHoldPoint,
+          stakePoint: newHoldPoint.toNumber(),
         });
       } else {
         const fromAddressPoint = addressPointMap.get(fromAddressPointKey);
