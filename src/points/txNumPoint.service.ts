@@ -164,6 +164,6 @@ export class TxNumPointService extends Worker {
     await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
     this.logger.log(`Finish ${TxNumPointService.name} addressPointArr, length: ${addressPointArr.length}`);
     await this.cacheRepository.setValue(txNumberLastBlockNumberKey, endBlockNumberStr);
-    this.logger.log(`${TxNumPointService.name} end at ${endBlockNumberStr}`);
+    this.logger.log(`Finish ${TxNumPointService.name} end at ${endBlockNumberStr}`);
   }
 }

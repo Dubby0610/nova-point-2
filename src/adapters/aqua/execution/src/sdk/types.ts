@@ -16,11 +16,10 @@ export type UserSupplied = Omit<UserBalance, 'balance'> & {
     pool: string
 }
 
-export interface AquaCToken {
+export interface Pool {
     id: string
     totalSupplied: string
     balance: string
-    blockNumber: string
 }
 
 export type Response = {
@@ -36,5 +35,5 @@ export type Response = {
             transactionHash: string;
         }>
     }>
-    aquaCTokens: Array<AquaCToken>
+    pools: Array<Pool>
 }

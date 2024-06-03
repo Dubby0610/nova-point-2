@@ -11,7 +11,7 @@ export const fetchGraphQLData = async (query: string): Promise<Response> => {
 
   while (retry && retryCount < maxRetries) {
     try {
-      const response = await fetch("https://graph.zklink.io/subgraphs/name/aqua-points", {
+      const response = await fetch("https://graph.zklink.io/subgraphs/name/aqua-points-v2", {
         method: "POST",
         body: JSON.stringify({ query }),
         headers: { "Content-Type": "application/json" },
