@@ -86,7 +86,7 @@ import { TxVolPointService } from "./points/txVolPoint.service";
 import { TxNumPointService } from "./points/txNumPoint.service";
 import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
-import { HourlyHoldingService } from "./points/redistributeBalance.service";
+import { RedistributeBalanceService } from "./points/redistributeBalance.service";
 
 @Module({
   imports: [
@@ -227,7 +227,7 @@ import { HourlyHoldingService } from "./points/redistributeBalance.service";
     TxNumPointService,
     TxDataOfPointsRepository,
     BridgeActiveService,
-    HourlyHoldingService,
+    RedistributeBalanceService,
     RedistributeBalanceRepository
   ],
 })
