@@ -22,3 +22,4 @@ export * from "./blockAddressPointOfLp.repository";
 export * from "./project.repository";
 export * from "./cache.repository";
 export * from './txDataOfPoints.repository'
+export * from './redistributeBalance.repository'

@@ -29,3 +29,5 @@ export * from "./project.entity";
 export * from "./cache.entity";
 export * from "./transactionDataOfPoints.entity";
 export * from "./addressFirstDeposit.entity";
+export * from './redistributeBalanceHistory.entity'
+export * from './redistributeBalance.entity'
