@@ -50,10 +50,10 @@ export class TvlPointLinkswapService extends Worker {
     }
   }
 
-  async handleHoldPoint() {
+  public async handleHoldPoint() {
     this.saveProject(poolAddresses);
     const addressPointsArr: PoolPoint[] = await this.getAddressPoints(poolAddresses);
-    const addresses = addressPointsArr.map((item) => item.userAddress);
+    const addresses = [...new Set(addressPointsArr.map((item) => item.userAddress))];
     // get all first deposit time
     const addressFirstDepositList = await this.addressFirstDepositRepository.getAllAddressesFirstDeposits(addresses);
     this.logger.log(`Address first deposit map size: ${addressFirstDepositList.length}`);
@@ -84,7 +84,7 @@ export class TvlPointLinkswapService extends Worker {
       const pointsOfLp = {
         address: address,
         pairAddress: pairAddress,
-        stakePoint: Number(stakePoint.toString()),
+        stakePoint: stakePoint.toNumber(),
       } as PointsOfLp;
       addressPointArr.push(pointsOfLp);
       this.logger.log(
@@ -111,8 +111,7 @@ export class TvlPointLinkswapService extends Worker {
           headers: headers,
           redirect: "follow",
         });
-        const result = await response.text();
-        const resultJson = JSON.parse(result);
+        const resultJson = await response.json();
         const dataTArr = resultJson?.data?.users ?? [];
         if (dataTArr.length == 0) {
           this.logger.log(`linkswap pool:${poolAddress} empty, res:${JSON.stringify(resultJson)}`);
