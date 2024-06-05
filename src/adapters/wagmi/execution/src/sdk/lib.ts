@@ -1,5 +1,5 @@
 import { UserTVLData, UserTxData, SwapResponse, UserV3PositionsResponse, UserV3Position, UserMultipoolPosition, UserMultipoolPositionsResponse } from "./types";
-import { Contract, JsonRpcProvider, parseUnits , ZeroAddress} from "ethers";
+import { Contract, JsonRpcProvider, parseUnits , ZeroAddress } from "ethers";
 import path from "path";
 import { fetchGraphQLData } from "./fetch";
 import { MULTICALL_ADDRESS, RPC_URL } from "./constants";
@@ -99,36 +99,49 @@ const transformUserPositions = async (positions: UserV3Position[], blockNumber: 
     }
     return acc;
   }, {} as Record<string, { tickCurrent: number, sqrtRatioX96: bigint,  }>);
-  
 
-  return positions.reduce((acc, position) => {
+  const balances = positions.reduce((acc, position) => {
     const pool = pools[position.pool.id];
     if(pool) {
       const amount0 = PositionMath.getToken0Amount(pool.tickCurrent, position.tickLower, position.tickUpper, pool.sqrtRatioX96, position.liquidity);
       const amount1 = PositionMath.getToken1Amount(pool.tickCurrent, position.tickLower, position.tickUpper, pool.sqrtRatioX96, position.liquidity);
+
       if(amount0 > 0){
-        acc.push({
-          userAddress: position.owner,
-          poolAddress: position.pool.id,
-          tokenAddress: position.pool.token0.id,
-          blockNumber,
-          balance: amount0,
-          timestamp,
-        });
+        const key = `${position.owner}-${position.pool.id}-${position.pool.token0.id}`;
+        if(!acc[key]){
+          acc[key] = {
+            userAddress: position.owner,
+            poolAddress: position.pool.id,
+            tokenAddress: position.pool.token0.id,
+            blockNumber,
+            balance: amount0,
+            timestamp,
+          };
+        } else {
+          acc[key].balance += amount0;
+        }        
       }
+
       if(amount1 > 0){
-        acc.push({
-          userAddress: position.owner,
-          poolAddress: position.pool.id,
-          tokenAddress: position.pool.token1.id,
-          blockNumber,
-          balance: amount1,
-          timestamp,
-        });
+        const key = `${position.owner}-${position.pool.id}-${position.pool.token1.id}`;
+        if(!acc[key]){
+          acc[key] = {
+            userAddress: position.owner,
+            poolAddress: position.pool.id,
+            tokenAddress: position.pool.token1.id,
+            blockNumber,
+            balance: amount0,
+            timestamp,
+          };
+        } else {
+          acc[key].balance += amount0;
+        }   
       }   
     }
     return acc;
-  }, [] as UserTVLData[]);
+  }, {} as { [key: string]: UserTVLData });
+
+  return Object.values(balances);
 }
 
 const getAllUserMultipoolPositions = async (blockNumber: number) => {
