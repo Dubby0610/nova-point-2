@@ -15,6 +15,7 @@ import { PortalsFiTokenOffChainDataProvider } from "./token/tokenOffChainData/pr
 import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOffChainDataSaver.service";
 import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
+import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
 import {
   BatchRepository,
   BlockRepository,
@@ -154,7 +155,16 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
       },
     }),
     TypeOrmModule.forFeature(
-      [PointsOfLp, BlockAddressPointOfLp, BalanceOfLp, Project, Cache, TransactionDataOfPoints, RedistributeBalance, RedistributeBalanceHistory],
+      [
+        PointsOfLp,
+        BlockAddressPointOfLp,
+        BalanceOfLp,
+        Project,
+        Cache,
+        TransactionDataOfPoints,
+        RedistributeBalance,
+        RedistributeBalanceHistory,
+      ],
       "lrt"
     ),
 
@@ -228,7 +238,8 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     TxDataOfPointsRepository,
     BridgeActiveService,
     RedistributeBalanceService,
-    RedistributeBalanceRepository
+    RedistributeBalanceRepository,
+    TvlPointLinkswapService,
   ],
 })
-export class AppModule { }
+export class AppModule {}
