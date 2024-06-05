@@ -53,20 +53,6 @@ export class TvlPointLinkswapService extends Worker {
   public async handleHoldPoint() {
     this.saveProject(poolAddresses);
     const addressPointsArr: PoolPoint[] = await this.getAddressPoints(poolAddresses);
-    const addresses = [...new Set(addressPointsArr.map((item) => item.userAddress))];
-    // get all first deposit time
-    const addressFirstDepositList = await this.addressFirstDepositRepository.getAllAddressesFirstDeposits(addresses);
-    this.logger.log(`Address first deposit map size: ${addressFirstDepositList.length}`);
-    const addressFirstDepositMap: { [address: string]: AddressFirstDeposit } = {};
-    for (let i = 0; i < addressFirstDepositList.length; i++) {
-      const item = addressFirstDepositList[i];
-      const tmpAddress = item.address.toLocaleLowerCase();
-      if (tmpAddress) {
-        addressFirstDepositMap[tmpAddress] = item;
-      }
-    }
-
-    // loop all address to calculate hold point
     let addressPointArr = [];
     let groupBooster = new BigNumber(1);
     const now = new Date().getTime();
@@ -75,12 +61,8 @@ export class TvlPointLinkswapService extends Worker {
       const address = item.userAddress;
       const pairAddress = item.poolAddress;
       if (!novaPoint) continue;
-      // get the last multiplier before the block timestamp
-      const addressFirstDeposit = addressFirstDepositMap[address.toLowerCase()];
-      const firstDepositTime = addressFirstDeposit?.firstDepositTime;
-      const loyaltyBooster = this.boosterService.getLoyaltyBooster(now, firstDepositTime?.getTime());
 
-      const stakePoint = BigNumber(novaPoint).multipliedBy(groupBooster).multipliedBy(loyaltyBooster);
+      const stakePoint = BigNumber(novaPoint).multipliedBy(groupBooster);
       const pointsOfLp = {
         address: address,
         pairAddress: pairAddress,
