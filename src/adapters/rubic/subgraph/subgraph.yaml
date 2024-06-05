@@ -24,6 +24,4 @@ dataSources:
       eventHandlers:
         - event: RubicSwappedGeneric(indexed bytes32,address,address,address,address,uint256,uint256)
           handler: handleRubicSwappedGeneric
-        - event: RubicTransferStarted((bytes32,string,address,address,address,address,address,address,uint256,uint256,bool,bool))
-          handler: handleRubicTransferStarted
       file: ./src/rubic-multi-proxy.ts

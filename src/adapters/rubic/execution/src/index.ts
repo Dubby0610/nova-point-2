@@ -1,5 +1,5 @@
-import { RubicSwappedGenericSchema, RubicSwappedGenericsRes, RubicTransferStartedSchema, RubicTransferStartedsRes, UserTxData } from "./types"
-import { ethers , JsonRpcProvider} from 'ethers'
+import { RubicSwappedGenericSchema, RubicSwappedGenericsRes, PageWithTrsanctionsInChain, UserTxData, TransactionFromBackend } from "./types"
+import { ethers } from 'ethers'
 import ERC20_ABI from "./ERC20.json"
 import path from "path";
 
@@ -7,10 +7,10 @@ require('dotenv').config({ path: path.join(__dirname, "../.env") })
 
 const RUBIC_MULTI_PROXY_ADDRESS = '0x1a979E2386595837BaAB90Ba12B2E2a71C652576'
 const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000'
-const ZK_LINK_CHAIN_ID = 810180
-const ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string
+const SUBGRAPH_ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string
+const RUBIC_API_ENDPOINT = process.env.API_ENDPOINT as string
 
-if (!ENDPOINT) {
+if (!SUBGRAPH_ENDPOINT) {
   console.error("SUBGRAPH_ENDPOINT variable doesn't exist! Create .env file and add this one.");
   process.exit(1);
 }
@@ -19,17 +19,17 @@ export const getUserTransactionData = async (startBlock: number, endBlock: numbe
   console.log(`Get Tx Data From ${startBlock} to ${endBlock}`)
 
   const manager = new RubicQueriesManager(startBlock, endBlock)
-  const [onchainSwaps, ccrSwaps] = await Promise.all([
-      manager.queryRubicSwappedGenerics(),
-      manager.queryRubicTransferStarteds()
+  const results = await Promise.all([
+    manager.queryOnChainInfo(),
+    manager.queryCrossChainInfo()
   ])
-  const transactions = [...onchainSwaps, ...ccrSwaps]
+  const transactions = results.flat()
 
-  return transactions
+  return transactions;
 };
 
 class RubicQueriesManager {
-  private _provider = new JsonRpcProvider('https://rpc.zklink.io')
+  private _provider = new ethers.providers.JsonRpcProvider('https://rpc.zklink.io')
 
   private _retry: {count: number} = {count: 0}
 
@@ -37,12 +37,14 @@ class RubicQueriesManager {
 
   private _endBlock: number
 
+  private _pageSize: number = 2000;
+
   constructor(start: number, end: number) {
     this._startBlock = start;
     this._endBlock = end;
   }
 
-  public async queryRubicSwappedGenerics(): Promise<UserTxData[]> {
+  public async queryOnChainInfo(): Promise<UserTxData[]> {
     const query = `query MyQuery {
       rubicSwappedGenerics(where: {
         blockNumber_gte: ${this._startBlock},
@@ -57,15 +59,15 @@ class RubicQueriesManager {
     }
     `
     const res = await fetch(
-      ENDPOINT, 
+      SUBGRAPH_ENDPOINT, 
     {
       method: 'POST',
       body: JSON.stringify({ query }),
       headers: { 'Content-Type': 'application/json' }
-    });
+    })
 
     if(!res.ok){
-      return retryRequest(this.queryRubicSwappedGenerics.bind(this), this._retry)
+      return retryRequest(this.queryOnChainInfo.bind(this), this._retry)
     }
 
     const data = await res.json() as RubicSwappedGenericsRes
@@ -77,43 +79,62 @@ class RubicQueriesManager {
     return result
   }
 
-  public async queryRubicTransferStarteds(): Promise<UserTxData[]> {
-    const query = `query MyQuery {
-      rubicTransferStarteds(where: {
-        blockNumber_gte: ${this._startBlock},
-        blockNumber_lte: ${this._endBlock}
-      }) {
-        bridgeData_sendingAssetId
-        bridgeData_destinationChainId
-        bridgeData_receiver
-        bridgeData_minAmount
-        blockNumber
-        blockTimestamp
-        transactionHash
-    }
-    `
-    const res = await fetch(
-      ENDPOINT, 
-    {
-      method: 'POST',
-      body: JSON.stringify({ query }),
-      headers: { 'Content-Type': 'application/json' }
-    });
+  public async queryCrossChainInfo(): Promise<UserTxData[]> {
+    const [startTimestamp, endTimestamp] = await Promise.all([
+      this.getBlockTimestamp(this._startBlock),
+      this.getBlockTimestamp(this._endBlock)
+    ])
 
-    if(!res.ok){
-      return await retryRequest(this.queryRubicTransferStarteds.bind(this), this._retry)
-    }
-
-    const data = await res.json() as RubicTransferStartedsRes
-
-    const transfers = data.data?.rubicTransferStarteds || []
-    const promises = transfers
-        .filter(v => v.bridgeData_destinationChainId === ZK_LINK_CHAIN_ID)
-        .map(el => this.mapRTS(el))
-    const result = await Promise.all(promises)
-    
-    return result
+    return this.queryAllCrossChainTransactions(startTimestamp, endTimestamp)
   }
+
+  private async queryAllCrossChainTransactions(startTimestamp: number, endTimestamp: number): Promise<UserTxData[]> {
+    const firstPage = await this.queryPageWithTransactions(startTimestamp, endTimestamp, 1)
+    const promises = [] as Promise<PageWithTrsanctionsInChain>[]
+    const totalPageCount = Math.ceil(firstPage.count / this._pageSize)
+    for(let page = 1; page <= totalPageCount; page++) {
+      const req = this.queryPageWithTransactions(startTimestamp, endTimestamp, page);
+      promises.push(req)
+    }
+    const pages = await Promise.allSettled(promises); 
+
+    const transactions = pages
+        .filter(res => res.status === 'fulfilled')
+        .map(resolved => (resolved as PromiseFulfilledResult<PageWithTrsanctionsInChain>).value)
+        .map(p => p.results.map(tx => this.mapCrossChainTxInfo(tx)))
+        .flat()
+
+        
+    return transactions
+  }
+
+  private async queryPageWithTransactions(startTimestamp: number, endTimestamp: number, pageNumber: number): Promise<PageWithTrsanctionsInChain>{
+    const params = `startTimestampInSeconds=${startTimestamp}&endTimestampInSeconds=${endTimestamp}&page=${pageNumber}&pageSize=${this._pageSize}`
+    const res = await fetch(
+      `${RUBIC_API_ENDPOINT}/trades/crosschain/all_to_zklink?${params}
+      `, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })  
+    const page = await res.json() as PageWithTrsanctionsInChain
+    return page
+  }
+
+  private mapCrossChainTxInfo(tx: TransactionFromBackend): UserTxData {
+    return {
+      blockNumber: tx.sourceChainBlockNumber,
+      contractAddress: tx.contractAddress,
+      decimals: tx.tokenDecimals,
+      nonce: tx.nonce.toString(),
+      quantity: BigInt(tx.quantity),
+      timestamp: tx.timestamp,
+      tokenAddress: tx.tokenAddress,
+      txHash: tx.sourceTxHash,
+      userAddress: tx.userAddress
+    }
+  } 
 
   private async mapRSG(el: RubicSwappedGenericSchema): Promise<UserTxData> {
     const tx = await this._provider.getTransaction(el.transactionHash)
@@ -133,22 +154,9 @@ class RubicQueriesManager {
     }
   }
 
-  private async mapRTS(el: RubicTransferStartedSchema): Promise<UserTxData> {
-    const tx = await this._provider.getTransaction(el.transactionHash)
-    const isNative = el.bridgeData_sendingAssetId === EMPTY_ADDRESS
-    const contract = new ethers.Contract(el.bridgeData_sendingAssetId, ERC20_ABI, this._provider)
-
-    return {
-      blockNumber: el.blockNumber,
-      contractAddress: RUBIC_MULTI_PROXY_ADDRESS,
-      decimals: isNative ? 18 : await contract.decimals(),
-      nonce: tx!.nonce.toString(),
-      quantity: BigInt(el.bridgeData_minAmount),
-      timestamp: el.blockTimestamp,
-      tokenAddress: el.bridgeData_sendingAssetId,
-      txHash: el.transactionHash,
-      userAddress: el.bridgeData_receiver
-    }
+  private async getBlockTimestamp(blockNumber: number): Promise<number> {
+    const block = await this._provider.getBlock(blockNumber);
+    return block.timestamp;
   }
 }
 

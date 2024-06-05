@@ -10,22 +10,6 @@ export type UserTxData = {
     blockNumber: number
 }
 
-export interface RubicTransferStartedsRes {
-    data: {
-        rubicTransferStarteds: RubicTransferStartedSchema[]
-    }
-}
-
-export interface RubicTransferStartedSchema {
-    bridgeData_sendingAssetId: string;
-    bridgeData_destinationChainId: number;
-    bridgeData_receiver: string;
-    bridgeData_minAmount: string;
-    blockNumber: number;
-    blockTimestamp: number;
-    transactionHash: string;
-}
-
 export interface RubicSwappedGenericsRes {
     data:{
         rubicSwappedGenerics: RubicSwappedGenericSchema[]
@@ -39,3 +23,23 @@ export interface RubicSwappedGenericSchema {
     blockNumber: number;
     blockTimestamp: number;
 }
+
+
+export interface PageWithTrsanctionsInChain {
+    "count": number,
+    "next": number | null,
+    "previous": number | null,
+    "results": TransactionFromBackend[]
+}
+export interface TransactionFromBackend {
+    "sourceChainBlockNumber": number;
+    "contractAddress": string;
+    "tokenDecimals": number;
+    "nonce": number;
+    "quantity": number;
+    "timestamp": number;
+    "tokenAddress": string;
+    "sourceTxHash": string;
+    "userAddress": string;
+    "tokenSymbol": string;
+  }
