@@ -3,9 +3,8 @@ import { User } from './user.entity';
 import { WithdrawHistory } from './withdrawHistory.entity';
 import { hexTransformer } from '../transformers/hex.transformer';
 import { BaseEntity } from './base.entity';
-import { bigNumberTransformer } from '../transformers/bigNumber.transformer';
 
-@Entity()
+@Entity({ name: "userRedistributePoint" })
 @Index(["userAddress", "tokenAddress"], { unique: true })
 export class UserRedistributePoint extends BaseEntity {
   @PrimaryGeneratedColumn()

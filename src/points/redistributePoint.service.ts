@@ -466,14 +466,15 @@ export class RedistributePointService extends Worker {
   }
 
   private async batchInsertUserRedistributePoints(points: UserRedistributePoint[], entityManager: EntityManager) {
-    const values = points.map(p => `('\\x${Buffer.from(p.userAddress.userAddress.slice(2), 'hex').toString('hex')}', '\\x${Buffer.from(p.tokenAddress.slice(2), 'hex').toString('hex')}', '${p.balance}', ${p.exchangeRate}, ${p.pointWeight}, ${p.pointWeightPercentage})`).join(',');
+    const values = points.map(p => `('\\x${Buffer.from(p.userAddress.userAddress.slice(2), 'hex').toString('hex')}', '\\x${Buffer.from(p.tokenAddress.slice(2), 'hex').toString('hex')}', '${p.balance}', ${p.exchangeRate}, '${p.pointWeight}', ${p.pointWeightPercentage})`).join(',');
 
     const query = `
-      INSERT INTO "user_redistribute_point" ("userAddress", "tokenAddress", "balance", "exchangeRate", "pointWeight" "pointWeightPercentage")
+      INSERT INTO "userRedistributePoint" ("userAddress", "tokenAddress", "balance", "exchangeRate", "pointWeight", "pointWeightPercentage")
       VALUES ${values}
       ON CONFLICT ("userAddress", "tokenAddress") DO UPDATE
       SET "balance" = EXCLUDED.balance, "exchangeRate" = EXCLUDED."exchangeRate", "pointWeight" = EXCLUDED."pointWeight", "pointWeightPercentage" = EXCLUDED."pointWeightPercentage";
     `;
+
 
     try {
       await entityManager.query(query);
@@ -486,7 +487,7 @@ export class RedistributePointService extends Worker {
     const values = histories.map(h => `('${h.balance}', '${h.timestamp.toISOString()}', ${h.userPointId.id})`).join(',');
 
     const query = `
-      INSERT INTO "withdraw_history" ("balance", "timestamp", "userPointId")
+      INSERT INTO "withdrawHistory" ("balance", "timestamp", "userPointId")
       VALUES ${values};
     `;
 

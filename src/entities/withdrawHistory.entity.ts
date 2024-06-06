@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { UserRedistributePoint } from './userRedistributePoint.entity';
 import { BaseEntity } from './base.entity';
 
-@Entity()
+@Entity({ name: "withdrawHistory" })
 export class WithdrawHistory extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
