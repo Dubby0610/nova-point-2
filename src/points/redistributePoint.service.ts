@@ -8,6 +8,7 @@ import { User } from "src/entities/user.entity";
 import { UserRedistributePoint } from "src/entities/userRedistributePoint.entity";
 import { WithdrawHistory } from "src/entities/withdrawHistory.entity";
 import { EntityManager } from "typeorm";
+import BigNumber from "bignumber.js";
 
 interface Pool {
   balance: string
@@ -77,9 +78,7 @@ export class RedistributePointService extends Worker {
   async runProcess() {
     const data = await this.fetchDataFromSubgraph();
     await this.insertOrUpdateUsers(data);
-    await this.unitOfWork.useTransaction(async () => {
-      await this.batchUpsertData(data);
-    });
+    await this.batchUpsertData(data);
   }
 
   private async queryPoolsMap() {
@@ -270,12 +269,15 @@ export class RedistributePointService extends Worker {
   }
 
   private calcWithdrawBalanceWeight(withdrawBalanceInfo: GraphWithdrawPoint) {
+    const now = (new Date().getTime() / 1000) | 0;
     let timestamp = Number(withdrawBalanceInfo.blockTimestamp);
     for (const item of withdrawTime) {
       if (timestamp >= item.start && timestamp < item.end) {
         timestamp = timestamp + item.period;
+        break;
       }
     }
+    timestamp = timestamp < now ? timestamp : now
     const { weightBalance, timeWeightAmountIn, timeWeightAmountOut } = withdrawBalanceInfo
 
     return BigInt(weightBalance) * BigInt(timestamp) -
@@ -284,11 +286,11 @@ export class RedistributePointService extends Worker {
   }
 
   private async genWithdrawInfoMap() {
-    const withdrawWeightData = await this.queryWithdrawWeightData()
+    const withdrawWeightData = await this.queryWithdrawWeightData() 
     const withdrawTime = Math.floor(
       (new Date().getTime() - 7 * 24 * 60 * 60 * 1000) / 1000,
     );
-    const [tokenWithdrawWeightMap, userTokenWithWeightMap] = withdrawWeightData.reduce(([tokenMapResult, userTokenMapResult], item) => {
+    const [tokenWithdrawWeightMap, userTokenWithWeightMap] = withdrawWeightData.reduce(([userTokenMapResult, tokenMapResult], item) => {
       const withdrawBalanceWeighting = this.calcWithdrawBalanceWeight(item)
       const userTokenMapKey = this.genUserTokenMapKey(item.address, item.project)
 
@@ -307,8 +309,8 @@ export class RedistributePointService extends Worker {
       }
 
 
-      return [tokenMapResult, userTokenMapResult]
-    }, [new Map<string, bigint>(), new Map<string, { weightPoint: bigint, withdrawList: WithdrawInfo[] }>()])
+      return [userTokenMapResult, tokenMapResult]
+    }, [new Map<string, { weightPoint: bigint, withdrawList: WithdrawInfo[] }>(), new Map<string, bigint>()])
 
     return [tokenWithdrawWeightMap, userTokenWithWeightMap] as const;
   }
@@ -353,19 +355,19 @@ export class RedistributePointService extends Worker {
     ])
 
     const pointWeightResult = Array.from(pointWeightMap, ([key, obj]) => {
-      const userTokenWithdrawWeight = userTokenWithdrawWeightMap.get(key) ?? BigInt(0)
+      const userTokenWithdrawWeightInfo = userTokenWithdrawWeightMap.get(key) ?? { weightPoint: BigInt(0), withdrawList: [] }
       const userTokenTransferFailedWeight = userTokenTransferFailedPointsWeightMap.get(key) ?? BigInt(0)
-      const userTokenPointWeight = obj.balancePointWeight + userTokenWithdrawWeight + userTokenTransferFailedWeight
+      const userTokenPointWeight = obj.balancePointWeight + userTokenWithdrawWeightInfo.weightPoint + userTokenTransferFailedWeight
 
       const totalTokenPointWeight = tokenBalancePointsWeightMap.get(obj.tokenAddress)
-      const totalWithdrawWeightInfo = tokenWithdrawWeightMap.get(obj.tokenAddress) ?? { weightPoint: BigInt(0), withdrawList: [] }
+      const totalWithdrawWeight = tokenWithdrawWeightMap.get(obj.tokenAddress) ?? BigInt(0)
       const totalTransferFailedWeight = tokenTransferFailedPointsWeightMap.get(obj.tokenAddress) ?? BigInt(0)
-      const totalPointWeight = totalTokenPointWeight + totalWithdrawWeightInfo.weightPoint + totalTransferFailedWeight
+      const totalPointWeight = totalTokenPointWeight + totalWithdrawWeight + totalTransferFailedWeight
 
-      const pointWeightPercentage = Number(userTokenPointWeight * BigInt(100_000_000) / totalPointWeight) / 100_000_000
-      const withdrawHistory = totalWithdrawWeightInfo.withdrawList
+      const pointWeightPercentage = BigNumber(userTokenPointWeight.toString(10)).div(totalPointWeight.toString(10)).toNumber()
+      const withdrawHistory = userTokenWithdrawWeightInfo.withdrawList
       const lpPoolInfo = lpPoolsMap.get(obj.tokenAddress)
-      const exchangeRate = lpPoolInfo ? Number(BigInt(lpPoolInfo.balance) * BigInt(100_000_000) / BigInt(lpPoolInfo.totalSupplied)) / 100_000_000 : 1
+      const exchangeRate = lpPoolInfo ? BigNumber(lpPoolInfo.balance).div(lpPoolInfo.totalSupplied).toNumber() : 1
 
       return { ...obj, exchangeRate, withdrawHistory, pointWeight: userTokenPointWeight.toString(), pointWeightPercentage }
     })
@@ -451,6 +453,7 @@ export class RedistributePointService extends Worker {
       for (const withdrawData of data.withdrawHistory) {
         const withdrawHistory = new WithdrawHistory();
         withdrawHistory.balance = withdrawData.balance.toString();
+        withdrawHistory.timestamp = withdrawData.timestamp;
         withdrawHistory.userPointId = userRedistributePoint;
         withdrawHistories.push(withdrawHistory);
       }
@@ -484,7 +487,7 @@ export class RedistributePointService extends Worker {
   }
 
   private async batchInsertWithdrawHistories(histories: WithdrawHistory[], entityManager: EntityManager) {
-    const values = histories.map(h => `('${h.balance}', '${h.timestamp.toISOString()}', ${h.userPointId.id})`).join(',');
+    const values = histories.map(h => `('${h.balance}', '${h.timestamp}', ${h.userPointId.id})`).join(',');
 
     const query = `
       INSERT INTO "withdrawHistory" ("balance", "timestamp", "userPointId")

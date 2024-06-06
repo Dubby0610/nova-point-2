@@ -16,13 +16,13 @@ export class UserRedistributePoint extends BaseEntity {
   @Column({ type: "varchar", length: 128 })
   balance: string;
 
-  @Column('decimal', { precision: 12, scale: 10 })
+  @Column('decimal', { precision: 30, scale: 18 })
   exchangeRate: number
 
   @Column({ type: "varchar", length: 128 })
   pointWeight: string;
 
-  @Column('decimal', { precision: 12, scale: 10 })
+  @Column('decimal', { precision: 30, scale: 18 })
   pointWeightPercentage: number;
 
   @ManyToOne(() => User, (user) => user.points, { onDelete: 'CASCADE', cascade: true })
