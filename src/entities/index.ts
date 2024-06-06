@@ -31,3 +31,6 @@ export * from "./transactionDataOfPoints.entity";
 export * from "./addressFirstDeposit.entity";
 export * from './redistributeBalanceHistory.entity'
 export * from './redistributeBalance.entity'
+export * from './user.entity'
+export * from './userRedistributePoint.entity'
+export * from './withdrawHistory.entity'

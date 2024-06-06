@@ -16,6 +16,7 @@ import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOf
 import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
+import { RedistributePointService } from './points/redistributePoint.service'
 import {
   BatchRepository,
   BlockRepository,
@@ -58,6 +59,9 @@ import {
   TransactionDataOfPoints,
   RedistributeBalance,
   RedistributeBalanceHistory,
+  User,
+  UserRedistributePoint,
+  WithdrawHistory
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -164,6 +168,9 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         TransactionDataOfPoints,
         RedistributeBalance,
         RedistributeBalanceHistory,
+        User,
+        UserRedistributePoint,
+        WithdrawHistory
       ],
       "lrt"
     ),
@@ -240,6 +247,7 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     RedistributeBalanceService,
     RedistributeBalanceRepository,
     TvlPointLinkswapService,
+    RedistributePointService
   ],
 })
-export class AppModule {}
+export class AppModule { }
