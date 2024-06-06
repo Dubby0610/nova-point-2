@@ -8,7 +8,7 @@ require('dotenv').config({ path: path.join(__dirname, "../.env") })
 const RUBIC_MULTI_PROXY_ADDRESS = '0x1a979E2386595837BaAB90Ba12B2E2a71C652576'
 const EMPTY_ADDRESS = '0x0000000000000000000000000000000000000000'
 const SUBGRAPH_ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string
-const RUBIC_API_ENDPOINT = process.env.API_ENDPOINT as string
+const RUBIC_API_ENDPOINT = 'https://api.rubic.exchange/api/v2'
 
 if (!SUBGRAPH_ENDPOINT) {
   console.error("SUBGRAPH_ENDPOINT variable doesn't exist! Create .env file and add this one.");
