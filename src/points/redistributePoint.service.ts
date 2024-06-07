@@ -69,7 +69,7 @@ interface GraphWithdrawPoint {
 export class RedistributePointService extends Worker {
   private readonly logger: Logger;
   private readonly BATCH_SIZE = 1000;
-  private readonly SUBGRAPH_URL = 'http://3.114.68.110:8000/subgraphs/name/nova-points-redistribute'
+  private readonly SUBGRAPH_URL = 'https://graph.zklink.io/subgraphs/name/nova-points-redistribute-v4'
 
   public constructor(
     private readonly unitOfWork: LrtUnitOfWork
