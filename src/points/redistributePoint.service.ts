@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
-import { Cron, CronExpression } from "@nestjs/schedule";
 import { transferFailedData, withdrawTime } from "../constants/index";
 import { fetchGraphQLData } from "src/utils";
 import { LrtUnitOfWork } from "src/unitOfWork";
@@ -78,11 +77,24 @@ export class RedistributePointService extends Worker {
     this.logger = new Logger(RedistributePointService.name);
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
+  private delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   async runProcess() {
-    const data = await this.fetchDataFromSubgraph();
-    await this.insertOrUpdateUsers(data);
-    await this.batchUpsertData(data);
+    while (true) {
+      try {
+        const now = Date.now();
+        const data = await this.fetchDataFromSubgraph();
+        await this.insertOrUpdateUsers(data);
+        await this.batchUpsertData(data);
+        this.logger.log(`Process all redistributePointService cost ${Date.now() - now} ms`);
+      } catch (error) {
+        this.logger.error('Error in RedistributePointService runLoop', error);
+      }
+
+      await this.delay(2 * 60 * 1000);
+    }
   }
 
   private async queryPoolsMap() {
