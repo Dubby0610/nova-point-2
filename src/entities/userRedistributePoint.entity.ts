@@ -7,8 +7,8 @@ import { BaseEntity } from './base.entity';
 @Entity({ name: "userRedistributePoint" })
 @Index(["userAddress", "tokenAddress"], { unique: true })
 export class UserRedistributePoint extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryColumn({ type: "varchar", length: 128 })
+  id: string;
 
   @Column({ type: "bytea", transformer: hexTransformer })
   tokenAddress: string;
