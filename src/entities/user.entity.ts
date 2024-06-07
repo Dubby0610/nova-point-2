@@ -8,6 +8,8 @@ export class User extends BaseEntity {
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   userAddress: string;
 
-  @OneToMany(() => UserRedistributePoint, (point) => point.userAddress)
+  @OneToMany(() => UserRedistributePoint, (point) => point.userAddress, {
+    cascade: true,
+  })
   points: UserRedistributePoint[];
 }

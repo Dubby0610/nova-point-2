@@ -185,7 +185,6 @@ export class RedistributePointService extends Worker {
       if (points.length < pageSize) {
         fetchNext = false;
       } else {
-        // fetchNext = false;
         skip += pageSize;
       }
     }
@@ -286,7 +285,7 @@ export class RedistributePointService extends Worker {
   }
 
   private async genWithdrawInfoMap() {
-    const withdrawWeightData = await this.queryWithdrawWeightData() 
+    const withdrawWeightData = await this.queryWithdrawWeightData()
     const withdrawTime = Math.floor(
       (new Date().getTime() - 7 * 24 * 60 * 60 * 1000) / 1000,
     );
@@ -426,22 +425,38 @@ export class RedistributePointService extends Worker {
 
     const userAddresses = [...new Set(batch.map(data => Buffer.from(data.userAddress.slice(2), 'hex')))];
     const users = await entityManager
-      .createQueryBuilder(User, 'user')
+      .createQueryBuilder()
+      .select('*')
+      .from(User, 'user')
       .where('user.userAddress IN (:...userAddresses)', { userAddresses })
-      .getMany();
+      .getRawMany();
 
-    users.forEach(user => userMap.set(user.userAddress, user));
+    users.forEach(user => userMap.set('0x' + user.userAddress.toString('hex'), user));
 
     const userRedistributePoints: UserRedistributePoint[] = [];
-    const withdrawHistories: WithdrawHistory[] = [];
 
+    const map = new Map()
     for (const data of batch) {
+
       const user = userMap.get(data.userAddress);
       if (!user) {
         throw new Error(`User with address ${data.userAddress} not found`);
       }
-
+      if (!map.get(`${data.tokenAddress}_${data.userAddress}`)) {
+        map.set(`${data.tokenAddress}_${data.userAddress}`, user)
+      } else {
+        console.log(data);
+      }
+      const withdrawHistories: WithdrawHistory[] = [];
       const userRedistributePoint = new UserRedistributePoint();
+      for (const withdrawData of data.withdrawHistory) {
+        const withdrawHistory = new WithdrawHistory();
+        withdrawHistory.balance = withdrawData.balance.toString();
+        withdrawHistory.timestamp = withdrawData.timestamp;
+        withdrawHistory.userPointId = userRedistributePoint;
+        withdrawHistories.push(withdrawHistory);
+      }
+      userRedistributePoint.withdrawHistory = withdrawHistories
       userRedistributePoint.userAddress = user;
       userRedistributePoint.tokenAddress = data.tokenAddress;
       userRedistributePoint.balance = data.balance.toString();
@@ -450,54 +465,18 @@ export class RedistributePointService extends Worker {
       userRedistributePoint.pointWeight = data.pointWeight
       userRedistributePoints.push(userRedistributePoint);
 
-      for (const withdrawData of data.withdrawHistory) {
-        const withdrawHistory = new WithdrawHistory();
-        withdrawHistory.balance = withdrawData.balance.toString();
-        withdrawHistory.timestamp = withdrawData.timestamp;
-        withdrawHistory.userPointId = userRedistributePoint;
-        withdrawHistories.push(withdrawHistory);
-      }
     }
     if (userRedistributePoints.length > 0) {
-      await this.batchInsertUserRedistributePoints(userRedistributePoints, entityManager)
-    }
-
-    if (withdrawHistories.length > 0) {
-      await this.batchInsertWithdrawHistories(withdrawHistories, entityManager);
-    }
-
-  }
-
-  private async batchInsertUserRedistributePoints(points: UserRedistributePoint[], entityManager: EntityManager) {
-    const values = points.map(p => `('\\x${Buffer.from(p.userAddress.userAddress.slice(2), 'hex').toString('hex')}', '\\x${Buffer.from(p.tokenAddress.slice(2), 'hex').toString('hex')}', '${p.balance}', ${p.exchangeRate}, '${p.pointWeight}', ${p.pointWeightPercentage})`).join(',');
-
-    const query = `
-      INSERT INTO "userRedistributePoint" ("userAddress", "tokenAddress", "balance", "exchangeRate", "pointWeight", "pointWeightPercentage")
-      VALUES ${values}
-      ON CONFLICT ("userAddress", "tokenAddress") DO UPDATE
-      SET "balance" = EXCLUDED.balance, "exchangeRate" = EXCLUDED."exchangeRate", "pointWeight" = EXCLUDED."pointWeight", "pointWeightPercentage" = EXCLUDED."pointWeightPercentage";
-    `;
-
-
-    try {
-      await entityManager.query(query);
-    } catch (error) {
-      console.error('Error inserting UserRedistributePoints:', error);
-    }
-  }
-
-  private async batchInsertWithdrawHistories(histories: WithdrawHistory[], entityManager: EntityManager) {
-    const values = histories.map(h => `('${h.balance}', '${h.timestamp}', ${h.userPointId.id})`).join(',');
-
-    const query = `
-      INSERT INTO "withdrawHistory" ("balance", "timestamp", "userPointId")
-      VALUES ${values};
-    `;
-
-    try {
-      await entityManager.query(query);
-    } catch (error) {
-      console.error('Error inserting WithdrawHistory:', error);
+      await entityManager
+        .createQueryBuilder()
+        .insert()
+        .into(UserRedistributePoint)
+        .values(userRedistributePoints)
+        .orUpdate({
+          conflict_target: ["userAddress", "tokenAddress"],
+          overwrite: ["balance", "exchangeRate", "pointWeight", "pointWeightPercentage"]
+        })
+        .execute();
     }
   }
 }

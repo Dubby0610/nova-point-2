@@ -25,11 +25,13 @@ export class UserRedistributePoint extends BaseEntity {
   @Column('decimal', { precision: 30, scale: 18 })
   pointWeightPercentage: number;
 
-  @ManyToOne(() => User, (user) => user.points, { onDelete: 'CASCADE', cascade: true })
+  @ManyToOne(() => User, (user) => user.points, { onDelete: 'CASCADE' })
   @JoinColumn({ name: "userAddress" })
   userAddress: User;
 
-  @OneToMany(() => WithdrawHistory, (withdrawHistory) => withdrawHistory.userPointId, { cascade: true })
+  @OneToMany(() => WithdrawHistory, (withdrawHistory) => withdrawHistory.userPointId, {
+    cascade: true,
+  })
   withdrawHistory: WithdrawHistory[];
 
 }
