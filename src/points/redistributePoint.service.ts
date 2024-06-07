@@ -3,7 +3,7 @@ import { Worker } from "../common/worker";
 import { transferFailedData, withdrawTime } from "../constants/index";
 import { fetchGraphQLData } from "src/utils";
 import { LrtUnitOfWork } from "src/unitOfWork";
-import { User } from "src/entities/user.entity";
+import { User, RedistributeBalance } from "src/entities";
 import BigNumber from "bignumber.js";
 
 interface Pool {
@@ -85,9 +85,11 @@ export class RedistributePointService extends Worker {
     while (true) {
       try {
         const now = Date.now();
-        const data = await this.fetchDataFromSubgraph();
-        await this.insertOrUpdateUsers(data);
-        await this.batchUpsertData(data);
+        const [subgraphData, hourlyDBData] = await Promise.all([this.fetchDataFromSubgraph(), this.fetchDataFromHourlyData()])
+        const processData = [...subgraphData, ...hourlyDBData]
+        this.logger.log(`Process subgraphData ${subgraphData.length}, hourlyDBData ${hourlyDBData.length}`);
+        await this.insertOrUpdateUsers(processData);
+        await this.batchUpsertData(processData);
         this.logger.log(`Process all redistributePointService cost ${Date.now() - now} ms`);
       } catch (error) {
         this.logger.error('Error in RedistributePointService runLoop', error);
@@ -402,8 +404,38 @@ export class RedistributePointService extends Worker {
       return { ...obj, exchangeRate, withdrawHistory, pointWeight: userTokenPointWeight.toString(), pointWeightPercentage }
     })
 
-
     return pointWeightResult
+  }
+
+  async fetchDataFromHourlyData() {
+    const entityManager = this.unitOfWork.getTransactionManager();
+    let offset = 0;
+    let hasMore = true;
+    const allData: RedistributeBalance[] = [];
+
+    while (hasMore) {
+      const batch = await entityManager
+        .createQueryBuilder(RedistributeBalance, 'rb')
+        .skip(offset)
+        .take(this.BATCH_SIZE)
+        .getMany();
+
+      allData.push(...batch);
+      offset += this.BATCH_SIZE;
+      hasMore = batch.length === this.BATCH_SIZE;
+    }
+    const formattedData = allData.map(data => ({
+      exchangeRate: 1,
+      withdrawHistory: [],
+      pointWeight: data.accumulateBalance,
+      pointWeightPercentage: Number(data.percentage),
+      userAddress: data.userAddress,
+      tokenAddress: data.pairAddress,
+      balance: data.balance,
+    }))
+
+    return formattedData;
+
   }
 
   async insertOrUpdateUsers(pointData: Array<UserPointData>) {
