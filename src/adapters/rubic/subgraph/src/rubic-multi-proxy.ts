@@ -1,10 +1,8 @@
 import {
   RubicSwappedGeneric as RubicSwappedGenericEvent,
-  RubicTransferStarted as RubicTransferStartedEvent,
 } from "../generated/RubicMultiProxy/RubicMultiProxy"
 import {
   RubicSwappedGeneric,
-  RubicTransferStarted,
 } from "../generated/schema"
 
 export function handleRubicSwappedGeneric(
