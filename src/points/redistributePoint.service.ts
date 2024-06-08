@@ -72,7 +72,7 @@ export class RedistributePointService extends Worker {
     while (true) {
       try {
         const now = Date.now();
-        const { holdingsPointData, stakesPointData, withdrawList } = await this.fetchDataFromSubgraph()
+        const { holdingsPointData, stakesPointData, withdrawList } = await this.fetchData()
         await this.insertOrUpdateUsers([...new Set([...holdingsPointData, ...stakesPointData, ...withdrawList].map(d => d.userAddress))]);
         await this.insertOrUpdateHoldingData(holdingsPointData);
         await this.insertOrUpdateStakedData(stakesPointData);
@@ -118,7 +118,7 @@ export class RedistributePointService extends Worker {
         }
       }
       `;
-    const layerBankPools = await fetchGraphQLData<{ pools: Pool[] }>('https://graph.zklink.io/subgraphs/name/aqua-points-v2', queryLayerBankPool);
+    const layerBankPools = await fetchGraphQLData<{ pools: Pool[] }>('https://graph.zklink.io/subgraphs/name/layerbank-points', queryLayerBankPool);
 
     const result = new Map([aquaPools.pools, layerBankPools.pools].flat().map(pool => [pool.id, pool]))
 
@@ -347,7 +347,7 @@ export class RedistributePointService extends Worker {
     return [userTokenTransferFailedPointsWeightMap, tokenTransferFailedPointsWeightMap]
   }
 
-  public async fetchDataFromSubgraph() {
+  public async fetchData() {
     this.logger.log('Start fetchDataFromSubgraph')
     const [
       hourlyDBData,
@@ -400,14 +400,18 @@ export class RedistributePointService extends Worker {
           userAddress: data.address,
           tokenAddress: poolInfo.underlying,
           poolAddress: tokenAddressOrPoolAddress,
-          balance: data.balance,
+          balance: (BigInt(data.balance) * BigInt(poolInfo.balance)/ BigInt(poolInfo.totalSupplied)).toString(), 
           pointWeight: userTokenPointWeight.toString(),
           pointWeightPercentage: pointWeightPercentage
         })
       }
     })
 
-    return { holdingsPointData, stakesPointData: [...stakesPointData, ...hourlyDBData], withdrawList }
+    return { 
+      holdingsPointData,
+      stakesPointData: [...stakesPointData, ...hourlyDBData], 
+      withdrawList 
+    }
   }
 
   async insertOrUpdateUsers(userAddresses: Array<string>) {

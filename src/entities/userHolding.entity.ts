@@ -24,9 +24,3 @@ export class UserHolding extends BaseEntity {
   @Column('decimal', { precision: 30, scale: 18 })
   pointWeightPercentage: number;
 }
-
-
-
-
-
-
