@@ -12,7 +12,7 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
 
   public async updateCumulativeData(newHoldings: RedistributeBalanceHistory[]): Promise<void> {
     const transactionManager = this.unitOfWork.getTransactionManager();
-    await this.unitOfWork.useTransaction(async () => {
+    this.unitOfWork.useTransaction(async () => {
       // Insert new hourly_holdings data
       await this.addMany(newHoldings);
 
@@ -21,17 +21,17 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
       const tokenAddressSet = new Set(newHoldings.map(holding => holding.tokenAddress));
       const pairAddressSet = new Set(newHoldings.map(holding => holding.pairAddress));
 
-      const userAddresses = Array.from(userAddressSet);
-      const tokenAddresses = Array.from(tokenAddressSet);
-      const pairAddresses = Array.from(pairAddressSet);
+      const userAddresses = Array.from(userAddressSet).map(address => Buffer.from(address.slice(2), 'hex'));;
+      const tokenAddresses = Array.from(tokenAddressSet).map(address => Buffer.from(address.slice(2), 'hex'));;
+      const pairAddresses = Array.from(pairAddressSet).map(address => Buffer.from(address.slice(2), 'hex'));;
 
       // Precompute total balances for all tokenAddress and pairAddress combinations
       const existingPairTotalBalances = await transactionManager
         .createQueryBuilder(RedistributeBalance, "hbp")
         .select([
-          "hbp.tokenAddress",
-          "hbp.pairAddress",
-          "SUM(CAST(hbp.accumulateBalance AS DECIMAL)) AS totalAccumulateBalance"
+          "hbp.tokenAddress AS \"tokenAddress\"",
+          "hbp.pairAddress AS \"pairAddress\"",
+          "SUM(CAST(hbp.accumulateBalance AS DECIMAL)) AS \"totalAccumulateBalance\""
         ])
         .where("hbp.tokenAddress IN (:...tokenAddresses)", { tokenAddresses })
         .andWhere("hbp.pairAddress IN (:...pairAddresses)", { pairAddresses })
@@ -41,12 +41,12 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
       // Create a map for quick lookup of pair total balances
       const pairTotalBalanceMap = new Map<string, bigint>();
       existingPairTotalBalances.forEach((balance) => {
-        const key = `${balance.tokenAddress}-${balance.pairAddress}`;
+        const key = `0x${balance.tokenAddress.toString('hex')}-0x${balance.pairAddress.toString('hex')}`;
         pairTotalBalanceMap.set(key, BigInt(balance.totalAccumulateBalance));
       });
 
       newHoldings.forEach(holding => {
-        const key = `${holding.tokenAddress}-${holding.pairAddress}`;
+        const key = `${holding.tokenAddress.toLowerCase()}-${holding.pairAddress.toLowerCase()}`;
         const currentBalance = pairTotalBalanceMap.get(key) || BigInt(0);
         pairTotalBalanceMap.set(key, currentBalance + BigInt(holding.balance));
       });
@@ -62,14 +62,14 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
       // Create a map for quick lookup of hourly_balance_percentage records
       const balancePercentageMap = new Map<string, RedistributeBalance>();
       balancePercentages.forEach((bp) => {
-        const key = `${bp.userAddress}-${bp.tokenAddress}-${bp.pairAddress}`;
+        const key = `${bp.userAddress.toLowerCase()}-${bp.tokenAddress.toLowerCase()}-${bp.pairAddress.toLowerCase()}`;
         balancePercentageMap.set(key, bp);
       });
 
       // Calculate new cumulative balances and update percentages
-      const hourlyBalancePercentageData = []
+      const hourlyBalancePercentageData = [];
       for (const holding of newHoldings) {
-        const key = `${holding.userAddress}-${holding.tokenAddress}-${holding.pairAddress}`;
+        const key = `${holding.userAddress.toLowerCase()}-${holding.tokenAddress.toLowerCase()}-${holding.pairAddress.toLowerCase()}`;
         let record = balancePercentageMap.get(key);
 
         if (!record) {
@@ -89,7 +89,7 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
         record.accumulateBalance = (BigInt(record.accumulateBalance) + BigInt(holding.balance)).toString();
 
         // Calculate percentage
-        const pairKey = `${holding.tokenAddress}-${holding.pairAddress}`;
+        const pairKey = `${holding.tokenAddress.toLowerCase()}-${holding.pairAddress.toLowerCase()}`;
         const totalPairBalance = pairTotalBalanceMap.get(pairKey);
         const percentage = (Number(record.accumulateBalance) / Number(totalPairBalance)).toFixed(18);
         record.percentage = percentage;

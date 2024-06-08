@@ -39,13 +39,6 @@ export class AdapterService extends Worker {
     } catch (error) {
       this.logger.error("Failed to adapter balance", error.stack);
     }
-
-    // const adapterInterval = this.configService.get<number>("adapterInterval");
-    // await waitFor(() => !this.currentProcessPromise, adapterInterval * 1000, adapterInterval * 1000);
-    // if (!this.currentProcessPromise) {
-    //   return;
-    // }
-    // return this.runProcess();
   }
 
   public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
@@ -140,7 +133,7 @@ export class AdapterService extends Worker {
           if (results.length > 0) {
             await this.insertTVLDataToDb(results, dir);
           }
-          // fs.unlinkSync(outputPath);
+          fs.unlinkSync(outputPath);
           this.logger.log(
             `Adapter:${dir} tvl CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
           );
