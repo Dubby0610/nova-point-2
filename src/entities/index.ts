@@ -32,5 +32,6 @@ export * from "./addressFirstDeposit.entity";
 export * from './redistributeBalanceHistory.entity'
 export * from './redistributeBalance.entity'
 export * from './user.entity'
-export * from './userRedistributePoint.entity'
-export * from './withdrawHistory.entity'
+export * from './userHolding.entity'
+export * from './userStaked.entity'
+export * from './userWithdraw.entity'

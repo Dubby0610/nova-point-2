@@ -7,7 +7,7 @@ const BATCH_SIZE = 1000;
 
 @Injectable()
 export abstract class BaseRepository<T> {
-  public constructor(protected readonly entityTarget: EntityTarget<T>, protected readonly unitOfWork: UnitOfWork) {}
+  public constructor(protected readonly entityTarget: EntityTarget<T>, protected readonly unitOfWork: UnitOfWork) { }
 
   public async addMany(records: Partial<T>[]): Promise<void> {
     if (!records?.length) {
@@ -28,50 +28,54 @@ export abstract class BaseRepository<T> {
 
   public async addManyIgnoreConflicts(records: Partial<T>[]): Promise<void> {
     if (!records?.length) {
-        return;
+      return;
     }
 
     const transactionManager = this.unitOfWork.getTransactionManager();
 
     let recordsToInsert = [];
     for (let i = 0; i < records.length; i++) {
-        recordsToInsert.push(records[i]);
-        if (recordsToInsert.length === BATCH_SIZE || i === records.length - 1) {
-            await transactionManager.createQueryBuilder()
-                .insert()
-                .into(this.entityTarget)
-                .values(recordsToInsert)
-                .orIgnore()
-                .execute();
-            recordsToInsert = [];
-        }
+      recordsToInsert.push(records[i]);
+      if (recordsToInsert.length === BATCH_SIZE || i === records.length - 1) {
+        await transactionManager
+          .createQueryBuilder()
+          .insert()
+          .into(this.entityTarget)
+          .values(recordsToInsert)
+          .orIgnore()
+          .execute();
+
+        recordsToInsert = [];
+      }
     }
+  }
+
+  public async addManyOrUpdate(
+    records: Partial<T>[],
+    updateColumns: string[],
+    conflictColumns: string[]
+  ): Promise<void> {
+    if (!records?.length) {
+      return;
     }
 
-    public async  addManyOrUpdate(records: Partial<T>[],
-        updateColumns: string[],
-        conflictColumns: string[],
-        ): Promise<void> {
-        if (!records?.length) {
-            return;
-        }
+    const transactionManager = this.unitOfWork.getTransactionManager();
 
-        const transactionManager = this.unitOfWork.getTransactionManager();
-
-        let recordsToAddOrUpdate = [];
-        for (let i = 0; i < records.length; i++) {
-            recordsToAddOrUpdate.push(records[i]);
-            if (recordsToAddOrUpdate.length === BATCH_SIZE || i === records.length - 1) {
-                await transactionManager.createQueryBuilder()
-                    .insert()
-                    .into(this.entityTarget)
-                    .values(recordsToAddOrUpdate)
-                    .orUpdate(updateColumns, conflictColumns)
-                    .execute();
-                recordsToAddOrUpdate = [];
-            }
-        }
+    let recordsToAddOrUpdate = [];
+    for (let i = 0; i < records.length; i++) {
+      recordsToAddOrUpdate.push(records[i]);
+      if (recordsToAddOrUpdate.length === BATCH_SIZE || i === records.length - 1) {
+        await transactionManager
+          .createQueryBuilder()
+          .insert()
+          .into(this.entityTarget)
+          .values(recordsToAddOrUpdate)
+          .orUpdate(updateColumns, conflictColumns)
+          .execute();
+        recordsToAddOrUpdate = [];
+      }
     }
+  }
 
   public async add(record: QueryDeepPartialEntity<T>): Promise<void> {
     const transactionManager = this.unitOfWork.getTransactionManager();
@@ -87,11 +91,11 @@ export abstract class BaseRepository<T> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const recordToUpsert = shouldExcludeNullValues
       ? Object.keys(record).reduce((acc, key) => {
-          if (record[key] !== null && record[key] !== undefined) {
-            acc[key] = record[key];
-          }
-          return acc;
-        }, {})
+        if (record[key] !== null && record[key] !== undefined) {
+          acc[key] = record[key];
+        }
+        return acc;
+      }, {})
       : record;
     await transactionManager.upsert<T>(this.entityTarget, recordToUpsert, {
       conflictPaths,

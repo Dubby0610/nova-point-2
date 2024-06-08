@@ -2,9 +2,9 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
 import { transferFailedData, withdrawTime } from "../constants/index";
 import { fetchGraphQLData } from "src/utils";
-import { LrtUnitOfWork } from "src/unitOfWork";
-import { User, RedistributeBalance } from "src/entities";
+import { RedistributeBalance, UserHolding, UserStaked, UserWithdraw } from "src/entities";
 import BigNumber from "bignumber.js";
+import { RedistributeBalanceRepository, UserHoldingRepository, UserRepository, UserStakedRepository, UserWithdrawRepository } from "src/repositories";
 
 interface Pool {
   balance: string
@@ -16,24 +16,7 @@ interface Pool {
   underlying: string
 }
 
-interface WithdrawInfo {
-  id: string,
-  balance: string,
-  timestamp: Date;
-  tokenAddress: string,
-  userPointId: string,
-  userAddress: string
-}
-
-interface UserPointData {
-  userAddress: string,
-  tokenAddress: string,
-  balance: string,
-  exchangeRate: number,
-  pointWeight: string,
-  pointWeightPercentage: number,
-  withdrawHistory: Array<WithdrawInfo>
-}
+type OmitEntityTime<T> = Omit<T, 'createdAt' | 'updatedAt'>;
 
 interface GraphPoint {
   address: string;
@@ -71,7 +54,11 @@ export class RedistributePointService extends Worker {
   private readonly SUBGRAPH_URL = 'https://graph.zklink.io/subgraphs/name/nova-points-redistribute-v4'
 
   public constructor(
-    private readonly unitOfWork: LrtUnitOfWork
+    private readonly userRepository: UserRepository,
+    private readonly userHoldingRepository: UserHoldingRepository,
+    private readonly userStakedRepository: UserStakedRepository,
+    private readonly userWithdrawRepository: UserWithdrawRepository,
+    private readonly redistributeBalanceRepository: RedistributeBalanceRepository
   ) {
     super();
     this.logger = new Logger(RedistributePointService.name);
@@ -85,14 +72,14 @@ export class RedistributePointService extends Worker {
     while (true) {
       try {
         const now = Date.now();
-        const [subgraphData, hourlyDBData] = await Promise.all([this.fetchDataFromSubgraph(), this.fetchDataFromHourlyData()])
-        const processData = [...subgraphData, ...hourlyDBData]
-        this.logger.log(`Process subgraphData ${subgraphData.length}, hourlyDBData ${hourlyDBData.length}`);
-        await this.insertOrUpdateUsers(processData);
-        await this.batchUpsertData(processData);
+        const { holdingsPointData, stakesPointData, withdrawList } = await this.fetchDataFromSubgraph()
+        await this.insertOrUpdateUsers([...new Set([...holdingsPointData, ...stakesPointData, ...withdrawList].map(d => d.userAddress))]);
+        await this.insertOrUpdateHoldingData(holdingsPointData);
+        await this.insertOrUpdateStakedData(stakesPointData);
+        await this.insertOrUpdateWithdrawData(withdrawList);
         this.logger.log(`Process all redistributePointService cost ${Date.now() - now} ms`);
       } catch (error) {
-        this.logger.error('Error in RedistributePointService runLoop', error);
+        this.logger.error(`Error in RedistributePointService runLoop, ${error.stack}}`);
       }
 
       await this.delay(2 * 60 * 1000);
@@ -105,31 +92,31 @@ export class RedistributePointService extends Worker {
 
     const queryAquaPools = `
         query Pools {
-          pools(first: ${pageSize}, skip: ${skip}) {
-            balance
-            decimals
-            id
-            name
-            symbol
-            totalSupplied
-            underlying
-          }
+        pools(first: ${pageSize}, skip: ${skip}) {
+          balance
+          decimals
+          id
+          name
+          symbol
+          totalSupplied
+          underlying
         }
+      }
       `;
     const aquaPools = await fetchGraphQLData<{ pools: Pool[] }>('https://graph.zklink.io/subgraphs/name/aqua-points-v2', queryAquaPools);
 
     const queryLayerBankPool = `
         query Pools {
-          pools(first: ${pageSize}, skip: ${skip}) {
-            balance
-            decimals
-            id
-            name
-            symbol
-            totalSupplied
-            underlying
-          }
+        pools(first: ${pageSize}, skip: ${skip}) {
+          balance
+          decimals
+          id
+          name
+          symbol
+          totalSupplied
+          underlying
         }
+      }
       `;
     const layerBankPools = await fetchGraphQLData<{ pools: Pool[] }>('https://graph.zklink.io/subgraphs/name/aqua-points-v2', queryLayerBankPool);
 
@@ -155,7 +142,7 @@ export class RedistributePointService extends Worker {
           totalTimeWeightAmountOut
         }
       }
-    `;
+      `;
       const data = await fetchGraphQLData<{ totalPoints: GraphTotalPoint[] }>(this.SUBGRAPH_URL, queryTotalPoints);
       if (!data) {
         console.log("No Data Yet!");
@@ -170,7 +157,7 @@ export class RedistributePointService extends Worker {
         skip += pageSize;
       }
     }
-    this.logger.log(`queryTotalPointsWeightingData succeed with ${result.length}`)
+    this.logger.log(`queryTotalPointsWeightingData succeed with ${result.length} `)
     return result;
   }
 
@@ -182,15 +169,15 @@ export class RedistributePointService extends Worker {
     while (fetchNext) {
       const queryPoints = `
         query Points {
-          points(first: ${pageSize}, skip: ${skip}) {
-            address
-            balance
-            weightBalance
-            timeWeightAmountIn
-            timeWeightAmountOut
-            project
-          }
+        points(first: ${pageSize}, skip: ${skip}) {
+          address
+          balance
+          weightBalance
+          timeWeightAmountIn
+          timeWeightAmountOut
+          project
         }
+      }
       `;
       const data = await fetchGraphQLData<{ points: GraphPoint[] }>(this.SUBGRAPH_URL, queryPoints);
       if (!data) {
@@ -206,7 +193,7 @@ export class RedistributePointService extends Worker {
         skip += pageSize;
       }
     }
-    this.logger.log(`queryPointWeightData succeed with ${result.length}`)
+    this.logger.log(`queryPointWeightData succeed with ${result.length} `)
     return result;
   }
 
@@ -218,17 +205,17 @@ export class RedistributePointService extends Worker {
     while (fetchNext) {
       const queryPoints = `
         query WithdrawPoints {
-          withdrawPoints(first:${pageSize}, skip:${skip}){
-            id
-            project
-            balance
-            weightBalance
-            address
-            timeWeightAmountIn
-            timeWeightAmountOut
-            blockTimestamp
-          }
+        withdrawPoints(first: ${pageSize}, skip: ${skip}){
+          id
+          project
+          balance
+          weightBalance
+          address
+          timeWeightAmountIn
+          timeWeightAmountOut
+          blockTimestamp
         }
+      }
       `;
       const data = await fetchGraphQLData<{ withdrawPoints: GraphWithdrawPoint[] }>(this.SUBGRAPH_URL, queryPoints);
       if (!data) {
@@ -244,12 +231,40 @@ export class RedistributePointService extends Worker {
         skip += pageSize;
       }
     }
-    this.logger.log(`queryWithdrawWeightData succeed with ${result.length}`)
+    this.logger.log(`queryWithdrawWeightData succeed with ${result.length} `)
     return result;
   }
 
+  async fetchDataFromHourlyData() {
+
+    let offset = 0;
+    let hasMore = true;
+    const allData: RedistributeBalance[] = [];
+
+    while (hasMore) {
+      const batch = await this.redistributeBalanceRepository.find({
+        skip: offset,
+        take: this.BATCH_SIZE,
+      })
+
+      allData.push(...batch);
+      offset += this.BATCH_SIZE;
+      hasMore = batch.length === this.BATCH_SIZE;
+    }
+    const formattedData = allData.map(data => ({
+      userAddress: data.userAddress,
+      tokenAddress: data.tokenAddress,
+      poolAddress: data.pairAddress,
+      balance: data.balance,
+      pointWeight: data.accumulateBalance,
+      pointWeightPercentage: Number(data.percentage),
+    }))
+    this.logger.log(`fetchDataFromHourlyData succeed`)
+    return formattedData;
+  }
+
   private genUserTokenMapKey(userAddress: string, tokenAddress: string) {
-    return `${userAddress}_${tokenAddress}`
+    return `${userAddress}_${tokenAddress} `
   }
 
   private async genTokenBalancePointsWeightMap() {
@@ -261,27 +276,7 @@ export class RedistributePointService extends Worker {
         (BigInt(item.totalTimeWeightAmountIn) - BigInt(item.totalTimeWeightAmountOut))
       return [tokenAddress, pointsWeight]
     }))
-    return result
-  }
-
-  private async genUserBalancePointsWeightMap() {
-    const pointWeightData = await this.queryPointWeightData()
-    const now = (new Date().getTime() / 1000) | 0;
-    const result = new Map(
-      pointWeightData
-        .map(item => {
-          const [_, tokenAddress] = item.project.split('-');
-          const pointsWeight = BigInt(item.weightBalance) * BigInt(now) -
-            (BigInt(item.timeWeightAmountIn) - BigInt(item.timeWeightAmountOut))
-          const userTokenMapKey = this.genUserTokenMapKey(item.address, tokenAddress)
-          return [userTokenMapKey, {
-            userAddress: item.address,
-            tokenAddress: tokenAddress,
-            balance: item.balance,
-            balancePointWeight: pointsWeight
-          }]
-        })
-    )
+    this.logger.log(`genTokenBalancePointsWeightMap succeed`)
     return result
   }
 
@@ -307,44 +302,26 @@ export class RedistributePointService extends Worker {
     const withdrawTime = Math.floor(
       (new Date().getTime() - 7 * 24 * 60 * 60 * 1000) / 1000,
     );
-    const [tokenWithdrawWeightMap, userTokenWithWeightMap] = withdrawWeightData.reduce(([userTokenMapResult, tokenMapResult], item) => {
+    const tokenWithdrawWeightMap = new Map<string, bigint>()
+    const userTokenWithdrawWeightMap = new Map<string, bigint>()
+    const withdrawList: OmitEntityTime<UserWithdraw>[] = []
+    for (const item of withdrawWeightData) {
       const withdrawBalanceWeighting = this.calcWithdrawBalanceWeight(item)
       const userTokenMapKey = this.genUserTokenMapKey(item.address, item.project)
 
-      tokenMapResult.set(item.project, (tokenMapResult.get(item.project) ?? BigInt(0)) + withdrawBalanceWeighting)
-      const userTokenWeightInfo = userTokenMapResult.get(userTokenMapKey)
-      if (!userTokenWeightInfo) {
-        userTokenMapResult.set(userTokenMapKey, {
-          weightPoint: withdrawBalanceWeighting,
-          withdrawList: Number(item.blockTimestamp) > withdrawTime ?
-            [{
-              id: item.id,
-              tokenAddress: item.project,
-              balance: item.balance,
-              userAddress: item.address,
-              timestamp: new Date(Number(item.blockTimestamp) * 1000),
-              userPointId: this.genUserTokenMapKey(item.address, item.project)
-            }] : []
-        })
-      } else {
-        userTokenMapResult.set(userTokenMapKey, {
-          weightPoint: userTokenWeightInfo.weightPoint + withdrawBalanceWeighting,
-          withdrawList: userTokenWeightInfo.withdrawList.concat(Number(item.blockTimestamp) > withdrawTime ? {
-            id: item.id,
-            tokenAddress: item.project,
-            balance: item.balance,
-            userAddress: item.address,
-            timestamp: new Date(Number(item.blockTimestamp) * 1000),
-            userPointId: this.genUserTokenMapKey(item.address, item.project)
-          } : [])
+      tokenWithdrawWeightMap.set(item.project, (tokenWithdrawWeightMap.get(item.project) ?? BigInt(0)) + withdrawBalanceWeighting)
+      userTokenWithdrawWeightMap.set(userTokenMapKey, (userTokenWithdrawWeightMap.get(userTokenMapKey) ?? BigInt(0)) + withdrawBalanceWeighting)
+      if (Number(item.blockTimestamp) > withdrawTime) {
+        withdrawList.push({
+          userAddress: item.address,
+          tokenAddress: item.project,
+          balance: item.balance,
+          timestamp: new Date(Number(item.blockTimestamp) * 1000)
         })
       }
-
-
-      return [userTokenMapResult, tokenMapResult]
-    }, [new Map<string, { weightPoint: bigint, withdrawList: WithdrawInfo[] }>(), new Map<string, bigint>()])
-
-    return [tokenWithdrawWeightMap, userTokenWithWeightMap] as const;
+    }
+    this.logger.log(`genWithdrawInfoMap succeed`)
+    return { tokenWithdrawWeightMap, userTokenWithdrawWeightMap, withdrawList }
   }
 
   // get transferFailedPointsWeight by tokenAddress
@@ -373,179 +350,84 @@ export class RedistributePointService extends Worker {
   public async fetchDataFromSubgraph() {
     this.logger.log('Start fetchDataFromSubgraph')
     const [
-      [userTokenWithdrawWeightMap, tokenWithdrawWeightMap],
+      hourlyDBData,
+      { userTokenWithdrawWeightMap, tokenWithdrawWeightMap, withdrawList },
       [userTokenTransferFailedPointsWeightMap, tokenTransferFailedPointsWeightMap],
       tokenBalancePointsWeightMap,
-      pointWeightMap,
-      lpPoolsMap
+      userPointWeightData,
+      poolsMap
     ] = await Promise.all([
+      this.fetchDataFromHourlyData(),
       this.genWithdrawInfoMap(),
       this.getTransferFailedPointsWeight(),
       this.genTokenBalancePointsWeightMap(),
-      this.genUserBalancePointsWeightMap(),
-      this.queryPoolsMap()
+      this.queryPointWeightData(),
+      this.queryPoolsMap(),
     ])
+    const now = (new Date().getTime() / 1000) | 0;
 
-    const pointWeightResult = Array.from(pointWeightMap, ([key, obj]) => {
-      const userTokenWithdrawWeightInfo = userTokenWithdrawWeightMap.get(key) ?? { weightPoint: BigInt(0), withdrawList: [] }
+    const holdingsPointData: OmitEntityTime<UserHolding>[] = []
+    const stakesPointData: OmitEntityTime<UserStaked>[] = []
+
+    userPointWeightData.forEach(data => {
+      const [_, tokenAddressOrPoolAddress] = data.project.split('-')
+      const key = this.genUserTokenMapKey(data.address, tokenAddressOrPoolAddress)
+
+      const tokenPointsWeight = BigInt(data.weightBalance) * BigInt(now) -
+        (BigInt(data.timeWeightAmountIn) - BigInt(data.timeWeightAmountOut))
+      const userTokenWithdrawWeight = userTokenWithdrawWeightMap.get(key) ?? BigInt(0)
       const userTokenTransferFailedWeight = userTokenTransferFailedPointsWeightMap.get(key) ?? BigInt(0)
-      const userTokenPointWeight = obj.balancePointWeight + userTokenWithdrawWeightInfo.weightPoint + userTokenTransferFailedWeight
+      const userTokenPointWeight = tokenPointsWeight + userTokenWithdrawWeight + userTokenTransferFailedWeight
 
-      const totalTokenPointWeight = tokenBalancePointsWeightMap.get(obj.tokenAddress)
-      const totalWithdrawWeight = tokenWithdrawWeightMap.get(obj.tokenAddress) ?? BigInt(0)
-      const totalTransferFailedWeight = tokenTransferFailedPointsWeightMap.get(obj.tokenAddress) ?? BigInt(0)
+      const totalTokenPointWeight = tokenBalancePointsWeightMap.get(tokenAddressOrPoolAddress)
+      const totalWithdrawWeight = tokenWithdrawWeightMap.get(tokenAddressOrPoolAddress) ?? BigInt(0)
+      const totalTransferFailedWeight = tokenTransferFailedPointsWeightMap.get(tokenAddressOrPoolAddress) ?? BigInt(0)
       const totalPointWeight = totalTokenPointWeight + totalWithdrawWeight + totalTransferFailedWeight
 
       const pointWeightPercentage = BigNumber(userTokenPointWeight.toString(10)).div(totalPointWeight.toString(10)).toNumber()
-      const withdrawHistory = userTokenWithdrawWeightInfo.withdrawList
-      const lpPoolInfo = lpPoolsMap.get(obj.tokenAddress)
-      const exchangeRate = lpPoolInfo ? BigNumber(lpPoolInfo.balance).div(lpPoolInfo.totalSupplied).toNumber() : 1
 
-      return { ...obj, exchangeRate, withdrawHistory, pointWeight: userTokenPointWeight.toString(), pointWeightPercentage }
+      const poolInfo = poolsMap.get(tokenAddressOrPoolAddress)
+      if (!poolInfo) {
+        holdingsPointData.push({
+          userAddress: data.address,
+          tokenAddress: tokenAddressOrPoolAddress,
+          balance: data.balance,
+          pointWeight: userTokenPointWeight.toString(),
+          pointWeightPercentage: pointWeightPercentage
+        })
+      } else {
+        stakesPointData.push({
+          userAddress: data.address,
+          tokenAddress: poolInfo.underlying,
+          poolAddress: tokenAddressOrPoolAddress,
+          balance: data.balance,
+          pointWeight: userTokenPointWeight.toString(),
+          pointWeightPercentage: pointWeightPercentage
+        })
+      }
     })
 
-    return pointWeightResult
+    return { holdingsPointData, stakesPointData: [...stakesPointData, ...hourlyDBData], withdrawList }
   }
 
-  async fetchDataFromHourlyData() {
-    const entityManager = this.unitOfWork.getTransactionManager();
-    let offset = 0;
-    let hasMore = true;
-    const allData: RedistributeBalance[] = [];
-
-    while (hasMore) {
-      const batch = await entityManager
-        .createQueryBuilder(RedistributeBalance, 'rb')
-        .skip(offset)
-        .take(this.BATCH_SIZE)
-        .getMany();
-
-      allData.push(...batch);
-      offset += this.BATCH_SIZE;
-      hasMore = batch.length === this.BATCH_SIZE;
-    }
-    const formattedData = allData.map(data => ({
-      exchangeRate: 1,
-      withdrawHistory: [],
-      pointWeight: data.accumulateBalance,
-      pointWeightPercentage: Number(data.percentage),
-      userAddress: data.userAddress,
-      tokenAddress: data.pairAddress,
-      balance: data.balance,
-    }))
-
-    return formattedData;
-
+  async insertOrUpdateUsers(userAddresses: Array<string>) {
+    const data = userAddresses.map(address => ({ userAddress: address, }))
+    await this.userRepository.addManyIgnoreConflicts(data)
+    this.logger.log('upsert user data upsert completed');
   }
 
-  async insertOrUpdateUsers(pointData: Array<UserPointData>) {
-    const entityManager = this.unitOfWork.getTransactionManager();
-    const userAddresses = [...new Set(pointData.map(d => d.userAddress))];
-    const userMap = new Map<string, User>();
-
-    for (let i = 0; i < userAddresses.length; i += this.BATCH_SIZE) {
-      const batch = userAddresses.slice(i, i + this.BATCH_SIZE);
-      const users = await entityManager
-        .createQueryBuilder(User, 'user')
-        .where('user.userAddress IN (:...batch)', { batch })
-        .getMany();
-
-      users.forEach(user => userMap.set(user.userAddress, user));
-
-      const newUserEntities: User[] = [];
-      for (const userAddress of batch) {
-        if (!userMap.has(userAddress)) {
-          const newUser = new User();
-          newUser.userAddress = userAddress;
-          newUserEntities.push(newUser);
-          userMap.set(userAddress, newUser);
-        }
-      }
-
-      if (newUserEntities.length > 0) {
-        await entityManager.save(User, newUserEntities);
-      }
-      this.logger.log(`insertOrUpdateUsers batch ${i}, total length ${userAddresses.length}`)
-    }
-    this.logger.log(`insertOrUpdateUsers succeed`)
-    return userMap;
+  async insertOrUpdateHoldingData(data: Array<OmitEntityTime<UserHolding>>) {
+    await this.userHoldingRepository.addManyOrUpdate(data, ["balance", "pointWeight", "pointWeightPercentage"], ["userAddress", "tokenAddress"])
+    this.logger.log('upsert holding data upsert completed');
   }
 
-  async batchUpsertData(pointData: Array<UserPointData>) {
-    const entityManager = this.unitOfWork.getTransactionManager();
+  async insertOrUpdateStakedData(data: Array<OmitEntityTime<UserStaked>>) {
+    await this.userStakedRepository.addManyOrUpdate(data, ["balance", "pointWeight", "pointWeightPercentage"], ["userAddress", "tokenAddress", "poolAddress"])
+    this.logger.log('upsert staked data upsert completed');
+  }
 
-    for (let i = 0; i < pointData.length; i += this.BATCH_SIZE) {
-      const batch = pointData.slice(i, i + this.BATCH_SIZE);
-      const userRedistributePoints = batch.map(data => ({
-        id: this.genUserTokenMapKey(data.userAddress, data.tokenAddress),
-        tokenAddress: Buffer.from(data.tokenAddress.slice(2), 'hex'),
-        balance: data.balance.toString(),
-        exchangeRate: data.exchangeRate,
-        pointWeight: data.pointWeight.toString(),
-        pointWeightPercentage: data.pointWeightPercentage,
-        userAddress: Buffer.from(data.userAddress.slice(2), 'hex')
-      }));
-
-      const values = userRedistributePoints.map(p => `(
-      '${p.id}',
-      decode('${p.tokenAddress.toString('hex')}', 'hex'),
-      '${p.balance}',
-      ${p.exchangeRate},
-      '${p.pointWeight}',
-      ${p.pointWeightPercentage},
-      decode('${p.userAddress.toString('hex')}', 'hex')
-    )`).join(',');
-
-      const upsertQuery = `
-      INSERT INTO "userRedistributePoint" 
-      ("id", "tokenAddress", "balance", "exchangeRate", "pointWeight", "pointWeightPercentage", "userAddress") 
-      VALUES ${values}
-      ON CONFLICT ("userAddress", "tokenAddress")
-      DO UPDATE SET 
-        "balance" = EXCLUDED.balance,
-        "exchangeRate" = EXCLUDED."exchangeRate",
-        "pointWeight" = EXCLUDED."pointWeight",
-        "pointWeightPercentage" = EXCLUDED."pointWeightPercentage"
-      RETURNING id, "userAddress", "tokenAddress"
-    `;
-
-      await entityManager.query(upsertQuery);
-
-      const withdrawHistories = batch.map(data => data.withdrawHistory.map(withdraw => ({
-        id: Buffer.from(withdraw.id.slice(2), 'hex'),
-        balance: withdraw.balance,
-        timestamp: withdraw.timestamp.toISOString(),
-        userPointId: withdraw.userPointId,
-        tokenAddress: Buffer.from(withdraw.tokenAddress.slice(2), 'hex'),
-        userAddress: Buffer.from(withdraw.userAddress.slice(2), 'hex')
-      }))).flat()
-
-      if (withdrawHistories.length > 0) {
-        const withdrawValues = withdrawHistories.map(w => `(
-        decode('${w.id.toString('hex')}', 'hex'),
-        '${w.balance}',
-        '${w.timestamp}',
-        decode('${w.tokenAddress.toString('hex')}', 'hex'),
-        '${w.userPointId}',
-        decode('${w.userAddress.toString('hex')}', 'hex')
-      )`).join(',');
-
-        const withdrawQuery = `
-        INSERT INTO "withdrawHistory" ("id", "balance", "timestamp", "tokenAddress", "userPointId", "userAddressId")
-        VALUES ${withdrawValues}
-        ON CONFLICT ("id")
-        DO UPDATE SET 
-          "balance" = EXCLUDED."balance",
-          "tokenAddress" = EXCLUDED."tokenAddress",
-          "userPointId" = EXCLUDED."userPointId",
-          "userAddressId" = EXCLUDED."userAddressId"
-      `;
-
-        await entityManager.query(withdrawQuery);
-      }
-      this.logger.log(`Process ${i} batch successfully, total point data length ${pointData.length}`)
-    }
-
-    this.logger.log('Data batch upsert completed');
+  async insertOrUpdateWithdrawData(data: Array<OmitEntityTime<UserWithdraw>>) {
+    await this.userWithdrawRepository.addManyOrUpdate(data, ["balance"], ["userAddress", "tokenAddress", "timestamp"])
+    this.logger.log('upsert withdraw data upsert completed');
   }
 }

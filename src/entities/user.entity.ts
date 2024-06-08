@@ -1,21 +1,27 @@
 import { Entity, PrimaryColumn, OneToMany } from 'typeorm';
-import { UserRedistributePoint } from './userRedistributePoint.entity';
+import { UserHolding } from './userHolding.entity';
 import { BaseEntity } from './base.entity';
 import { hexTransformer } from '../transformers/hex.transformer';
-import { WithdrawHistory } from './withdrawHistory.entity';
+import { UserWithdraw } from './userWithdraw.entity';
+import { UserStaked } from './userStaked.entity';
 
 @Entity()
 export class User extends BaseEntity {
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   userAddress: string;
 
-  @OneToMany(() => UserRedistributePoint, (point) => point.userAddress, {
+  @OneToMany(() => UserHolding, (point) => point.userAddress, {
     cascade: true,
   })
-  points: UserRedistributePoint[];
+  holdings: UserHolding[];
 
-  @OneToMany(() => WithdrawHistory, (withdraw) => withdraw.userAddress, {
+  @OneToMany(() => UserStaked, (point) => point.userAddress, {
     cascade: true,
   })
-  withdrawHistory: WithdrawHistory[];
+  stakes: UserStaked[];
+
+  @OneToMany(() => UserWithdraw, (withdraw) => withdraw.userAddress, {
+    cascade: true,
+  })
+  withdraws: UserWithdraw[];
 }

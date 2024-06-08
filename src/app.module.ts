@@ -30,6 +30,11 @@ import {
   ProjectRepository,
   CacheRepository,
   RedistributeBalanceRepository,
+  RedistributeBalanceHistoryRepository,
+  UserRepository,
+  UserHoldingRepository,
+  UserStakedRepository,
+  UserWithdrawRepository
 } from "./repositories";
 import {
   Batch,
@@ -60,8 +65,9 @@ import {
   RedistributeBalance,
   RedistributeBalanceHistory,
   User,
-  UserRedistributePoint,
-  WithdrawHistory
+  UserHolding,
+  UserStaked,
+  UserWithdraw
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -169,8 +175,9 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         RedistributeBalance,
         RedistributeBalanceHistory,
         User,
-        UserRedistributePoint,
-        WithdrawHistory
+        UserHolding,
+        UserStaked,
+        UserWithdraw
       ],
       "lrt"
     ),
@@ -246,8 +253,13 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     BridgeActiveService,
     RedistributeBalanceService,
     RedistributeBalanceRepository,
+    RedistributeBalanceHistoryRepository,
     TvlPointLinkswapService,
-    RedistributePointService
+    RedistributePointService,
+    UserRepository,
+    UserHoldingRepository,
+    UserStakedRepository,
+    UserWithdrawRepository
   ],
 })
 export class AppModule { }

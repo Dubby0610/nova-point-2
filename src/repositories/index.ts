@@ -23,3 +23,8 @@ export * from "./project.repository";
 export * from "./cache.repository";
 export * from './txDataOfPoints.repository'
 export * from './redistributeBalance.repository'
+export * from './redistributeBalanceHistory.repository'
+export * from './userHolding.repository'
+export * from './userStaked.repository'
+export * from './userWithdraw.repository'
+export * from './user.repository'
