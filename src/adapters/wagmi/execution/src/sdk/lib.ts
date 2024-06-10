@@ -130,11 +130,11 @@ const transformUserPositions = async (positions: UserV3Position[], blockNumber: 
             poolAddress: position.pool.id,
             tokenAddress: position.pool.token1.id,
             blockNumber,
-            balance: amount0,
+            balance: amount1,
             timestamp,
           };
         } else {
-          acc[key].balance += amount0;
+          acc[key].balance += amount1;
         }   
       }   
     }
