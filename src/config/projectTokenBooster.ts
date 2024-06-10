@@ -58,6 +58,9 @@ const booster = {
         "0x380dd3344288bd6efd7c3597b2b6114b722a0e65": 10, // ARPA
         "0xbb68f4548a1c26b6611cbb8087c25a616edd8569": 10, // mswETH
         "0x829a939ee105cc3607428c237e463feb051e9780": 10, // wUSDM.manta
+        "0x011E385631488F3318F0C5541A343306626200D7": 10, // uniETH.eth
+        "0xb8FF1eD3CEC08533F32E85Bd44a37e8822DDd368": 10, // uniETH.manta,
+        "0xd77c50384edA6018d4a9951521E9B77c2af1842E": 10, // uniETH.linea
     },
     logx: {
         "0x2F8A25ac62179B31D62D7F80884AE57464699059": 10, //USDT
