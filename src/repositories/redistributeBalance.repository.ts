@@ -2,19 +2,22 @@ import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { RedistributeBalanceHistory, RedistributeBalance } from "../entities";
+import { RedistributeBalanceHistoryRepository } from './redistributeBalanceHistory.repository'
 
 
 @Injectable()
-export class RedistributeBalanceRepository extends BaseRepository<RedistributeBalanceHistory> {
-  public constructor(unitOfWork: LrtUnitOfWork) {
-    super(RedistributeBalanceHistory, unitOfWork);
+export class RedistributeBalanceRepository extends BaseRepository<RedistributeBalance> {
+  public constructor(
+    unitOfWork: LrtUnitOfWork,
+    private readonly redistributeBalanceHistoryRepository: RedistributeBalanceHistoryRepository) {
+    super(RedistributeBalance, unitOfWork);
   }
 
   public async updateCumulativeData(newHoldings: RedistributeBalanceHistory[]): Promise<void> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     this.unitOfWork.useTransaction(async () => {
       // Insert new hourly_holdings data
-      await this.addMany(newHoldings);
+      await this.redistributeBalanceHistoryRepository.addMany(newHoldings);
 
       // Get unique combinations of userAddress, tokenAddress, and pairAddress
       const userAddressSet = new Set(newHoldings.map(holding => holding.userAddress));
