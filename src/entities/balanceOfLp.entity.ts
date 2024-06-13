@@ -4,7 +4,6 @@ import { bigIntNumberTransformer } from "../transformers/bigIntNumber.transforme
 import { hexTransformer } from "../transformers/hex.transformer";
 
 @Entity({ name: "balancesOfLp" })
-@Index(['blockNumber', 'pairAddress', 'tokenAddress'])
 @Index(['blockNumber', 'pairAddress', 'tokenAddress', 'address'])
 export class BalanceOfLp extends BaseEntity {
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
