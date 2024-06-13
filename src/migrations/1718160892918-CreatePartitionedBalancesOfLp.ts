@@ -30,8 +30,7 @@ export class CreatePartitionedBalancesOfLp1718160892918 implements MigrationInte
                     CREATE TABLE "${partitionTableName}" PARTITION OF "balancesOfLp_new"
                     FOR VALUES FROM (${startBlock}) TO (${endBlock});
                 `);
-                await queryRunner.query(`CREATE INDEX "IDX_${partitionTableName}_blockNumber_pairAddress_tokenAddress" ON "${partitionTableName}" ("pairAddress", "blockNumber", "tokenAddress")`);
-                await queryRunner.query(`CREATE INDEX "IDX_${partitionTableName}_blockNumber_pairAddress_tokenAddress_address" ON "${partitionTableName}" ("pairAddress", "tokenAddress", "address", "blockNumber")`);
+                await queryRunner.query(`CREATE INDEX "IDX_${partitionTableName}_blockNumber_pairAddress_tokenAddress_address" ON "${partitionTableName}" ("blockNumber", "pairAddress", "tokenAddress", "address")`);
             }
 
 
@@ -50,9 +49,6 @@ export class CreatePartitionedBalancesOfLp1718160892918 implements MigrationInte
             `);
 
             // create index
-            await queryRunner.query(`
-                CREATE INDEX "IDX_balancesOfLp_blockNumber_pairAddress_tokenAddress" ON "balancesOfLp" ("blockNumber", "pairAddress", "tokenAddress");
-            `);
             await queryRunner.query(`CREATE INDEX "IDX_balancesOfLp_blockNumber_pairAddress_tokenAddress_address" ON "balancesOfLp" ("blockNumber", "pairAddress", "tokenAddress", "address")`);
             await queryRunner.commitTransaction();
 
@@ -97,9 +93,6 @@ export class CreatePartitionedBalancesOfLp1718160892918 implements MigrationInte
             await queryRunner.query(`DROP TABLE "balancesOfLp_temp";`);
 
             // Step 6: re-create index
-            await queryRunner.query(`
-                CREATE INDEX "IDX_balancesOfLp_pairAddress_blockNumber_tokenAddress" ON "balancesOfLp" ("blockNumber", "pairAddress", "tokenAddress");
-            `);
             await queryRunner.query(`CREATE INDEX "IDX_balancesOfLp_pairAddress_tokenAddress_address_blockNumber" ON "balancesOfLp" ("blockNumber", "pairAddress", "tokenAddress", "address")`);
             await queryRunner.commitTransaction();
         } catch (err) {
