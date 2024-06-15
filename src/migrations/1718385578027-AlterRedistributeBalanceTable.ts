@@ -4,12 +4,11 @@ export class AlterRedistributeBalanceTable1718385578027 implements MigrationInte
     name = 'AlterRedistributeBalanceTable1718385578027'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`DELETE FROM "redistribute_balance"`);
         await queryRunner.query(`DROP INDEX "public"."IDX_5d6e510e5f4aefe5b96c2e1532"`);
         await queryRunner.query(`ALTER TABLE "redistribute_balance" DROP CONSTRAINT "PK_5d6e510e5f4aefe5b96c2e15322"`);
         await queryRunner.query(`ALTER TABLE "redistribute_balance" ADD CONSTRAINT "PK_327cdecd5f51f433a593e8900d1" PRIMARY KEY ("userAddress", "tokenAddress", "pairAddress")`);
         await queryRunner.query(`CREATE UNIQUE INDEX "IDX_327cdecd5f51f433a593e8900d" ON "redistribute_balance" ("pairAddress", "tokenAddress", "userAddress") `);
-        await queryRunner.query(`DELETE FROM "redistribute_balance"`);
-
         const redistributeBalanceHistory = await queryRunner.query(`
             SELECT
                 "userAddress",
