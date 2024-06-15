@@ -28,7 +28,7 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
       const tokenAddresses = Array.from(tokenAddressSet).map(address => Buffer.from(address.slice(2), 'hex'));;
       const pairAddresses = Array.from(pairAddressSet).map(address => Buffer.from(address.slice(2), 'hex'));;
 
-      // Precompute total balances for all tokenAddress and pairAddress combinations
+      // PreCompute total balances for all tokenAddress and pairAddress combinations
       const existingPairTotalBalances = await transactionManager
         .createQueryBuilder(RedistributeBalance, "hbp")
         .select([
@@ -88,19 +88,21 @@ export class RedistributeBalanceRepository extends BaseRepository<RedistributeBa
           balancePercentageMap.set(key, record);
         }
 
-        // Update totalBalance
-        record.accumulateBalance = (BigInt(record.accumulateBalance) + BigInt(holding.balance)).toString();
-
         // Calculate percentage
+        const accumulateBalance = (BigInt(record.accumulateBalance) + BigInt(holding.balance)).toString();
         const pairKey = `${holding.tokenAddress.toLowerCase()}-${holding.pairAddress.toLowerCase()}`;
         const totalPairBalance = pairTotalBalanceMap.get(pairKey);
-        const percentage = (Number(record.accumulateBalance) / Number(totalPairBalance)).toFixed(18);
-        record.percentage = percentage;
+        const percentage = (Number(accumulateBalance) / Number(totalPairBalance)).toFixed(18);
 
-        // Save the record
+        record.percentage = percentage;
+        record.blockNumber = holding.blockNumber;
+        record.balance = holding.balance;
+        record.accumulateBalance = accumulateBalance
+
         hourlyBalancePercentageData.push(record)
       }
-      await transactionManager.save(RedistributeBalance, hourlyBalancePercentageData);
+
+      await this.addManyOrUpdate(hourlyBalancePercentageData, ['balance', 'accumulateBalance', 'percentage', 'blockNumber'], ['userAddress', 'tokenAddress', 'pairAddress'])
     });
   }
 }
