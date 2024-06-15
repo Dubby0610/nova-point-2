@@ -38,15 +38,14 @@ export default [
     addresses: [
       "0x8Dc71561414CDcA6DcA7C1dED1ABd04AF474D189".toLocaleLowerCase(), //weth
       "0xd17Ee77a10376Dab561d947F5e5FC5cf6de67441".toLocaleLowerCase(), //eth
-
     ],
     pointsRule: defaultPointsRule,
   },
-  //   {
-  //     id: "owlet",
-  //     addresses: ["0x5e809A85Aa182A9921EDD10a4163745bb3e36284".toLocaleLowerCase()],
-  //     pointsRule: defaultPointsRule,
-  //   },
+  {
+    id: "owlet",
+    addresses: ["0x5e809A85Aa182A9921EDD10a4163745bb3e36284".toLocaleLowerCase()],
+    pointsRule: defaultPointsRule,
+  },
   {
     id: "orbiter",
     addresses: [
@@ -59,5 +58,3 @@ export default [
     pointsRule: defaultPointsRule,
   },
 ];
-
-
