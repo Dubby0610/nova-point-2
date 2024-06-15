@@ -4,7 +4,7 @@ import { bigIntNumberTransformer } from "../transformers/bigIntNumber.transforme
 import { hexTransformer } from "../transformers/hex.transformer";
 
 @Entity({ name: "redistribute_balance" })
-@Index(["userAddress", "tokenAddress", "pairAddress", "blockNumber"])
+@Index(["pairAddress", "tokenAddress", "userAddress",], { unique: true })
 export class RedistributeBalance extends BaseEntity {
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   public userAddress: string;
@@ -24,6 +24,6 @@ export class RedistributeBalance extends BaseEntity {
   @Column({ type: "varchar", length: 50 })
   public accumulateBalance: string;
 
-  @PrimaryColumn({ type: "bigint", transformer: bigIntNumberTransformer })
+  @Column({ type: "bigint", transformer: bigIntNumberTransformer })
   public blockNumber: number;
 }

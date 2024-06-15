@@ -169,15 +169,15 @@ export class RedistributePointService extends Worker {
     while (fetchNext) {
       const queryPoints = `
         query Points {
-        points(first: ${pageSize}, skip: ${skip}) {
-          address
-          balance
-          weightBalance
-          timeWeightAmountIn
-          timeWeightAmountOut
-          project
+          points(first: ${pageSize}, skip: ${skip}) {
+            address
+            balance
+            weightBalance
+            timeWeightAmountIn
+            timeWeightAmountOut
+            project
+          }
         }
-      }
       `;
       const data = await fetchGraphQLData<{ points: GraphPoint[] }>(this.SUBGRAPH_URL, queryPoints);
       if (!data) {
@@ -259,7 +259,7 @@ export class RedistributePointService extends Worker {
       pointWeight: data.accumulateBalance,
       pointWeightPercentage: Number(data.percentage),
     }))
-    this.logger.log(`fetchDataFromHourlyData succeed`)
+    this.logger.log(`fetchDataFromHourlyData succeed with ${formattedData.length}`)
     return formattedData;
   }
 
@@ -400,17 +400,17 @@ export class RedistributePointService extends Worker {
           userAddress: data.address,
           tokenAddress: poolInfo.underlying,
           poolAddress: tokenAddressOrPoolAddress,
-          balance: (BigInt(data.balance) * BigInt(poolInfo.balance)/ BigInt(poolInfo.totalSupplied)).toString(), 
+          balance: (BigInt(data.balance) * BigInt(poolInfo.balance) / BigInt(poolInfo.totalSupplied)).toString(),
           pointWeight: userTokenPointWeight.toString(),
           pointWeightPercentage: pointWeightPercentage
         })
       }
     })
 
-    return { 
+    return {
       holdingsPointData,
-      stakesPointData: [...stakesPointData, ...hourlyDBData], 
-      withdrawList 
+      stakesPointData: [...stakesPointData, ...hourlyDBData],
+      withdrawList
     }
   }
 

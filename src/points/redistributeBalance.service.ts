@@ -51,7 +51,7 @@ export class RedistributeBalanceService extends Worker {
 
   public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
     await this.executeCommandInDirectory(name, curBlockNumber, lastBlockNumber);
-    this.logger.log(`compensatePointsData ${name} at block ${curBlockNumber}`)
+    this.logger.log(`compensateRedistributeData ${name} at block ${curBlockNumber}`)
   }
 
   public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
@@ -130,7 +130,7 @@ export class RedistributeBalanceService extends Worker {
           if (results.length > 0) {
             await this.insertTVLDataToDb(results, dir);
           }
-          // fs.unlinkSync(outputPath);
+          fs.unlinkSync(outputPath);
           this.logger.log(
             `Adapter:${dir} hourly CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
           );
