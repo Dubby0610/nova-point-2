@@ -1,0 +1,12 @@
+# staking balance
+type StakingBalance @entity {
+    id: ID!
+    # pool
+    pool: String!
+    # account
+    account: String!
+    # token
+    token: String!
+    # amount
+    amount: BigInt!
+}

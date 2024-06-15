@@ -1,3 +1,4 @@
+// case insensitive
 const booster = {
     layerbank: {
         "0x000000000000000000000000000000000000800A": 10, // ETH 0xb666582f612692525c4027d2a8280ac06a055a95
@@ -76,6 +77,10 @@ const booster = {
         "0xDa4AaEd3A53962c83B35697Cd138cc6df43aF71f": 10, // WBTC
         "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169": 10, // WETH
         "0x2F8A25ac62179B31D62D7F80884AE57464699059": 10, // USDT
+    },
+    zkdx: {
+        "0x1a1A3b2ff016332e866787B311fcB63928464509": 10, // USDC
+        "0x000000000000000000000000000000000000800A": 10, // ETH
     }
 } as const;
 
