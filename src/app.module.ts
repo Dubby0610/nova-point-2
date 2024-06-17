@@ -147,6 +147,7 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
           autoLoadEntities: true,
           retryDelay: 3000, // to cover 3 minute DB failover window
           retryAttempts: 70, // try to reconnect for 3.5 minutes,
+          name: 'refer'
         };
       },
     }),
@@ -161,6 +162,7 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
           autoLoadEntities: true,
           retryDelay: 3000, // to cover 3 minute DB failover window
           retryAttempts: 70, // try to reconnect for 3.5 minutes,
+          name: 'lrt'
         };
       },
     }),
@@ -191,6 +193,7 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
           autoLoadEntities: true,
           retryDelay: 3000, // to cover 3 minute DB failover window
           retryAttempts: 70, // try to reconnect for 3.5 minutes,
+          name: 'explorer'
         };
       },
     }),
