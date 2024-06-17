@@ -4,8 +4,8 @@ import { promises as promisesFs, existsSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
 import { BlockRepository, CacheRepository, RedistributeBalanceRepository, ProjectRepository } from "../repositories";
-import * as csv from "csv-parser";
-import * as fs from "fs";
+import csv from "csv-parser";
+import fs from "fs";
 import { Cron } from "@nestjs/schedule";
 import { getAddress } from "ethers/lib/utils";
 
@@ -28,6 +28,7 @@ export class RedistributeBalanceService extends Worker {
   private readonly outputFileName = "/data/";
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
   private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber'
+  private readonly filePrefix = 'hourly'
 
   public constructor(
     private readonly redistributeBalanceRepository: RedistributeBalanceRepository,
@@ -62,10 +63,10 @@ export class RedistributeBalanceService extends Worker {
         select: { number: true, timestamp: true },
       })
       const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-      this.logger.log(`Adapter start from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
+      this.logger.log(`RedistributeBalanceService start from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
       await this.runCommandsInAllDirectories(currentBlock.number, Number(adapterTxSyncBlockNumber));
       this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, currentBlock.number.toString())
-      this.logger.log(`Adapter end from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
+      this.logger.log(`RedistributeBalanceService end from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
     }
 
   }
@@ -87,7 +88,7 @@ export class RedistributeBalanceService extends Worker {
   private async executeCommandInDirectory(dir: string, curBlockNumber: number, lastBlockNumber: number): Promise<void> {
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
-    const command = `node genHourlyData.js ${dir} ${curBlockNumber} ${lastBlockNumber}`;
+    const command = `npm run adapter:tvl -- ${dir} '${this.filePrefix}' ${curBlockNumber}`;
 
     try {
       await this.execCommand(command, this.adaptersPath);
@@ -115,9 +116,9 @@ export class RedistributeBalanceService extends Worker {
   private async saveTVLDataToDb(dir: string, blockNumber: number): Promise<void> {
     return new Promise((resolve) => {
       // read output.csv file and save data to db
-      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `hourly.${blockNumber}.csv`);
+      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `${this.filePrefix}.${blockNumber}.csv`);
       if (!existsSync(outputPath)) {
-        this.logger.warn(`Folder '${dir}' does not contain hourly.${blockNumber}.csv file.`);
+        this.logger.warn(`Folder '${dir}' does not contain ${this.filePrefix}.${blockNumber}.csv file.`);
         resolve()
         return;
       }

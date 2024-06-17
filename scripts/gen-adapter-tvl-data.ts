@@ -1,52 +1,54 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
+import { write } from "fast-csv";
 
-const { write } = require("fast-csv");
+interface UserTVLData {
+  userAddress: string;
+  poolAddress: string;
+  tokenAddress: string;
+  blockNumber: number;
+  balance: number;
+  timestamp: number;
+}
 
-// Get the folder name from command line arguments
-const folderName = process.argv[2];
-const curBlockNumber = process.argv[3];
-const lastBlockNumber = process.argv[4];
-
+const args = process.argv.slice(2);
+const folderName: string | undefined = args[0];
+const filePrefix: string | undefined = args[1];
+const curBlockNumber: string | undefined = args[2];
 if (!folderName) {
-  console.error("Folder name not provided. Please provide the folder name as an argument.");
+  console.error("Folder name not provided. Please provide the folder name as 1st argument.");
   process.exit(1);
 }
 
-if (!lastBlockNumber) {
-  console.error("lastBlockNumber not provided. Please provide the lastBlockNumber as an argument.");
+if (!filePrefix) {
+  console.error("File prefix not provided. Please provide the file prefix as 2ed argument.");
   process.exit(1);
 }
 
 if (!curBlockNumber) {
-  console.error("curBlockNumber not provided. Please provide the curBlockNumber as an argument.");
+  console.error("curBlockNumber not provided. Please provide the curBlockNumber as 3rd argument.");
   process.exit(1);
 }
 
-// Get the absolute path of the provided folder
-const folderPath = path.resolve(folderName);
+const folderPath: string = path.join(__dirname, '../src/adapters', folderName);
 
-// Check if the provided folder exists
 if (!fs.existsSync(folderPath)) {
   console.error(`Folder '${folderPath}' does not exist.`);
   process.exit(1);
 }
 
-// Check if the provided folder contains index.ts file
-const indexPath = path.join(folderPath, "execution/dist/index.js");
+const indexPath: string = path.join(folderPath, "execution/dist/index.js");
 if (!fs.existsSync(indexPath)) {
   console.error(`Folder '${folderName}' does not contain index.ts file.`);
   process.exit(1);
 }
 
-// Import the funct function from the provided folder
 const { getUserTVLData } = require(indexPath);
 
 if (getUserTVLData) {
-  getUserTVLData(Number(curBlockNumber)).then((result) => {
-    const keyMap = new Map();
+  getUserTVLData(Number(curBlockNumber)).then((result: UserTVLData[]) => {
+    const keyMap = new Map<string, UserTVLData>();
     try {
-      // check : item of result must be an object with keys: address, poolAddress, tokenAddress, blockNumber, balance
       for (const item of result) {
         const key = item.userAddress + item.tokenAddress + item.poolAddress;
         if (
@@ -81,22 +83,19 @@ if (getUserTVLData) {
         };
       });
 
-      // Accumulate CSV rows for all blocks
-      const file = `${folderName}/data/hourly.${curBlockNumber}.csv`;
-      fs.mkdirSync(`${folderName}/data`, { recursive: true });
+      const file = path.join(folderPath, `/data/${filePrefix}.${curBlockNumber}.csv`)
+      fs.mkdirSync(`${folderPath}/data`, { recursive: true });
 
       const ws = fs.createWriteStream(file, { flags: "w" });
       write(allCsvRows, { headers: true })
         .pipe(ws)
         .on("finish", () => {
           console.log(`${file} has been written.`);
+          process.exit(0);
         });
-      // Clear the accumulated CSV rows
-      allCsvRows.length = 0;
-
-      // Write to file when batch size is reached or at the end of loop
     } catch (error) {
       console.error(`An error occurred for block ${curBlockNumber}:`, error);
+      process.exit(1);
     }
   });
 }
