@@ -1,9 +1,8 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Cron } from "@nestjs/schedule";
 import BigNumber from "bignumber.js";
 import { Worker } from "../common/worker";
 import { PointsOfLpRepository, AddressFirstDepositRepository, ProjectRepository } from "../repositories";
-import { PointsOfLp, AddressFirstDeposit } from "src/entities";
+import { PointsOfLp } from "src/entities";
 import { BoosterService } from "../booster/booster.service";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
@@ -40,11 +39,11 @@ export class TvlPointLinkswapService extends Worker {
     this.logger = new Logger(TvlPointLinkswapService.name);
   }
 
-  @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
     this.logger.log(`${TvlPointLinkswapService.name} initialized`);
     try {
-      await this.handleHoldPoint();
+      return;
+      //await this.handleHoldPoint();
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
