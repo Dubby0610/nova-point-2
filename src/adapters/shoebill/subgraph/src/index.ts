@@ -26,7 +26,6 @@ export function handleMarketListed(event: MarketListed): void {
     pool.totalSupplied = lToken.totalSupply();
     pool.symbol = symbol;
     pool.name = lToken.name();
-    pool.exchangeRate = lToken.exchangeRateCurrent();
     pool.save();
     LayerBankLTokenTemplate.create(gToken);
   }
@@ -51,7 +50,6 @@ export function handleTransfer(event: Transfer): void {
     pool.decimals = BigInt.fromI32(lToken.decimals());
     pool.balance = BigInt.zero();
     pool.totalSupplied = BigInt.zero();
-    pool.exchangeRate = lToken.exchangeRateCurrent();
     pool.save();
   } else {
     pool.symbol = symbol;
@@ -78,7 +76,6 @@ function updateTokenPosition(user: Address, event: Transfer, pool: Pool): void {
 
   pool.balance = poolBalance;
   pool.totalSupplied = lToken.totalSupply();
-  pool.exchangeRate = lToken.exchangeRateCurrent();
   pool.save();
 
   const poolTokenPositionId = user.concat(pool.underlying).concat(pool.id);

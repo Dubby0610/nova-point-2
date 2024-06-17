@@ -1,16 +1,16 @@
-# LayerBank Subgraph
+# Shoebill Subgraph
 
-This repository contains the Subgraph configuration for LayerBank, a decentralized finance protocol. This Subgraph indexes and exposes data related to liquidity pools and user positions on the `zklink-nova` network using The Graph protocol.
+This repository contains the Subgraph configuration for Shoebill, a decentralized finance protocol. This Subgraph indexes and exposes data related to liquidity pools and user positions on the `zklink-nova` network using The Graph protocol.
 
 ## Overview
 
-The Subgraph is designed to index events emitted by the LayerBank smart contracts. It tracks liquidity pool statistics, individual token positions within pools, and user positions across different pools.
+The Subgraph is designed to index events emitted by the Shoebill smart contracts. It tracks liquidity pool statistics, individual token positions within pools, and user positions across different pools.
 
 ## Schema
 
 The Graph schema defines three main entities:
 
-- **Pool**: Represents a liquidity pool in the LayerBank protocol.
+- **Pool**: Represents a liquidity pool in the Shoebill protocol.
 - **PoolTokenPosition**: Tracks individual token positions within a liquidity pool.
 - **UserPosition**: Aggregates all token positions for a user across various pools.
 
@@ -50,12 +50,12 @@ To deploy to a hosted service, replace the URLs with the appropriate hosted serv
 
 ## Configuration Details
 - Network: zklink-nova
-- Start Block: 727 for the main LayerBank contract.
+- Start Block: 727 for the main Shoebill contract.
 ### Data Sources
 The subgraph indexes data from two main sources:
 
-- LayerBankCore: Main contract handling pool operations.
-- LayerBankLToken: Contract for liquidity tokens in the pools.
+- ShoebillCore: Main contract handling pool operations.
+- ShoebillLToken: Contract for liquidity tokens in the pools.
 ### Event Handlers
 - handleMarketListed: Handles the MarketListed event for tracking newly listed markets.
 - handleTransfer: Monitors the Transfer events for liquidity tokens.

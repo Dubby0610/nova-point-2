@@ -15,8 +15,6 @@ type Pool @entity(immutable: false) {
   symbol: String!
 
   name: String!
-
-  exchangeRate: BigInt!
 }
 
 type PoolTokenPosition @entity(immutable: false) {
