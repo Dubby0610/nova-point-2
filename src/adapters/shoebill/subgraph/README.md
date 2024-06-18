@@ -25,43 +25,55 @@ The Graph schema defines three main entities:
 ### Installation
 
 1. Install dependencies:
-    ```bash 
-    yarn install
-    ```
+   ```bash
+   yarn install
+   ```
 2. Prepare the subgraph.yaml:
-Ensure the contract addresses and start blocks are correct for the network you are deploying to.
+   Ensure the contract addresses and start blocks are correct for the network you are deploying to.
 
 3. Generate code:
-    ```bash
-    graph codegen
-    ```
+   ```bash
+   graph codegen
+   ```
 4. Build the subgraph:
-    ```bash
-    graph build
-    ```
+   ```bash
+   graph build
+   ```
+
 ## Deployment
+
 To deploy this subgraph to a local Graph node:
-    
-``` bash 
+
+```bash
     graph create --node http://localhost:8020/ your-subgraph-name
     graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 your-subgraph-name
 ```
+
 To deploy to a hosted service, replace the URLs with the appropriate hosted service endpoints and include your deploy key.
 
 ## Configuration Details
+
 - Network: zklink-nova
-- Start Block: 727 for the main Shoebill contract.
+- Start Block: 2335136 for the main Shoebill contract.
+
 ### Data Sources
+
 The subgraph indexes data from two main sources:
 
-- ShoebillCore: Main contract handling pool operations.
-- ShoebillLToken: Contract for liquidity tokens in the pools.
+- ShoebillUnitroller: Main contract handling pool operations.
+- ShoebillSbToken: Contract for liquidity tokens in the pools.
+
 ### Event Handlers
+
 - handleMarketListed: Handles the MarketListed event for tracking newly listed markets.
 - handleTransfer: Monitors the Transfer events for liquidity tokens.
+- handleBorrow: Monitors the Borrow events for tracking underlying balance.
+- hnadleRepayBorrow: Monitors the Repay events for tracking underlying balance.
 
 ## Contributing
+
 Contributions to this subgraph are welcome. Please ensure that you adhere to standard coding practices and submit pull requests for any enhancements.
 
 ## License
+
 This project is licensed under the MIT License.

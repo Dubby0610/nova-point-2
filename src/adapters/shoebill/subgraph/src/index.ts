@@ -1,18 +1,21 @@
-import { MarketListed } from '../generated/LayerBank/LayerBankCore';
-import { LayerBankLToken, Transfer } from '../generated/templates/LayerBankLToken/LayerBankLToken';
+import { MarketListed } from '../generated/Shoebill/ShoebillUnitroller';
+import {
+  ShoebillSbToken,
+  Transfer,
+  Borrow,
+  RepayBorrow
+} from '../generated/templates/ShoebillSbToken/ShoebillSbToken';
 import { PoolTokenPosition, Pool } from '../generated/schema';
-import { LayerBankLToken as LayerBankLTokenTemplate } from '../generated/templates';
+import { ShoebillSbToken as ShoebillSbTokenTemplate } from '../generated/templates';
 import { Address, BigInt, Bytes, log } from '@graphprotocol/graph-ts';
 import { setUserInvalid, updateUserBalance } from './general';
 import { fetchTokenSymbol } from './utils/tokenHelper';
 import { ADDRESS_ZERO } from './utils/constants';
 
-const CEther = '0x4da697a89ea1d166881362b56e6863294820ec97';
 export function handleMarketListed(event: MarketListed): void {
   const gToken = event.params.gToken;
-  const isEther = gToken.toHexString() === CEther.toLowerCase();
   let pool = Pool.load(Bytes.fromHexString(gToken.toHexString()));
-  const lToken = LayerBankLToken.bind(gToken);
+  const lToken = ShoebillSbToken.bind(gToken);
   const underlying = lToken.try_underlying();
 
   const symbol = underlying.reverted ? 'ETH' : fetchTokenSymbol(underlying.value);
@@ -27,13 +30,12 @@ export function handleMarketListed(event: MarketListed): void {
     pool.symbol = symbol;
     pool.name = lToken.name();
     pool.save();
-    LayerBankLTokenTemplate.create(gToken);
+    ShoebillSbTokenTemplate.create(gToken);
   }
 }
 
 export function handleTransfer(event: Transfer): void {
-  const lToken = LayerBankLToken.bind(event.address);
-  const isEther = event.address.toHexString() === CEther.toLowerCase();
+  const lToken = ShoebillSbToken.bind(event.address);
   const underlyingCall = lToken.try_underlying();
   const symbol = underlyingCall.reverted ? 'ETH' : fetchTokenSymbol(underlyingCall.value);
   log.info('example_2 name {},symbol {}, underlying {}', [lToken.name(), symbol, 'ETH']);
@@ -68,10 +70,30 @@ export function handleTransfer(event: Transfer): void {
   }
 }
 
+export function handleBorrow(event: Borrow): void {
+  const lToken = ShoebillSbToken.bind(event.address);
+
+  let pool = Pool.load(event.address)!;
+  let poolBalance = lToken.getCash();
+
+  pool.balance = poolBalance;
+  pool.save();
+}
+
+export function handleRepayBorrow(event: RepayBorrow): void {
+  const lToken = ShoebillSbToken.bind(event.address);
+
+  let pool = Pool.load(event.address)!;
+  let poolBalance = lToken.getCash();
+
+  pool.balance = poolBalance;
+  pool.save();
+}
+
 function updateTokenPosition(user: Address, event: Transfer, pool: Pool): void {
   const userPosition = updateUserBalance(user, BigInt.zero());
 
-  const lToken = LayerBankLToken.bind(event.address);
+  const lToken = ShoebillSbToken.bind(event.address);
   let poolBalance = lToken.getCash();
 
   pool.balance = poolBalance;

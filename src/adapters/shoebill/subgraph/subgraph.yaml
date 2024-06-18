@@ -3,12 +3,12 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: LayerBank
+    name: Shoebill
     network: zklink-nova
     source:
-      abi: LayerBankCore
+      abi: ShoebillUnitroller
       address: '0x89e348e0ab4D83aEDbf1354004552822a805a12e'
-      startBlock: 2335536
+      startBlock: 2335136
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -18,10 +18,10 @@ dataSources:
         - Pool
         - PoolTokenPosition
       abis:
-        - name: LayerBankCore
-          file: ./abis/LayerBankCore.json
-        - name: LayerBankLToken
-          file: ./abis/LayerBankLToken.json
+        - name: ShoebillUnitroller
+          file: ./abis/ShoebillUnitroller.json
+        - name: ShoebillSbToken
+          file: ./abis/ShoebillSbToken.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20BytesMethod
@@ -32,10 +32,10 @@ dataSources:
 
 templates:
   - kind: ethereum/contract
-    name: LayerBankLToken
+    name: ShoebillSbToken
     network: zklink-nova
     source:
-      abi: LayerBankLToken
+      abi: ShoebillSbToken
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.9
@@ -46,8 +46,8 @@ templates:
         - PoolTokenPosition
         - UserPosition
       abis:
-        - name: LayerBankLToken
-          file: ./abis/LayerBankLToken.json
+        - name: ShoebillSbToken
+          file: ./abis/ShoebillSbToken.json
         - name: ERC20
           file: ./abis/ERC20.json
         - name: ERC20BytesMethod
@@ -55,3 +55,7 @@ templates:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
+        - event: Borrow(address,uint256,uint256,uint256)
+          handler: handleBorrow
+        - event: RepayBorrow(address,address,uint256,uint256,uint256)
+          handler: handleRepayBorrow

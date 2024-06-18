@@ -1,0 +1,642 @@
+[
+    { "type": "constructor", "inputs": [], "stateMutability": "nonpayable" },
+    {
+      "type": "function",
+      "name": "accountLiquidityOf",
+      "inputs": [{ "name": "account", "type": "address", "internalType": "address" }],
+      "outputs": [
+        { "name": "collateralInUSD", "type": "uint256", "internalType": "uint256" },
+        { "name": "supplyInUSD", "type": "uint256", "internalType": "uint256" },
+        { "name": "borrowInUSD", "type": "uint256", "internalType": "uint256" }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "allMarkets",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address[]", "internalType": "address[]" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "borrow",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "checkMembership",
+      "inputs": [
+        { "name": "account", "type": "address", "internalType": "address" },
+        { "name": "gToken", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "claimLab",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "claimLab",
+      "inputs": [{ "name": "market", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "closeFactor",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "compoundLab",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "enterMarkets",
+      "inputs": [{ "name": "gTokens", "type": "address[]", "internalType": "address[]" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "exitMarket",
+      "inputs": [{ "name": "gToken", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [{ "name": "_priceCalculator", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "initialized",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "keeper",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "labDistributor",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "contract ILABDistributor" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "liquidateBorrow",
+      "inputs": [
+        { "name": "gTokenBorrowed", "type": "address", "internalType": "address" },
+        { "name": "gTokenCollateral", "type": "address", "internalType": "address" },
+        { "name": "borrower", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "liquidationIncentive",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "listMarket",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address payable" },
+        { "name": "supplyCap", "type": "uint256", "internalType": "uint256" },
+        { "name": "borrowCap", "type": "uint256", "internalType": "uint256" },
+        { "name": "collateralFactor", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "marketInfoOf",
+      "inputs": [{ "name": "gToken", "type": "address", "internalType": "address" }],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct Constant.MarketInfo",
+          "components": [
+            { "name": "isListed", "type": "bool", "internalType": "bool" },
+            { "name": "supplyCap", "type": "uint256", "internalType": "uint256" },
+            { "name": "borrowCap", "type": "uint256", "internalType": "uint256" },
+            { "name": "collateralFactor", "type": "uint256", "internalType": "uint256" }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "marketInfos",
+      "inputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "outputs": [
+        { "name": "isListed", "type": "bool", "internalType": "bool" },
+        { "name": "supplyCap", "type": "uint256", "internalType": "uint256" },
+        { "name": "borrowCap", "type": "uint256", "internalType": "uint256" },
+        { "name": "collateralFactor", "type": "uint256", "internalType": "uint256" }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "marketListOf",
+      "inputs": [{ "name": "account", "type": "address", "internalType": "address" }],
+      "outputs": [{ "name": "", "type": "address[]", "internalType": "address[]" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "marketListOfUsers",
+      "inputs": [
+        { "name": "", "type": "address", "internalType": "address" },
+        { "name": "", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "markets",
+      "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nftBorrow",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "user", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "nftCore",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "nftRepayBorrow",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "user", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "owner",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "pause",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "paused",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "priceCalculator",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "contract IPriceCalculator" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "rebateDistributor",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "redeemToken",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "gAmount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "redeemUnderlying",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "uAmount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "removeMarket",
+      "inputs": [{ "name": "gToken", "type": "address", "internalType": "address payable" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "renounceOwnership",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "repayBorrow",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "repayBorrowBehalf",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "borrower", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "setCloseFactor",
+      "inputs": [{ "name": "newCloseFactor", "type": "uint256", "internalType": "uint256" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setCollateralFactor",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "newCollateralFactor", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setKeeper",
+      "inputs": [{ "name": "_keeper", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setLABDistributor",
+      "inputs": [{ "name": "_labDistributor", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setLiquidationIncentive",
+      "inputs": [{ "name": "newLiquidationIncentive", "type": "uint256", "internalType": "uint256" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setMarketBorrowCaps",
+      "inputs": [
+        { "name": "gTokens", "type": "address[]", "internalType": "address[]" },
+        { "name": "newBorrowCaps", "type": "uint256[]", "internalType": "uint256[]" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setMarketSupplyCaps",
+      "inputs": [
+        { "name": "gTokens", "type": "address[]", "internalType": "address[]" },
+        { "name": "newSupplyCaps", "type": "uint256[]", "internalType": "uint256[]" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setNftCore",
+      "inputs": [{ "name": "_nftCore", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setPriceCalculator",
+      "inputs": [{ "name": "_priceCalculator", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setRebateDistributor",
+      "inputs": [{ "name": "_rebateDistributor", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "setValidator",
+      "inputs": [{ "name": "_validator", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "supply",
+      "inputs": [
+        { "name": "gToken", "type": "address", "internalType": "address" },
+        { "name": "uAmount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "transferOwnership",
+      "inputs": [{ "name": "newOwner", "type": "address", "internalType": "address" }],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "transferTokens",
+      "inputs": [
+        { "name": "spender", "type": "address", "internalType": "address" },
+        { "name": "src", "type": "address", "internalType": "address" },
+        { "name": "dst", "type": "address", "internalType": "address" },
+        { "name": "amount", "type": "uint256", "internalType": "uint256" }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "unpause",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "usersOfMarket",
+      "inputs": [
+        { "name": "", "type": "address", "internalType": "address" },
+        { "name": "", "type": "address", "internalType": "address" }
+      ],
+      "outputs": [{ "name": "", "type": "bool", "internalType": "bool" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "validator",
+      "inputs": [],
+      "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+      "stateMutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "BorrowCapUpdated",
+      "inputs": [
+        { "name": "gToken", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "newBorrowCap", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "CloseFactorUpdated",
+      "inputs": [
+        { "name": "newCloseFactor", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "CollateralFactorUpdated",
+      "inputs": [
+        { "name": "gToken", "type": "address", "indexed": false, "internalType": "address" },
+        {
+          "name": "newCollateralFactor",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "FlashLoan",
+      "inputs": [
+        { "name": "target", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "initiator", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "asset", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" },
+        { "name": "premium", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "KeeperUpdated",
+      "inputs": [
+        { "name": "newKeeper", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "LABDistributorUpdated",
+      "inputs": [
+        {
+          "name": "newLABDistributor",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "LiquidationIncentiveUpdated",
+      "inputs": [
+        {
+          "name": "newLiquidationIncentive",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MarketEntered",
+      "inputs": [
+        { "name": "gToken", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "account", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MarketExited",
+      "inputs": [
+        { "name": "gToken", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "account", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MarketListed",
+      "inputs": [
+        { "name": "gToken", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MarketRedeem",
+      "inputs": [
+        { "name": "user", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "gToken", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "uAmount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "MarketSupply",
+      "inputs": [
+        { "name": "user", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "gToken", "type": "address", "indexed": false, "internalType": "address" },
+        { "name": "uAmount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "NftCoreUpdated",
+      "inputs": [
+        { "name": "newNftCore", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "OwnershipTransferred",
+      "inputs": [
+        { "name": "previousOwner", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "newOwner", "type": "address", "indexed": true, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Paused",
+      "inputs": [
+        { "name": "account", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RebateDistributorUpdated",
+      "inputs": [
+        {
+          "name": "newRebateDistributor",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SupplyCapUpdated",
+      "inputs": [
+        { "name": "gToken", "type": "address", "indexed": true, "internalType": "address" },
+        { "name": "newSupplyCap", "type": "uint256", "indexed": false, "internalType": "uint256" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Unpaused",
+      "inputs": [
+        { "name": "account", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "ValidatorUpdated",
+      "inputs": [
+        { "name": "newValidator", "type": "address", "indexed": false, "internalType": "address" }
+      ],
+      "anonymous": false
+    }
+  ]
+  
