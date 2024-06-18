@@ -46,3 +46,91 @@ dataSources:
           handler: handleStake
         - event: Withdraw(indexed address,uint256)
           handler: handleWithdraw
+  - kind: ethereum
+    name: ZUSDPool
+    network: zklink-nova
+    source:
+      abi: ZUSDPool
+      address: '0xe8b1035Ef3F2Fac3d1d10d34759EA42e077DeaC4'
+      startBlock: 2980387
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/zusd_exchange.ts
+      entities:
+        - Transaction
+      abis:
+        - name: ZUSDPool
+          file: ./abis/ZUSDPool.json
+      eventHandlers:
+        - event: Exchange(indexed address,indexed address,uint256,uint256)
+          handler: handleExchange
+        - event: Redeem(indexed address,indexed address,uint256,uint256)
+          handler: handleRedeem
+  - kind: ethereum
+    name: ZkdxVault
+    network: zklink-nova
+    source:
+      abi: ZkdxVault
+      address: '0x640444b37e8b3BdeB3Cf61D1D5f7F86a336bcA1c'
+      startBlock: 2980383
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/trading.ts
+      entities:
+        - Transaction
+      abis:
+        - name: ZkdxVault
+          file: ./abis/ZkdxVault.json
+      eventHandlers:
+        - event: Increase(address,address,address,uint256)
+          handler: handleIncrease
+        - event: Decrease(address,address,address,uint256)
+          handler: handleDecrease
+  - kind: ethereum
+    name: ZKLPool
+    network: zklink-nova
+    source:
+      abi: ZKLPool
+      address: '0x32d2918fE669e03286Fff440D892A0012915f3CA'
+      startBlock: 2980392
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/lp.ts
+      entities:
+        - Transaction
+      abis:
+        - name: ZKLPool
+          file: ./abis/ZKLPool.json
+      eventHandlers:
+        - event: BuyLP(indexed address,indexed address,uint256,uint256)
+          handler: handleBuyLP
+        - event: RedeemLP(indexed address,indexed address,uint256,uint256)
+          handler: handleRedeemLP
+  - kind: ethereum
+    name: ZKHLPool
+    network: zklink-nova
+    source:
+      abi: ZKHLPool
+      address: '0x06EF31817DE3c46262fa690cE2274dd02549fb49'
+      startBlock: 2980394
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/lp.ts
+      entities:
+        - Transaction
+      abis:
+        - name: ZKHLPool
+          file: ./abis/ZKHLPool.json
+      eventHandlers:
+        - event: BuyLP(indexed address,indexed address,uint256,uint256)
+          handler: handleBuyLP
+        - event: RedeemLP(indexed address,indexed address,uint256,uint256)
+          handler: handleRedeemLP

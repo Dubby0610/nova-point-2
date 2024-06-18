@@ -1,6 +1,6 @@
 import {Stake, Withdraw} from "../generated/ZkdxStakingETH/ZkdxStakingETH";
 import {StakingBalance} from "../generated/schema";
-import {ETH_ADDRESS} from "./constants";
+import {ETH_ADDRESS} from "./utils";
 
 export function handleStake(event: Stake): void {
 

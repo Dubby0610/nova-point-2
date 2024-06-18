@@ -10,3 +10,15 @@ type StakingBalance @entity {
     # amount
     amount: BigInt!
 }
+
+# transaction
+type Transaction @entity {
+    id: ID!
+    timestamp: BigInt!
+    user_address: String!
+    contract_address: String!
+    token_address: String!
+    price: BigDecimal!
+    amount: BigInt!
+    nonce: BigInt!
+}

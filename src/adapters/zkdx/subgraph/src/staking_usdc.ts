@@ -1,6 +1,6 @@
 import {Stake, Withdraw} from "../generated/ZkdxStakingUSDC/ZkdxStakingUSDC";
 import {StakingBalance} from "../generated/schema";
-import {USDC_ADDRESS} from "./constants";
+import {USDC_ADDRESS} from "./utils";
 
 export function handleStake(event: Stake): void {
 
