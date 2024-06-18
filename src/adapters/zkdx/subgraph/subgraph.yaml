@@ -1,0 +1,48 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: ZkdxStakingETH
+    network: zklink-nova
+    source:
+      abi: ZkdxStakingETH
+      address: '0xb5e635f2cB9eAC385D679069f8e0d1740436b355'
+      startBlock: 266
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/staking_eth.ts
+      entities:
+        - StakingBalance
+      abis:
+        - name: ZkdxStakingETH
+          file: ./abis/ZkdxStakingETH.json
+      eventHandlers:
+        - event: Stake(indexed address,uint256)
+          handler: handleStake
+        - event: Withdraw(indexed address,uint256)
+          handler: handleWithdraw
+  - kind: ethereum
+    name: ZkdxStakingUSDC
+    network: zklink-nova
+    source:
+      abi: ZkdxStakingUSDC
+      address: '0xa6DbD1bdB1DC4339Df51d90Ce306CCE6edFbbbb1'
+      startBlock: 505708
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/staking_usdc.ts
+      entities:
+        - StakingBalance
+      abis:
+        - name: ZkdxStakingUSDC
+          file: ./abis/ZkdxStakingUSDC.json
+      eventHandlers:
+        - event: Stake(indexed address,uint256)
+          handler: handleStake
+        - event: Withdraw(indexed address,uint256)
+          handler: handleWithdraw
