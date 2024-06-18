@@ -60,12 +60,12 @@ export function handleTransfer(event: Transfer): void {
   }
   setUserInvalid(event.address);
   // update from to
-  if (event.params.from.notEqual(Address.zero())) {
+  if (event.params.from.notEqual(Address.zero()) && event.params.from.notEqual(event.address)) {
     updateTokenPosition(event.params.from, event, pool);
   }
 
   // update to address
-  if (event.params.to.notEqual(Address.zero())) {
+  if (event.params.to.notEqual(Address.zero()) && event.params.to.notEqual(event.address)) {
     updateTokenPosition(event.params.to, event, pool);
   }
 }
