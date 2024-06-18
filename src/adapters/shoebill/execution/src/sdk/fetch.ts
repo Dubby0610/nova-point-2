@@ -1,7 +1,11 @@
 import { Response } from "./types";
+import path from "path";
+
+require("dotenv").config({ path: path.join(__dirname, "../../.env") });
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const SUBGRAPH_ENDPOINT = process.env.SUBGRAPH_ENDPOINT as string;
 export const fetchGraphQLData = async (query: string): Promise<Response> => {
   let data;
   let errors;
@@ -11,7 +15,7 @@ export const fetchGraphQLData = async (query: string): Promise<Response> => {
 
   while (retry && retryCount < maxRetries) {
     try {
-      const response = await fetch("http://3.114.68.110:8000/subgraphs/name/shoebill-points", {
+      const response = await fetch(SUBGRAPH_ENDPOINT, {
         method: "POST",
         body: JSON.stringify({ query }),
         headers: { "Content-Type": "application/json" },
