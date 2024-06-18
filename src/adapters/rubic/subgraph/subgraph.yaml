@@ -1,0 +1,27 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: RubicMultiProxy
+    network: zklink-nova
+    source:
+      address: "0x1a979E2386595837BaAB90Ba12B2E2a71C652576"
+      abi: RubicMultiProxy
+      startBlock: 733321
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - RubicSwappedGeneric
+        - RubicTransferStarted
+      abis:
+        - name: RubicMultiProxy
+          file: ./abis/RubicMultiProxy.json
+      eventHandlers:
+        - event: RubicSwappedGeneric(indexed bytes32,address,address,address,address,uint256,uint256)
+          handler: handleRubicSwappedGeneric
+      file: ./src/rubic-multi-proxy.ts

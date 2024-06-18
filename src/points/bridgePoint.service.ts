@@ -184,6 +184,9 @@ export class BridgePointService extends Worker {
     let defalutBridgeAddress: string[] = [],
       symbiosisAddress: string[] = [];
     for (const item of BridgeConfig) {
+      if (item.id == "owlet") {
+        continue;
+      }
       if (item.id == "symbiosis") {
         symbiosisAddress = item.addresses;
       } else {

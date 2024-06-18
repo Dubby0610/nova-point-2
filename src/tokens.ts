@@ -629,6 +629,11 @@ export default [
         l1Address: "0x34c7ad65e4163306f8745996688b476914201ce0",
         l2Address: "0xb8FF1eD3CEC08533F32E85Bd44a37e8822DDd368",
       },
+      {
+        chain: "Linea",
+        l1Address: "0x15EEfE5B297136b8712291B632404B66A8eF4D25",
+        l2Address: "0xd77c50384edA6018d4a9951521E9B77c2af1842E",
+      },
     ],
     symbol: "uniETH",
     decimals: 18,

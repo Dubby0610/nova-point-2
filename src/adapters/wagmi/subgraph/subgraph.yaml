@@ -1,0 +1,197 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: Factory
+    network: zklink-nova
+    source:
+      address: "0x6175b648473F1d4c1549aAC3c2d007e7720585e6"
+      abi: Factory
+      startBlock: 1339353
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+        - Token
+      abis:
+        - name: Factory
+          file: ./abis/v3/Factory.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20/SymbolBytes.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20/NameBytes.json
+        - name: Pool
+          file: ./abis/v3/Pool.json
+      eventHandlers:
+        - event: PoolCreated(indexed address,indexed address,indexed uint24,int24,address)
+          handler: handlePoolCreated
+      file: ./src/mappings/factory.ts
+  - kind: ethereum/contract
+    name: NonfungiblePositionManager
+    network: zklink-nova
+    source:
+      address: "0x40701F439A4460C45607A8F75A0cA3cC6CBAf83d"
+      abi: NonfungiblePositionManager
+      startBlock: 1557384
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Pool
+        - Token
+      abis:
+        - name: NonfungiblePositionManager
+          file: ./abis/v3/NonfungiblePositionManager.json
+        - name: Pool
+          file: ./abis/v3/Pool.json
+        - name: Factory
+          file: ./abis/v3/Factory.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+      eventHandlers:
+        - event: IncreaseLiquidity(indexed uint256,uint128,uint256,uint256)
+          handler: handleIncreaseLiquidity
+        - event: DecreaseLiquidity(indexed uint256,uint128,uint256,uint256)
+          handler: handleDecreaseLiquidity
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+      file: ./src/mappings/position-manager.ts
+  - kind: ethereum/contract
+    name: FactoryMultipool
+    network: zklink-nova
+    source:
+      address: "0x8F901D3c80e6f72b6Ca118076697608C18ee48fe"
+      abi: FactoryMultipool
+      startBlock: 1598188
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+        - Token
+      abis:
+        - name: FactoryMultipool
+          file: ./abis/multipool/FactoryMultipool.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: MultipoolDispatcher
+          file: ./abis/multipool/MultipoolDispatcher.json
+      eventHandlers:
+        - event: CreateMultipool(address,address,address,address)
+          handler: handleMultiPoolCreated
+      file: ./src/mappings/factory-multipool.ts
+  - kind: ethereum/contract
+    name: MultipoolDispatcher
+    network: zklink-nova
+    source:
+      address: "0x1D236503285770b58f12C6AFc7896fAd713F9334"
+      abi: MultipoolDispatcher
+      startBlock: 1598188
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+        - Token
+      abis:
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: MultipoolDispatcher
+          file: ./abis/multipool/MultipoolDispatcher.json
+      eventHandlers:
+        - event: Deposit(address,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(address,uint256,uint256)
+          handler: handleWithdraw
+      file: ./src/mappings/multipool-dispatcher.ts
+
+templates:
+  - kind: ethereum/contract
+    name: Pool
+    network: zklink-nova
+    source:
+      abi: Pool
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      file: ./src/mappings/core.ts
+      entities:
+        - Pool
+        - Token
+      abis:
+        - name: Pool
+          file: ./abis/v3/Pool.json
+        - name: Factory
+          file: ./abis/v3/Factory.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: Oracle
+          file: ./abis/Oracle.json
+      eventHandlers:
+        - event: Initialize(uint160,int24)
+          handler: handleInitialize
+        - event: Swap(indexed address,indexed address,int256,int256,uint160,uint128,int24)
+          handler: handleSwap
+        - event: Mint(address,indexed address,indexed int24,indexed int24,uint128,uint256,uint256)
+          handler: handleMint
+        - event: Burn(indexed address,indexed int24,indexed int24,uint128,uint256,uint256)
+          handler: handleBurn
+        - event: Collect(indexed address,address,indexed int24,indexed int24,uint128,uint128)
+          handler: handleCollect
+  - kind: ethereum/contract
+    name: Multipool
+    network: zklink-nova
+    source:
+      abi: Multipool
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+      abis:
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+        - name: MultipoolDispatcher
+          file: ./abis/multipool/MultipoolDispatcher.json
+      eventHandlers:
+        - event: Deposit(address,address,uint256,uint256,uint256)
+          handler: handleDeposit
+        - event: Withdraw(address,address,uint256,uint256,uint256)
+          handler: handleWithdraw
+      file: ./src/mappings/multipool-core.ts
+  - kind: ethereum/contract
+    name: MultipoolToken
+    network: zklink-nova
+    source:
+      abi: ERC20
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.8
+      language: wasm/assemblyscript
+      entities:
+        - Multipool
+      abis:
+        - name: Multipool
+          file: ./abis/multipool/Multipool.json
+        - name: ERC20
+          file: ./abis/ERC20/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+      file: ./src/mappings/multipool-token.ts

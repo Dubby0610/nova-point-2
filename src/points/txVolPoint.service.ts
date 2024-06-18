@@ -127,7 +127,7 @@ export class TxVolPointService extends Worker {
           `get address first deposit empty, address is : ${itemUserAddress}, fistDeposit is : ${JSON.stringify(addressFirstDeposit)}`
         );
       }
-      const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster).multipliedBy(0.001)
+      const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster)
 
       const fromBlockAddressPointKey = `${itemUserAddress}-${itemPoolAddress}-${itemBlockNumber}-${this.type}`;
       if (!blockAddressPointMap.has(fromBlockAddressPointKey)) {

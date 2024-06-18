@@ -1,0 +1,19 @@
+{
+  "name": "rubic",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "create": "graph create rubic-points --node http://localhost:8020",
+    "deploy": "graph deploy rubic-points  --ipfs http://localhost:5001 --node http://localhost:8020/",
+    "remove": "graph remove --node http://localhost:8020 rubic-points",
+    "test": "graph test"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "0.71.2",
+    "@graphprotocol/graph-ts": "0.32.0"
+  },
+  "devDependencies": {
+    "matchstick-as": "0.5.0"
+  }
+}
