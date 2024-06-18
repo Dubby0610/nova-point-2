@@ -6,6 +6,7 @@ import { hideBin } from "yargs/helpers";
 
 interface Argv {
   project: string;
+  name: string;
   ipfsUrl: string;
   nodeUrl: string;
 }
@@ -13,6 +14,7 @@ interface Argv {
 const argv: Argv = yargs(hideBin(process.argv))
   .options({
     project: { type: "string", alias: "p", demandOption: true, description: "The project to deploy" },
+    name: { type: "string", alias: "n", demandOption: true, description: "The subgraph name" },
     ipfsUrl: { type: "string", demandOption: true, description: "IPFS URL" },
     nodeUrl: { type: "string", demandOption: true, description: "Node URL" }
   })
@@ -44,7 +46,7 @@ if (!project) {
   process.exit(1);
 }
 
-function deploySubgraph(directory: string, subgraphPathSecret: string, ipfsUrl: string, nodeUrl: string): void {
+function deploySubgraph(directory: string, name: string, ipfsUrl: string, nodeUrl: string): void {
 
   console.log(`Deploying subgraph in directory: ${directory}`);
 
@@ -63,15 +65,14 @@ function deploySubgraph(directory: string, subgraphPathSecret: string, ipfsUrl: 
   execSync("graph build", { stdio: "inherit" });
 
   console.log("Registers a subgraph name");
-  execSync(`graph create ${subgraphPathSecret} --node ${nodeUrl}`, { stdio: "inherit" });
+  execSync(`graph create ${name} --node ${nodeUrl}`, { stdio: "inherit" });
 
   console.log("Deploying the subgraph...");
-  execSync(`graph deploy ${subgraphPathSecret} --ipfs ${ipfsUrl} --node ${nodeUrl}`, { stdio: "inherit" });
+  execSync(`graph deploy ${name} --ipfs ${ipfsUrl} --node ${nodeUrl}`, { stdio: "inherit" });
 
   process.chdir("..");
 }
 
-const subgraphPathSecret = `${argv.project}-points`;
-deploySubgraph(project, subgraphPathSecret, argv.ipfsUrl, argv.nodeUrl);
+deploySubgraph(project, argv.name, argv.ipfsUrl, argv.nodeUrl);
 
 console.log("Deployment completed.");

@@ -108,7 +108,7 @@ The zkLink Nova network is not yet supported in _The Graph_'s list of supported 
 2. run the following command:
 
 ```bash
-npm run deploy-subgraph:dev -- -p <projectName>
+npm run deploy-subgraph:dev -- -p <projectName> -n <subgraphName>
 ```
 
 3. Upon successful deployment, a subgraph URL will be returned and displayed in your terminal.
