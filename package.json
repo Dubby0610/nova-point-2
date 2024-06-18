@@ -30,7 +30,9 @@
     "migration:run": "npm run typeorm migration:run -- -d ./src/typeorm.config.ts",
     "migration:revert": "npm run typeorm migration:revert -- -d ./src/typeorm.config.ts",
     "adapter:tvl": "ts-node ./scripts/gen-adapter-tvl-data.ts",
-    "adapter:tx": "ts-node ./scripts/gen-adapter-tx-data.ts"
+    "adapter:tx": "ts-node ./scripts/gen-adapter-tx-data.ts",
+    "deploy-subgraph:dev": "ts-node ./scripts/deploy-subgraph.ts --ipfsUrl http://3.114.68.110:5001 --nodeUrl http://3.114.68.110:8020",
+    "deploy-subgraph:prod": "ts-node ./scripts/deploy-subgraph.ts --ipfsUrl http://localhost:5001 --nodeUrl http://localhost:8020"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.0",

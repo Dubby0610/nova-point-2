@@ -3,29 +3,48 @@ import path from "path";
 import { execSync } from "child_process";
 import yargs from "yargs/yargs";
 import { hideBin } from "yargs/helpers";
-import dotenv from "dotenv";
 
 interface Argv {
-  directory: string;
+  project: string;
+  ipfsUrl: string;
+  nodeUrl: string;
 }
 
 const argv: Argv = yargs(hideBin(process.argv))
   .options({
-    directory: { type: "string", demandOption: true, description: "The subgraph directory to deploy" },
+    project: { type: "string", alias: "p", demandOption: true, description: "The project to deploy" },
+    ipfsUrl: { type: "string", demandOption: true, description: "IPFS URL" },
+    nodeUrl: { type: "string", demandOption: true, description: "Node URL" }
   })
   .parseSync() as Argv;
 
-const subgraphDir = "./subgraph";
-const subgraphToDeploy: string = argv.directory;
+const adaptersPath = path.join(__dirname, "../src/adapters");
 
-function deploySubgraph(directory: string): void {
-  dotenv.config({ path: path.resolve(directory, ".env") });
-  const subgraphPathSecret = process.env.SUBGRAPH_PATH_SECRET;
+function getProjects(basePath: string): { [key: string]: string } {
+  const dirs = fs.readdirSync(basePath, { withFileTypes: true });
+  const projects: { [key: string]: string } = {};
 
-  if (!subgraphPathSecret) {
-    console.error("SUBGRAPH_PATH_SECRET environment variable is not defined.");
-    process.exit(1);
-  }
+  dirs.forEach(dir => {
+    if (dir.isDirectory()) {
+      const projectPath = path.join(basePath, dir.name, "subgraph");
+      if (fs.existsSync(projectPath)) {
+        projects[dir.name] = projectPath;
+      }
+    }
+  });
+
+  return projects;
+}
+
+const projects = getProjects(adaptersPath);
+const project = projects[argv.project];
+
+if (!project) {
+  console.error(`Project '${argv.project}' is not defined in '${adaptersPath}'.`);
+  process.exit(1);
+}
+
+function deploySubgraph(directory: string, subgraphPathSecret: string, ipfsUrl: string, nodeUrl: string): void {
 
   console.log(`Deploying subgraph in directory: ${directory}`);
 
@@ -35,7 +54,7 @@ function deploySubgraph(directory: string): void {
   execSync("graph clean", { stdio: "inherit" });
 
   console.log("Installing dependencies...");
-  execSync("yarn install", { stdio: "inherit" });
+  execSync("npm install", { stdio: "inherit" });
 
   console.log("Generating schema code...");
   execSync("graph codegen", { stdio: "inherit" });
@@ -44,24 +63,15 @@ function deploySubgraph(directory: string): void {
   execSync("graph build", { stdio: "inherit" });
 
   console.log("Registers a subgraph name");
-  execSync(`graph create ${subgraphPathSecret} --node http://3.114.68.110:8020`, { stdio: "inherit" });
+  execSync(`graph create ${subgraphPathSecret} --node ${nodeUrl}`, { stdio: "inherit" });
 
   console.log("Deploying the subgraph...");
-  execSync(`graph deploy ${subgraphPathSecret} --ipfs http://3.114.68.110:5001 --node http://3.114.68.110:8020`, {
-    stdio: "inherit",
-  });
+  execSync(`graph deploy ${subgraphPathSecret} --ipfs ${ipfsUrl} --node ${nodeUrl}`, { stdio: "inherit" });
 
-  
   process.chdir("..");
 }
 
-const fullPath: string = path.join(__dirname, subgraphToDeploy, subgraphDir);
-if (fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory()) {
-  console.log("process full path: ", fullPath);
-
-  deploySubgraph(fullPath);
-} else {
-  console.error("Specified subgraph directory does not exist:", fullPath);
-}
+const subgraphPathSecret = `${argv.project}-points`;
+deploySubgraph(project, subgraphPathSecret, argv.ipfsUrl, argv.nodeUrl);
 
 console.log("Deployment completed.");
