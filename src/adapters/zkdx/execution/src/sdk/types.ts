@@ -18,5 +18,5 @@ export type UserTxData = {
     quantity: bigint
     txHash: string
     nonce: string
-    blockNumber: number
+    symbol: string
 }

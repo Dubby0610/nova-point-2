@@ -13,6 +13,7 @@ export function handleIncrease(event: Increase): void {
     transaction.price = BigDecimal.fromString("1");
     transaction.amount = event.params.amount;
     transaction.nonce = event.transaction.nonce;
+    transaction.block_number = event.block.number;
     transaction.save();
 }
 
@@ -27,6 +28,7 @@ export function handleDecrease(event: Decrease): void {
     transaction.price = BigDecimal.fromString("1");
     transaction.amount = event.params.amount;
     transaction.nonce = event.transaction.nonce;
+    transaction.block_number = event.block.number;
     transaction.save();
 }
 

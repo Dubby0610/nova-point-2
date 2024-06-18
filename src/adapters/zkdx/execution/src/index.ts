@@ -1,6 +1,6 @@
-import {UserTVLData} from './sdk/types';
+import {UserTVLData, UserTxData} from './sdk/types';
 import {
-    getAllBalances,
+    getAllBalances, getAllTransactions,
 } from './sdk/lib';
 
 export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]> => {
@@ -8,8 +8,7 @@ export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]
     return await getAllBalances(blockNumber)
 };
 
-// not tx data for now
-// export const getUserTransactionData = async (startBlock: number, endBlock: number): Promise<UserTxData[]> => {
-//     console.log(`Getting Tx Data From ${startBlock} to ${endBlock}`);
-//     return []
-// };
+export const getUserTransactionData = async (lastBlock: number, curBlock: number): Promise<UserTxData[]> => {
+    console.log(`Getting Tx Data: lastBlock: ${lastBlock}, curBlock: ${curBlock}`);
+    return await getAllTransactions(lastBlock, curBlock);
+};

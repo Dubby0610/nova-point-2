@@ -15,7 +15,7 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/staking_eth.ts
       entities:
-        - StakingBalance
+        - PoolBalance
       abis:
         - name: ZkdxStakingETH
           file: ./abis/ZkdxStakingETH.json
@@ -37,7 +37,7 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/staking_usdc.ts
       entities:
-        - StakingBalance
+        - PoolBalance
       abis:
         - name: ZkdxStakingUSDC
           file: ./abis/ZkdxStakingUSDC.json
