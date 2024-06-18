@@ -19,4 +19,5 @@ export type UserTxData = {
     txHash: string
     nonce: string
     symbol: string
+    blockNumber: number
 }

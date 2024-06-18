@@ -83,14 +83,14 @@ function txQuery(lastBlock: number, curBlock: number, lastId: string): string {
     return `
     query txs(
             $lastID: ID = "${lastId}"
-            $startBlock: Int = ${lastBlock}
-            $endBlock: Int = ${curBlock}
+            $lastBlock: Int = ${lastBlock}
+            $curBlock: Int = ${curBlock}
     ){
         transactions(
             first: 1000 
             where:{
-                block_number_gte: $startBlock
-                block_number_lte: $endBlock
+                block_number_gte: $lastBlock
+                block_number_lte: $curBlock
                 id_gt : $lastID
             })
             {
@@ -136,6 +136,7 @@ export async function getAllTransactions(lastBlock: number, curBlock: number) {
                 txHash: entity["id"],
                 nonce: entity["nonce"],
                 symbol: symbols[token],
+                blockNumber: entity["block_number"],
             });
         }
 
