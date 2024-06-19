@@ -1,0 +1,61 @@
+specVersion: 1.0.0
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Shoebill
+    network: zklink-nova
+    source:
+      abi: ShoebillUnitroller
+      address: '0x89e348e0ab4D83aEDbf1354004552822a805a12e'
+      startBlock: 2335136
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/index.ts
+      entities:
+        - Pool
+        - PoolTokenPosition
+      abis:
+        - name: ShoebillUnitroller
+          file: ./abis/ShoebillUnitroller.json
+        - name: ShoebillSbToken
+          file: ./abis/ShoebillSbToken.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20BytesMethod
+          file: ./abis/ERC20BytesMethod.json
+      eventHandlers:
+        - event: MarketListed(address)
+          handler: handleMarketListed
+
+templates:
+  - kind: ethereum/contract
+    name: ShoebillSbToken
+    network: zklink-nova
+    source:
+      abi: ShoebillSbToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.9
+      language: wasm/assemblyscript
+      file: ./src/index.ts
+      entities:
+        - Pool
+        - PoolTokenPosition
+        - UserPosition
+      abis:
+        - name: ShoebillSbToken
+          file: ./abis/ShoebillSbToken.json
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20BytesMethod
+          file: ./abis/ERC20BytesMethod.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Borrow(address,uint256,uint256,uint256)
+          handler: handleBorrow
+        - event: RepayBorrow(address,address,uint256,uint256,uint256)
+          handler: handleRepayBorrow
