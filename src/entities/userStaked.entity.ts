@@ -5,7 +5,8 @@ import { BaseEntity } from './base.entity';
 
 @Entity({ name: "userStaked" })
 @Index(["userAddress", "tokenAddress", "poolAddress"], { unique: true })
-@Index(["tokenAddress", "poolAddress"])
+@Index(["tokenAddress"])
+@Index(["poolAddress"])
 @Index(["tokenAddress", "userAddress"])
 export class UserStaked extends BaseEntity {
 
