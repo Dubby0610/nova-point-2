@@ -2,7 +2,6 @@ import { Entity, Column, PrimaryColumn, Index, ManyToOne, JoinColumn } from "typ
 import { bigIntNumberTransformer } from "../transformers/bigIntNumber.transformer";
 import { hash64HexTransformer } from "../transformers/hash64Hex.transformer";
 import { hexTransformer } from "../transformers/hex.transformer";
-import { Batch } from "./batch.entity";
 import { BaseEntity } from "./base.entity";
 
 @Entity({ name: "blocks" })
@@ -45,12 +44,6 @@ export class Block extends BaseEntity {
 
   @Column({ type: "bytea", transformer: hexTransformer })
   public readonly extraData: string;
-
-  @ManyToOne(() => Batch, {
-    createForeignKeyConstraints: false,
-  })
-  @JoinColumn({ name: "l1BatchNumber" })
-  public batch: Batch;
 
   @Index()
   @Column({ type: "bigint", transformer: bigIntNumberTransformer })

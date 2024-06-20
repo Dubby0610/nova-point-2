@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { BaseRepository } from "./base.repository";
-import { UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BlockTokenPrice } from "../entities/blockTokenPrice.entity";
 
 @Injectable()

@@ -11,7 +11,7 @@ import {
   AddressFirstDepositRepository,
 } from "../repositories";
 import { TokenService } from "../token/token.service";
-import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./depositPoint.service";
+import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service";
 import { hexTransformer } from "../transformers/hex.transformer";
 import { EnhancedBalanceOfLp } from "../repositories/balanceOfLp.repository";
 import { PointsOfLp, AddressFirstDeposit } from "src/entities";
@@ -32,11 +32,10 @@ export class TvlPointService extends Worker {
     private readonly blockAddressPointOfLpRepository: BlockAddressPointOfLpRepository,
     private readonly balanceOfLpRepository: BalanceOfLpRepository,
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
-    private readonly boosterService: BoosterService,
+    private readonly boosterService: BoosterService
   ) {
     super();
     this.logger = new Logger(TvlPointService.name);
-
   }
 
   @Cron("0 2,10,18 * * *")
@@ -74,7 +73,7 @@ export class TvlPointService extends Worker {
     const blockTs = currentStatisticalBlock.timestamp.getTime();
     const [addressMap, addressTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, tokenPriceMap);
     this.logger.log(`Address tvl map size: ${addressTvlMap.size}`);
-    let addresses = [...addressMap.keys()]
+    let addresses = [...addressMap.keys()];
 
     this.logger.log(`Address list size: ${addresses.length}`);
     // get all first deposit time
@@ -108,7 +107,7 @@ export class TvlPointService extends Worker {
     for (const key of addressTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
       const addressTvl = addressTvlMap.get(key);
-      if (!addressTvl) continue
+      if (!addressTvl) continue;
       // get the last multiplier before the block timestamp
       const addressFirstDeposit = addressFirstDepositMap[address.toLowerCase()];
       const firstDepositTime = addressFirstDeposit?.firstDepositTime;
@@ -167,7 +166,8 @@ export class TvlPointService extends Worker {
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(
-      `Finish hold point statistic for block: ${currentStatisticalBlock.number}, elapsed time: ${statisticElapsedTime / 1000
+      `Finish hold point statistic for block: ${currentStatisticalBlock.number}, elapsed time: ${
+        statisticElapsedTime / 1000
       } seconds`
     );
   }
@@ -178,10 +178,11 @@ export class TvlPointService extends Worker {
   ): Promise<[Map<string, boolean>, Map<string, BigNumber>]> {
     // If the score for this block height already exists,
     // it should not be calculated again
-    const alreadyCalculatedPointsKey = await this.blockAddressPointOfLpRepository.getBlockAddressPointKeyByBlock(blockNumber)
+    const alreadyCalculatedPointsKey =
+      await this.blockAddressPointOfLpRepository.getBlockAddressPointKeyByBlock(blockNumber);
 
     const addressTvlMap: Map<string, BigNumber> = new Map();
-    const addressMap: Map<string, boolean> = new Map()
+    const addressMap: Map<string, boolean> = new Map();
     const blockNumbers = [blockNumber];
     const balanceList = await this.balanceOfLpRepository.getAllByBlocks(blockNumbers);
     this.logger.log(`The all address list length: ${balanceList.length}`);
@@ -205,20 +206,18 @@ export class TvlPointService extends Worker {
       if (addressTvl.isZero()) {
         continue;
       }
-      const [address] = key.split('-')
+      const [address] = key.split("-");
       if (!addressMap.has(address)) {
-        addressMap.set(address, true)
+        addressMap.set(address, true);
       }
       addressTvlMap.set(key, addressTvl);
     }
     return [addressMap, addressTvlMap];
   }
 
-
-
   async calculateAddressTvl(
     addressBalances: EnhancedBalanceOfLp[],
-    tokenPrices: Map<string, BigNumber>,
+    tokenPrices: Map<string, BigNumber>
   ): Promise<BigNumber> {
     let holdBasePoint: BigNumber = new BigNumber(0);
     for (const balanceInfo of addressBalances) {
@@ -234,8 +233,8 @@ export class TvlPointService extends Worker {
       const tokenAmount = new BigNumber(balanceInfo.balance).dividedBy(new BigNumber(10).pow(tokenInfo.decimals));
       const tokenTvl = tokenAmount.multipliedBy(tokenPrice).dividedBy(ethPrice);
       // base point = Token Multiplier * Token Amount * Token Price / ETH_Price
-      const tokenMultiplier = this.tokenService.getPoolTokenBooster(balanceInfo.projectName, tokenAddress)
-      const tokenHoldBasePoint = tokenTvl.multipliedBy(tokenMultiplier)
+      const tokenMultiplier = this.tokenService.getPoolTokenBooster(balanceInfo.projectName, tokenAddress);
+      const tokenHoldBasePoint = tokenTvl.multipliedBy(tokenMultiplier);
       holdBasePoint = holdBasePoint.plus(tokenHoldBasePoint);
     }
     return holdBasePoint;

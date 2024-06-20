@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { UnitOfWork } from "../unitOfWork";
+import { ExplorerUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { Balance } from "../entities";
 

@@ -10,12 +10,14 @@ import { TvlPointService } from "./points/tvlPoint.service";
 import { TxVolPointService } from "./points/txVolPoint.service";
 import { TxNumPointService } from "./points/txNumPoint.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
+import { BaseDataService } from "./points/baseData.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger;
 
   public constructor(
+    private readonly baseDataService: BaseDataService,
     private readonly bridgePointService: BridgePointService,
 
     private readonly bridgeActiveService: BridgeActiveService,
@@ -35,7 +37,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // second params is utc+8
     // await this.tvlPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
     // this.compensatePoints()
-    this.redistributePointService.runProcess()
+    this.redistributePointService.runProcess();
 
     this.startWorkers();
   }
@@ -54,16 +56,16 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    const tasks = [this.bridgeActiveService.start(), this.bridgePointService.start()];
-    return Promise.all(tasks);
+    return Promise.all([
+      this.baseDataService.start(),
+      this.bridgeActiveService.start(),
+      this.bridgePointService.start(),
+    ]);
   }
 
   private stopWorkers() {
-    return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
+    return Promise.all([this.baseDataService.stop(), this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 
-  private async compensatePoints() {
-
-  }
-
+  private async compensatePoints() {}
 }

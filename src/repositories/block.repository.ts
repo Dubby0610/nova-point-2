@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { FindOptionsRelations, FindOptionsSelect, FindOptionsWhere } from "typeorm";
 import { Block } from "../entities";
-import { UnitOfWork } from "../unitOfWork";
+import { ExplorerUnitOfWork as UnitOfWork } from "../unitOfWork";
 
 @Injectable()
 export class BlockRepository {
