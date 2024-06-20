@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
-import { promises as promisesFs, existsSync } from "fs";
+import { existsSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
 import { BlockRepository, CacheRepository, RedistributeBalanceRepository, ProjectRepository } from "../repositories";
@@ -20,7 +20,7 @@ const TOKEN_ADDRESS_WHITELIST = [
   '0x186c0c42C617f1Ce65C4f7DF31842eD7C5fD8260', // rsETH.eth
   "0x4A2da287deB06163fB4D77c52901683d69bD06f4", // rsETH.arb
 ]
-const DIRS = ['agx', 'shoebill']
+const DIRS = ['agx', 'novaswap', 'shoebill']
 
 @Injectable()
 export class RedistributeBalanceService extends Worker {
