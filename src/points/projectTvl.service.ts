@@ -62,17 +62,18 @@ export class ProjectTvlService extends Worker {
         tvlMap.set(item.address, tvl);
       }
     }
-    // save tvl to db
-    console.log("supportTokenAddressToPriceId", supportTokenAddressToPriceId);
-    console.log("balanceList", balanceList);
-    console.log("tokenPriceMap", tokenPriceMap);
-    console.log("tvlMap", tvlMap);
+    const projectTvlArr = [];
     for (const [address, tvl] of tvlMap) {
       const project = projects.find((p) => p.pairAddress === address);
       if (project) {
-        await this.projectRepository.updateTvls(address, tvl.toFixed(4));
+        projectTvlArr.push({
+          pairAddress: address,
+          tvl: tvl.toString(),
+        });
       }
     }
+    // save tvl to db
+    await this.projectRepository.addManyOrUpdate(projectTvlArr, ["tvl"], ["pairAddress"]);
   }
 
   async getTokenPriceMap(allSupportTokens): Promise<Map<string, BigNumber>> {
