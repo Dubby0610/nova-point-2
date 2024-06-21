@@ -16,7 +16,8 @@ import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOf
 import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
-import { RedistributePointService } from './points/redistributePoint.service'
+import { RedistributePointService } from "./points/redistributePoint.service";
+import { ProjectTvlService } from "./points/projectTvl.service";
 import {
   BatchRepository,
   BlockRepository,
@@ -34,7 +35,7 @@ import {
   UserRepository,
   UserHoldingRepository,
   UserStakedRepository,
-  UserWithdrawRepository
+  UserWithdrawRepository,
 } from "./repositories";
 import {
   Batch,
@@ -67,7 +68,7 @@ import {
   User,
   UserHolding,
   UserStaked,
-  UserWithdraw
+  UserWithdraw,
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -177,7 +178,7 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         User,
         UserHolding,
         UserStaked,
-        UserWithdraw
+        UserWithdraw,
       ],
       "lrt"
     ),
@@ -259,7 +260,8 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     UserRepository,
     UserHoldingRepository,
     UserStakedRepository,
-    UserWithdrawRepository
+    UserWithdrawRepository,
+    ProjectTvlService,
   ],
 })
-export class AppModule { }
+export class AppModule {}

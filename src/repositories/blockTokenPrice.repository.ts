@@ -15,4 +15,20 @@ export class BlockTokenPriceRepository extends BaseRepository<BlockTokenPrice> {
       where: { blockNumber, priceId },
     });
   }
+
+  public async getLastTokenPrice(priceIds: string[]): Promise<BlockTokenPrice[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const selectScript = `
+      select * from "blockTokenPrice"
+      join (
+        select "priceId", max("blockNumber") as "blockNumber"
+        from "blockTokenPrice"
+        where "priceId" = ANY($1)
+        group by "priceId"
+      ) as "latest_blockTokenPrice"
+      on "blockTokenPrice"."priceId" = "latest_blockTokenPrice"."priceId"
+      and "blockTokenPrice"."blockNumber" = "latest_blockTokenPrice"."blockNumber"
+      `;
+    return await transactionManager.query(selectScript, [priceIds]);
+  }
 }
