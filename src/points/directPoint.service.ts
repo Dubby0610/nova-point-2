@@ -250,27 +250,6 @@ export class DirectPointService extends Worker {
     fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + holdPoint.toNumber();
     this.logger.log(`Address ${from} get hold point: ${holdPoint}`);
     // update point of referrer
-    let referrerBlockAddressPoint: BlockAddressPoint;
-    let referrerAddressPoint: Point;
-    const referral = await this.referrerRepository.getReferral(from);
-    const referrer = referral?.referrer;
-    if (!!referrer) {
-      referrerBlockAddressPoint = await this.blockAddressPointRepository.getBlockAddressPoint(blockNumber, referrer);
-      if (!referrerBlockAddressPoint) {
-        referrerBlockAddressPoint = this.blockAddressPointRepository.createDefaultBlockAddressPoint(
-          blockNumber,
-          referrer
-        );
-      }
-      referrerAddressPoint = await this.pointsRepository.getPointByAddress(referrer);
-      if (!referrerAddressPoint) {
-        referrerAddressPoint = this.pointsRepository.createDefaultPoint(referrer);
-      }
-      const referrerBonus = holdPoint.multipliedBy(REFERRER_BONUS);
-      referrerBlockAddressPoint.refPoint = Number(referrerBlockAddressPoint.refPoint) + referrerBonus.toNumber();
-      referrerAddressPoint.refPoint = Number(referrerAddressPoint.refPoint) + referrerBonus.toNumber();
-      this.logger.log(`Referrer ${referrer} get ref point from hold: ${referrerBonus}`);
-    }
     await this.blockAddressPointRepository.upsertUserAndReferrerPoint(
       fromBlockAddressPoint,
       fromAddressPoint,
