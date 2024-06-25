@@ -16,7 +16,8 @@ import { TokenOffChainDataSaverService } from "./token/tokenOffChainData/tokenOf
 import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
-import { RedistributePointService } from './points/redistributePoint.service'
+import { RedistributePointService } from "./points/redistributePoint.service";
+import { ProjectTvlService } from "./points/projectTvl.service";
 import {
   BatchRepository,
   BlockRepository,

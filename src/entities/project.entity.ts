@@ -10,4 +10,7 @@ export class Project extends BaseEntity {
 
   @Column({ type: "varchar", length: 50 })
   public readonly name: string;
+
+  @Column({ type: "varchar", length: 100 })
+  public readonly tvl: string;
 }

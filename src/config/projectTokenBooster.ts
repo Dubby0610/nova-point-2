@@ -23,10 +23,11 @@ const booster = {
         "0xF5d3953a33F78E0412A8988FD77B4920AA968B0b": 4, // Manta.manta 0x069fde3a1439d39ba2eef51559ba7006003a4853
         "0xDeEC33dc735Baf36b473598C33BCD077A0f32049": 4, // Stone.manta 0xa5b104e55d42f41ca1dbbb3ee95c62092c04b8f4
         "0xEA45e49428EB47E4f6F052148B23E8feC61d4Cad": 4, // Stone.eth
-        "0xcb70533c9635060275F1A97539dda2E3f8bFac42": 4, // ARB.ARB 0x78136b2fbffdf2df6261990eec49dbd76ca63c8f
+        "0xcb70533c9635060275F1A97539dda2E3f8bFac42": 4, // ARB.arb 0x78136b2fbffdf2df6261990eec49dbd76ca63c8f
         "0x829a939ee105Cc3607428c237E463fEb051E9780": 4, // wUSDM.manta 0x1274c609d81959da5014288e9ff8d22b6a781452
         "0xfe8C940B936E3520e314574418585687c3BbAA12": 4, // wstETH.eth
         "0x186c0c42C617f1Ce65C4f7DF31842eD7C5fD8260": 4, // rsETH.eth
+        "0x011E385631488F3318F0C5541A343306626200D7": 4, // uniETH.eth
     },
     izumi: {
         "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169": 10, // WETH
@@ -53,11 +54,11 @@ const booster = {
         "0x3fdb1939dab8e2d4f7a04212f142469cd52d6402": 10, // ezETH.arb
         "0xda7fa837112511f6e353091d7e388a4c45ce7d6c": 10, // ezETH.eth
         "0x8fee71ab3ffd6f8aec8cd2707da20f4da2bf583d": 10, // ezETH.linea
-        "0xb5b8c247c740d53b6fbab10f1c17922788baed54": 10, // mmETH
+        "0xb5b8c247c740d53b6fbab10f1c17922788baed54": 10, // mmETH.eth
         "0x35d5f1b41319e0ebb5a10e55c3bd23f121072da8": 10, // weETH.eth
         "0xcb70533c9635060275f1a97539dda2e3f8bfac42": 10, // ARB.arb
         "0x380dd3344288bd6efd7c3597b2b6114b722a0e65": 10, // ARPA
-        "0xbb68f4548a1c26b6611cbb8087c25a616edd8569": 10, // mswETH
+        "0xbb68f4548a1c26b6611cbb8087c25a616edd8569": 10, // mswETH.eth
         "0x829a939ee105cc3607428c237e463feb051e9780": 10, // wUSDM.manta
         "0x011E385631488F3318F0C5541A343306626200D7": 10, // uniETH.eth
         "0xb8FF1eD3CEC08533F32E85Bd44a37e8822DDd368": 10, // uniETH.manta,
@@ -81,6 +82,18 @@ const booster = {
     zkdx: {
         "0x1a1A3b2ff016332e866787B311fcB63928464509": 10, // USDC
         "0x000000000000000000000000000000000000800A": 10, // ETH
+    },
+    shoebill: {
+        "0x000000000000000000000000000000000000800A": 10,// ETH
+        "0x1B49eCf1A8323Db4abf48b2F5EFaA33F7DdAB3FC": 4, // pufETH.eth
+        "0xDeEC33dc735Baf36b473598C33BCD077A0f32049": 4, // STONE.manta
+        "0x3fdb1939dab8e2d4f7a04212f142469cd52d6402": 4, // ezETH.arb
+        "0xda7fa837112511f6e353091d7e388a4c45ce7d6c": 4, // ezETH.eth
+        "0x8fee71ab3ffd6f8aec8cd2707da20f4da2bf583d": 4, // ezETH.linea
+        "0xb5b8c247c740d53b6fbab10f1c17922788baed54": 4, // mmETH.eth
+        "0xbb68f4548a1c26b6611cbb8087c25a616edd8569": 4, // mswETH.eth
+        "0x4A2da287deB06163fB4D77c52901683d69bD06f4": 4, // rsETH.arb
+        "0xfe8C940B936E3520e314574418585687c3BbAA12": 4, // wstETH.eth
     }
 } as const;
 

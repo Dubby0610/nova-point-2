@@ -18,4 +18,9 @@ export class ProjectRepository extends BaseRepository<Project> {
     );
     return result.map((row: any) => row.pairAddress);
   }
+
+  public async updateTvls(pairAddress: string, tvl: string): Promise<void> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    await transactionManager.update(Project, { pairAddress }, { tvl });
+  }
 }

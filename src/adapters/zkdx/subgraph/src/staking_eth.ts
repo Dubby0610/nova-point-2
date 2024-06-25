@@ -1,23 +1,23 @@
 import {Stake, Withdraw} from "../generated/ZkdxStakingETH/ZkdxStakingETH";
-import {StakingBalance} from "../generated/schema";
-import {ETH_ADDRESS} from "./constants";
+import {PoolBalance} from "../generated/schema";
+import {ETH_ADDRESS} from "./utils";
 
 export function handleStake(event: Stake): void {
 
     let pool = event.address.toHex();
     let id = pool + "-" + event.params.account.toHex();
 
-    let stakingBalance = StakingBalance.load(id);
-    if (!stakingBalance) {
-        stakingBalance = new StakingBalance(id);
-        stakingBalance.pool = pool;
-        stakingBalance.account = event.params.account.toHex();
-        stakingBalance.token = ETH_ADDRESS;
-        stakingBalance.amount = event.params.amount;
+    let poolBalance = PoolBalance.load(id);
+    if (!poolBalance) {
+        poolBalance = new PoolBalance(id);
+        poolBalance.pool = pool;
+        poolBalance.account = event.params.account.toHex();
+        poolBalance.token = ETH_ADDRESS;
+        poolBalance.amount = event.params.amount;
     } else {
-        stakingBalance.amount = stakingBalance.amount.plus(event.params.amount);
+        poolBalance.amount = poolBalance.amount.plus(event.params.amount);
     }
-    stakingBalance.save();
+    poolBalance.save();
 }
 
 export function handleWithdraw(event: Withdraw): void {
@@ -25,10 +25,10 @@ export function handleWithdraw(event: Withdraw): void {
     let pool = event.address.toHex();
     let id = pool + "-" + event.params.account.toHex();
 
-    let stakingBalance = StakingBalance.load(id);
-    if (!stakingBalance) return;
-    stakingBalance.amount = stakingBalance.amount.minus(event.params.amount);
-    stakingBalance.save();
+    let poolBalance = PoolBalance.load(id);
+    if (!poolBalance) return;
+    poolBalance.amount = poolBalance.amount.minus(event.params.amount);
+    poolBalance.save();
 }
 
 
