@@ -34,7 +34,9 @@ import {
   UserRepository,
   UserHoldingRepository,
   UserStakedRepository,
-  UserWithdrawRepository
+  UserWithdrawRepository,
+  TvlProcessingRepository,
+  TxProcessingRepository,
 } from "./repositories";
 import {
   Batch,
@@ -67,7 +69,9 @@ import {
   User,
   UserHolding,
   UserStaked,
-  UserWithdraw
+  UserWithdraw,
+  TvlProcessingStatus,
+  TxProcessingStatus
 } from "./entities";
 import {
   typeOrmModuleOptions,
@@ -179,7 +183,9 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         User,
         UserHolding,
         UserStaked,
-        UserWithdraw
+        UserWithdraw,
+        TvlProcessingStatus,
+        TxProcessingStatus
       ],
       "lrt"
     ),
@@ -262,7 +268,9 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     UserRepository,
     UserHoldingRepository,
     UserStakedRepository,
-    UserWithdrawRepository
+    UserWithdrawRepository,
+    TvlProcessingRepository,
+    TxProcessingRepository,
   ],
 })
 export class AppModule { }

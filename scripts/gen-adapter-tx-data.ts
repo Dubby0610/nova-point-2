@@ -18,8 +18,8 @@ interface UserTransactionData {
 const args = process.argv.slice(2);
 const folderName: string | undefined = args[0];
 const filePrefix: string | undefined = args[1];
-const curBlockNumber: string | undefined = args[2];
-const lastBlockNumber: string | undefined = args[3];
+const prevBlockNumber: string | undefined = args[2];
+const curBlockNumber: string | undefined = args[3];
 
 if (!folderName) {
   console.error("Folder name not provided. Please provide the folder name as 1st argument.");
@@ -31,8 +31,8 @@ if (!filePrefix) {
   process.exit(1);
 }
 
-if (!lastBlockNumber) {
-  console.error("lastBlockNumber not provided. Please provide the lastBlockNumber as 3rd argument.");
+if (!prevBlockNumber) {
+  console.error("prevBlockNumber not provided. Please provide the lastBlockNumber as 3rd argument.");
   process.exit(1);
 }
 
@@ -57,7 +57,7 @@ if (!fs.existsSync(indexPath)) {
 const { getUserTransactionData } = require(indexPath);
 
 if (getUserTransactionData) {
-  getUserTransactionData(Number(lastBlockNumber), Number(curBlockNumber)).then((result: UserTransactionData[]) => {
+  getUserTransactionData(Number(prevBlockNumber), Number(curBlockNumber)).then((result: UserTransactionData[]) => {
     const keyMap = new Map<string, boolean>();
     try {
       for (const item of result) {
