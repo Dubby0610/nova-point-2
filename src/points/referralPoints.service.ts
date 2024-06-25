@@ -10,6 +10,7 @@ import {
 import { ConfigService } from "@nestjs/config";
 import { BlockReferralPoints } from "src/entities/blockReferralPoints.entity";
 import { ReferralPoints } from "src/entities/referralPoints.entity";
+import { LrtUnitOfWork } from "../unitOfWork";
 
 export const REFERRAL_BOOSTER: number = 0.1;
 
@@ -18,10 +19,11 @@ export class ReferralPointService extends Worker {
   private readonly logger: Logger;
 
   public constructor(
-    private readonly reffralRepository: ReferralRepository,
+    private readonly referralRepository: ReferralRepository,
     private readonly pointsOfLpRepository: PointsOfLpRepository,
     private readonly blockReferralPointsRepository: BlockReferralPointsRepository,
     private readonly referralPointsRepository: ReferralPointsRepository,
+    private readonly lrtUnitOfWork: LrtUnitOfWork,
     private readonly configService: ConfigService
   ) {
     super();
@@ -32,7 +34,7 @@ export class ReferralPointService extends Worker {
     try {
       await this.handleReferralPoint();
     } catch (error) {
-      this.logger.error("Failed to calculate reffral point", error.stack);
+      this.logger.error("Failed to calculate referral point", error.stack);
     }
   }
 
@@ -41,7 +43,7 @@ export class ReferralPointService extends Worker {
     // 2. get all referral address's holding point
     // 3. calculate referral point = ReferralBooster * sum(holding point of every referral address)
 
-    const addressReferralMap = await this.reffralRepository.getAllAddressReferral();
+    const addressReferralMap = await this.referralRepository.getAllAddressReferral();
     const addressArr = Array.from(addressReferralMap.keys());
     // get address referral points from referralPointsRepository
     const referralPoints = await this.referralPointsRepository.getReferralPointsByAddresses(addressArr);
@@ -117,10 +119,11 @@ export class ReferralPointService extends Worker {
       }
     }
 
-    // save to db
     try {
-      await this.blockReferralPointsRepository.addMany(blockReferralPointFinal);
-      await this.referralPointsRepository.addManyOrUpdate(referralPointFinal, ["point"], ["address", "pairAddress"]);
+      await this.lrtUnitOfWork.getTransactionManager().transaction(async (manager) => {
+        await this.blockReferralPointsRepository.addMany(blockReferralPointFinal);
+        await this.referralPointsRepository.addManyOrUpdate(referralPointFinal, ["point"], ["address", "pairAddress"]);
+      });
     } catch (error) {
       this.logger.error("Failed to save referral point to db", error.stack);
     }

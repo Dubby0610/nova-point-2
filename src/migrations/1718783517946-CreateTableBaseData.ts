@@ -1,4 +1,5 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner, DataSource } from "typeorm";
+import { typeOrmRefactorModuleOptions } from "../typeorm.config";
 
 export class CreateTableBaseData1718783517946 implements MigrationInterface {
   name = "CreateTableBaseData1718783517946";
@@ -33,6 +34,72 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
       `CREATE TABLE "blockReferralPoints" ("address" bytea NOT NULL, "pairAddress" bytea NOT NULL, "point" numeric NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now())`
     );
     await queryRunner.query(`CREATE INDEX "IDX_15717f61c13aacde581a05ec43" ON "blockReferralPoints" ("address") `);
+
+    const typeOrmRefactorCliDataSource = new DataSource({
+      ...typeOrmRefactorModuleOptions,
+    });
+
+    const refactorDataSource = await typeOrmRefactorCliDataSource.initialize();
+    const blockTokenPriceData = await refactorDataSource.query(`SELECT * FROM "blockTokenPrice"`);
+    await this.batchInsert(queryRunner, blockTokenPriceData, "blockTokenPrice", [
+      "blockNumber",
+      "priceId",
+      "usdPrice",
+      "createdAt",
+      "updatedAt",
+    ]);
+    // for (const item of blockTokenPriceData) {
+    //   await lrtDataSource.query(
+    //     `INSERT INTO "addressFirstDeposits" ("blockNumber", "priceId", "usdPrice", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5)`,
+    //     [item.blockNumber, item.priceId, item.usdPrice, item.createdAt, item.updatedAt]
+    //   );
+    // }
+
+    const addressFirstDepositsData = await refactorDataSource.query(`SELECT * FROM "addressFirstDeposits"`);
+    await this.batchInsert(queryRunner, addressFirstDepositsData, "addressFirstDeposits", [
+      "address",
+      "firstDepositTime",
+    ]);
+    // for (const item of addressFirstDepositsData) {
+    //   await lrtDataSource.query(`INSERT INTO "blockTokenPrice" ("address", "firstDepositTime") VALUES ($1, $2)`, [
+    //     item.address,
+    //     item.firstDepositTime,
+    //   ]);
+    // }
+
+    const blockAddressPointData = await refactorDataSource.query(`SELECT * FROM "blockAddressPoint"`);
+    await this.batchInsert(queryRunner, blockAddressPointData, "blockAddressPoint", [
+      "blockNumber",
+      "address",
+      "depositPoint",
+      "holdPoint",
+      "refPoint",
+      "createdAt",
+      "updatedAt",
+    ]);
+    // for (const item of blockAddressPointData) {
+    //   await lrtDataSource.query(
+    //     `INSERT INTO "blockAddressPoint" ("blockNumber", "address", "depositPoint", "holdPoint", "refPoint", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    //     [
+    //       item.blockNumber,
+    //       item.address,
+    //       item.depositPoint,
+    //       item.holdPoint,
+    //       item.refPoint,
+    //       item.createdAt,
+    //       item.updatedAt,
+    //     ]
+    //   );
+    // }
+
+    const pointsData = await refactorDataSource.query(`SELECT * FROM "points"`);
+    await this.batchInsert(queryRunner, pointsData, "points", ["id", "address", "stakePoint", "refPoint"]);
+    // for (const item of pointsData) {
+    //   await lrtDataSource.query(
+    //     `INSERT INTO "points" ("id", "address", "stakePoint", "refPoint") VALUES ($1, $2, $3, $4)`,
+    //     [item.id, item.address, item.stakePoint, item.refPoint]
+    //   );
+    // }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -44,5 +111,21 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "blockAddressPoint"`);
     await queryRunner.query(`DROP TABLE "addressFirstDeposits"`);
     await queryRunner.query(`DROP TABLE "blockTokenPrice"`);
+  }
+
+  public async batchInsert(queryRunner: QueryRunner, data: any, table: string, columns: string[]): Promise<void> {
+    const batchSize = 1000;
+    const tmpBatchData = [];
+    for (let i = 0; i < data.length; i++) {
+      tmpBatchData.push(data[i]);
+      if (tmpBatchData.length === batchSize || i === data.length - 1) {
+        const batchData = tmpBatchData.map((item) => columns.map((column) => item[column]).flat());
+        const querySql = `INSERT INTO "${table}" ("${columns.join('", "')}") VALUES ${batchData
+          .map((_, index) => `(${columns.map((_, cindex) => `$${index * columns.length + 1 + cindex}`).join(", ")})`)
+          .join(", ")}`;
+        await queryRunner.query(querySql, batchData.flat());
+        tmpBatchData.length = 0;
+      }
+    }
   }
 }
