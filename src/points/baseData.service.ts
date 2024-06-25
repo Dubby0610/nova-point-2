@@ -83,7 +83,6 @@ export class BaseDataService extends Worker {
 
   async handleDeposit() {
     const latestBlockNumber = await this.blockRepository.getLastBlockNumber();
-    this.logger.log(`Last block number: ${latestBlockNumber}`);
     let lastStatisticalBlockNumber: number;
     const lastStatisticalBlockNumberStr = await this.cacheRepository.getValue(BASE_DATA_LAST_RUN_BLOCKNUMBER_KEY);
     if (lastStatisticalBlockNumberStr) {
@@ -91,6 +90,7 @@ export class BaseDataService extends Worker {
     } else {
       lastStatisticalBlockNumber = latestBlockNumber;
     }
+    this.logger.log(`Last block number: ${latestBlockNumber},${lastStatisticalBlockNumber}`);
     while (lastStatisticalBlockNumber <= latestBlockNumber) {
       await this.syncToTheLatestBlock(lastStatisticalBlockNumber);
       lastStatisticalBlockNumber++;

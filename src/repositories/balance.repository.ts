@@ -70,7 +70,7 @@ export class BalanceRepository extends BaseRepository<Balance> {
   public async getAllAddressesByBlock(blockNumber: number): Promise<Buffer[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
-      `SELECT address FROM balances WHERE "blockNumber" <= $1 group by address;`,
+      `SELECT address FROM balances WHERE "blockNumber" <= $1 group by address limit 100;`,
       [blockNumber]
     );
     return result.map((row: any) => row.address);
@@ -92,16 +92,6 @@ export class BalanceRepository extends BaseRepository<Balance> {
     return await transactionManager.query(selectBalancesByBlockScript, [address, blockNumber]);
   }
 
-  // public async deleteOldBalances(fromBlockNumber: number, toBlockNumber: number): Promise<void> {
-  //   const transactionManager = this.unitOfWork.getTransactionManager();
-  //   await transactionManager.query(deleteOldBalancesScript, [fromBlockNumber, toBlockNumber]);
-  // }
-
-  // public async deleteZeroBalances(fromBlockNumber: number, toBlockNumber: number): Promise<void> {
-  //   const transactionManager = this.unitOfWork.getTransactionManager();
-  //   await transactionManager.query(deleteZeroBalancesScript, [fromBlockNumber, toBlockNumber]);
-  // }
-
   public async getDeleteBalancesFromBlockNumber(): Promise<number> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const [fromBlockNumber] = await transactionManager.query(
@@ -110,8 +100,9 @@ export class BalanceRepository extends BaseRepository<Balance> {
     return Number(fromBlockNumber.last_value);
   }
 
-  // public async setDeleteBalancesFromBlockNumber(fromBlockNumber: number): Promise<void> {
-  //   const transactionManager = this.unitOfWork.getTransactionManager();
-  //   await transactionManager.query(`SELECT setval('"deleteBalances_fromBlockNumber"', $1, false);`, [fromBlockNumber]);
-  // }
+  public async getLatesBlockNumber(): Promise<number> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const [latestBlockNumber] = await transactionManager.query(`SELECT MAX("blockNumber") FROM balances;`);
+    return Number(latestBlockNumber.max);
+  }
 }

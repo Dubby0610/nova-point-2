@@ -1,25 +1,20 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
 import { Cron } from "@nestjs/schedule";
-import waitFor from "../utils/waitFor";
 import {
   PointsRepository,
   BlockRepository,
   BalanceRepository,
   BlockTokenPriceRepository,
   BlockAddressPointRepository,
-  ReferrerRepository,
   AddressFirstDepositRepository,
 } from "../repositories";
 import { TokenMultiplier, TokenService } from "../token/token.service";
 import BigNumber from "bignumber.js";
-import { BlockAddressPoint, Point } from "../entities";
 import { hexTransformer } from "../transformers/hex.transformer";
 import { ConfigService } from "@nestjs/config";
 import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service";
 import addressMultipliers from "../config/addressMultipliers";
-
-const REFERRER_BONUS: BigNumber = new BigNumber(0.1);
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 type BlockAddressTvl = {
@@ -30,7 +25,6 @@ type BlockAddressTvl = {
 @Injectable()
 export class DirectPointService extends Worker {
   private readonly logger: Logger;
-  private readonly pointsStatisticalPeriodSecs: number;
   private readonly pointsPhase1StartTime: Date;
   private readonly addressMultipliersCache: Map<string, TokenMultiplier[]>;
   private readonly withdrawStartTime: Date;
@@ -39,17 +33,15 @@ export class DirectPointService extends Worker {
   public constructor(
     private readonly tokenService: TokenService,
     private readonly pointsRepository: PointsRepository,
-    private readonly blockRepository: BlockRepository,
     private readonly blockTokenPriceRepository: BlockTokenPriceRepository,
     private readonly blockAddressPointRepository: BlockAddressPointRepository,
     private readonly balanceRepository: BalanceRepository,
-    private readonly referrerRepository: ReferrerRepository,
+    private readonly blockRepository: BlockRepository,
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
     private readonly configService: ConfigService
   ) {
     super();
     this.logger = new Logger(DirectPointService.name);
-    this.pointsStatisticalPeriodSecs = this.configService.get<number>("points.pointsStatisticalPeriodSecs");
     this.pointsPhase1StartTime = new Date(this.configService.get<string>("points.pointsPhase1StartTime"));
     this.addressMultipliersCache = new Map<string, TokenMultiplier[]>();
     for (const m of addressMultipliers) {
@@ -67,42 +59,20 @@ export class DirectPointService extends Worker {
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
-
-    await waitFor(() => !this.currentProcessPromise, 60000, 60000);
-    if (!this.currentProcessPromise) {
-      return;
-    }
-
-    return this.runProcess();
   }
 
   async handleHoldPoint() {
-    // hold point statistical block number start from 1
-    const lastStatisticalBlockNumber = await this.pointsRepository.getLastHoldPointStatisticalBlockNumber();
-    const lastStatisticalBlock = await this.blockRepository.getLastBlock({
-      where: { number: lastStatisticalBlockNumber },
-      select: { number: true, timestamp: true },
-    });
-    if (!lastStatisticalBlock) {
-      throw new Error(`Last hold point statistical block not found: ${lastStatisticalBlockNumber}`);
-    }
-    const lastStatisticalTs = lastStatisticalBlock.timestamp;
-    const currentStatisticalTs = new Date(lastStatisticalTs.getTime() + this.pointsStatisticalPeriodSecs * 1000);
-    const currentStatisticalBlock = await this.blockRepository.getNextHoldPointStatisticalBlock(currentStatisticalTs);
-    if (!currentStatisticalBlock) {
+    const currentBlockNumber = await this.balanceRepository.getLatesBlockNumber();
+    if (!currentBlockNumber) {
       this.logger.log(`Wait for the next hold point statistical block`);
       return;
     }
-    const lastDepositStatisticalBlockNumber = await this.pointsRepository.getLastStatisticalBlockNumber();
-    if (lastDepositStatisticalBlockNumber < currentStatisticalBlock.number) {
-      this.logger.log(`Wait deposit statistic finish`);
-      return;
-    }
+    const currentStatisticalBlock = await this.blockRepository.getLastBlock({
+      where: {
+        number: currentBlockNumber,
+      },
+    });
 
-    const sinceLastTime = currentStatisticalBlock.timestamp.getTime() - lastStatisticalTs.getTime();
-    this.logger.log(
-      `Statistic hold point at block: ${currentStatisticalBlock.number}, since last: ${sinceLastTime / 1000} seconds`
-    );
     const statisticStartTime = new Date();
     const earlyBirdMultiplier = this.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
     this.logger.log(`Early bird multiplier: ${earlyBirdMultiplier}`);
@@ -140,7 +110,6 @@ export class DirectPointService extends Worker {
         .multipliedBy(loyaltyBooster);
       await this.updateHoldPoint(currentStatisticalBlock.number, address, newHoldPoint);
     }
-    await this.pointsRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(
@@ -162,7 +131,7 @@ export class DirectPointService extends Worker {
       const address = hexTransformer.from(addressBuffer);
       const addressTvl = await this.calculateAddressTvl(address, blockNumber, tokenPriceMap, blockTs);
       if (addressTvl.tvl.gt(new BigNumber(0))) {
-        this.logger.log(`Address ${address}: [tvl: ${addressTvl.tvl}, holdBasePoint: ${addressTvl.holdBasePoint}]`);
+        //this.logger.log(`Address ${address}: [tvl: ${addressTvl.tvl}, holdBasePoint: ${addressTvl.holdBasePoint}]`);
       }
       addressTvlMap.set(address, addressTvl);
     }
@@ -250,12 +219,7 @@ export class DirectPointService extends Worker {
     fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + holdPoint.toNumber();
     this.logger.log(`Address ${from} get hold point: ${holdPoint}`);
     // update point of referrer
-    await this.blockAddressPointRepository.upsertUserAndReferrerPoint(
-      fromBlockAddressPoint,
-      fromAddressPoint,
-      referrerBlockAddressPoint,
-      referrerAddressPoint
-    );
+    await this.blockAddressPointRepository.upsertUserAndReferrerPoint(fromBlockAddressPoint, fromAddressPoint);
   }
 
   isWithdrawStartPhase(blockTs: number): boolean {

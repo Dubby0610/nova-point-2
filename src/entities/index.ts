@@ -20,3 +20,5 @@ export * from "./userStaked.entity";
 export * from "./userWithdraw.entity";
 export * from "./points.entity";
 export * from "./blockAddressPoint.entity";
+export * from "./referralPoints.entity";
+export * from "./blockReferralPoints.entity";

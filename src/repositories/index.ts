@@ -18,4 +18,6 @@ export * from "./userWithdraw.repository";
 export * from "./user.repository";
 export * from "./points.repository";
 export * from "./blockAddressPoint.repository";
-export * from "./referrer.repository";
+export * from "./referral.repository";
+export * from "./referralPoints.repository";
+export * from "./blockReferralPoints.repository";

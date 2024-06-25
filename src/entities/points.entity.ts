@@ -16,7 +16,4 @@ export class Point {
 
   @Column("decimal")
   public refPoint: number;
-
-  @Column({ type: "bigint", transformer: bigIntNumberTransformer })
-  public refNumber: number;
 }

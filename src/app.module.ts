@@ -17,6 +17,7 @@ import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
+import { ReferralPointService } from "./points/referralPoints.service";
 import {
   BlockRepository,
   TokenRepository,
@@ -31,6 +32,11 @@ import {
   UserHoldingRepository,
   UserStakedRepository,
   UserWithdrawRepository,
+  PointsRepository,
+  BlockAddressPointRepository,
+  ReferralRepository,
+  BlockReferralPointsRepository,
+  ReferralPointsRepository,
 } from "./repositories";
 import {
   Block,
@@ -40,6 +46,7 @@ import {
   Referral,
   PointsOfLp,
   BlockAddressPointOfLp,
+  BlockAddressPoint,
   BalanceOfLp,
   Project,
   Cache,
@@ -50,6 +57,9 @@ import {
   UserHolding,
   UserStaked,
   UserWithdraw,
+  Point,
+  BlockReferralPoints,
+  ReferralPoints,
 } from "./entities";
 import { typeOrmReferModuleOptions, typeOrmLrtModuleOptions, typeOrmExplorerModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
@@ -69,6 +79,7 @@ import { TxNumPointService } from "./points/txNumPoint.service";
 import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
 import { RedistributeBalanceService } from "./points/redistributeBalance.service";
+import { DirectPointService } from "./points/directPoint.service";
 
 @Module({
   imports: [
@@ -117,6 +128,8 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         AddressFirstDeposit,
         PointsOfLp,
         BlockAddressPointOfLp,
+        BlockAddressPoint,
+        Point,
         BalanceOfLp,
         Project,
         Cache,
@@ -127,6 +140,8 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         UserHolding,
         UserStaked,
         UserWithdraw,
+        BlockReferralPoints,
+        ReferralPoints,
       ],
       "lrt"
     ),
@@ -188,6 +203,13 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     UserHoldingRepository,
     UserStakedRepository,
     UserWithdrawRepository,
+    DirectPointService,
+    PointsRepository,
+    BlockAddressPointRepository,
+    ReferralRepository,
+    ReferralPointService,
+    BlockReferralPointsRepository,
+    ReferralPointsRepository,
   ],
 })
 export class AppModule {}
