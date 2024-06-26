@@ -7,8 +7,7 @@ import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { AdapterService } from "./points/adapter.service";
 import { TvlPointService } from "./points/tvlPoint.service";
-import { TxVolPointService } from "./points/txVolPoint.service";
-import { TxNumPointService } from "./points/txNumPoint.service";
+import { TxPointService } from "./points/txPoint.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 
 @Injectable()
@@ -22,8 +21,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly configService: ConfigService,
     private readonly adapterService: AdapterService,
     private readonly tvlPointService: TvlPointService,
-    private readonly txVolPointService: TxVolPointService,
-    private readonly txNumPointService: TxNumPointService,
+    private readonly txPointService: TxPointService,
     private readonly redistributePointService: RedistributePointService
   ) {
     this.logger = new Logger(AppService.name);
@@ -62,5 +60,5 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 
-  private async compensatePoints() {}
+  private async compensatePoints() { }
 }

@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { BaseRepository } from "./base.repository";
 import { UnitOfWork } from "../unitOfWork";
 import { AddressFirstDeposit } from "../entities/addressFirstDeposit.entity";
+import { In } from "typeorm";
 
 @Injectable()
 export class AddressFirstDepositRepository extends BaseRepository<AddressFirstDeposit> {
@@ -27,6 +28,26 @@ export class AddressFirstDepositRepository extends BaseRepository<AddressFirstDe
       row.address = "0x" + row.address.toString("hex");
       return row;
     });
+  }
+
+
+  /**
+   * 
+   * @param addresses user address
+   * @returns a Map which key is the user address
+   */
+  public async getFirstDepositMapForAddresses(addresses: string[]): Promise<Map<string, AddressFirstDeposit>> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const addressesBuff = addresses.map((item) => Buffer.from(item.substring(2), "hex"));
+    const result = await transactionManager.find(AddressFirstDeposit, {
+      where: {
+        address: In(addressesBuff)
+      }
+    }
+    );
+    return new Map(result.map((row) => {
+      return [row.address.toLowerCase(), row];
+    }));
   }
 
   public async getAllAddressFirstDeposits(): Promise<AddressFirstDeposit[]> {

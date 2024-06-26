@@ -47,7 +47,7 @@ export class TvlPointService extends Worker {
     this.logger.log(`${TvlPointService.name} initialized`);
     try {
       const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false } })
-      pendingProcessed.map(item => this.handleHoldPoint(item.blockNumber, item.adapterName))
+      pendingProcessed.forEach(item => this.handleHoldPoint(item.blockNumber, item.adapterName))
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
@@ -75,16 +75,7 @@ export class TvlPointService extends Worker {
 
     this.logger.log(`Address list size: ${addresses.length}`);
     // get all first deposit time
-    const addressFirstDepositList = await this.addressFirstDepositRepository.getAllAddressesFirstDeposits(addresses);
-    this.logger.log(`Address first deposit map size: ${addressFirstDepositList.length}`);
-    const addressFirstDepositMap: { [address: string]: AddressFirstDeposit } = {};
-    for (let i = 0; i < addressFirstDepositList.length; i++) {
-      const item = addressFirstDepositList[i];
-      const tmpAddress = item.address.toLocaleLowerCase();
-      if (tmpAddress) {
-        addressFirstDepositMap[tmpAddress] = item;
-      }
-    }
+    const addressFirstDepositMap = await this.addressFirstDepositRepository.getFirstDepositMapForAddresses(addresses);
     // get all point of lp by addresses
     const addressPointList = await this.pointsOfLpRepository.getPointByAddresses(addresses);
     this.logger.log(`Address point map size: ${addressPointList.length}`);
@@ -107,7 +98,7 @@ export class TvlPointService extends Worker {
       const addressTvl = addressTvlMap.get(key);
       if (!addressTvl) continue
       // get the last multiplier before the block timestamp
-      const addressFirstDeposit = addressFirstDepositMap[address.toLowerCase()];
+      const addressFirstDeposit = addressFirstDepositMap.get(address.toLowerCase());
       const firstDepositTime = addressFirstDeposit?.firstDepositTime;
       const loyaltyBooster = this.boosterService.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
 
@@ -125,7 +116,7 @@ export class TvlPointService extends Worker {
         createdAt: blockTs,
         updatedAt: blockTs,
       });
-      // let fromAddressPoint = await this.pointsOfLpRepository.getPointByAddress(address, pairAddress);
+
       let fromAddressPoint = addressPointMap[key];
       if (!fromAddressPoint) {
         fromAddressPoint = {

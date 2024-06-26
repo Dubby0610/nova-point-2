@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { TransactionDataOfPoints } from "../entities";
+import { Between, MoreThanOrEqual } from "typeorm";
 export interface TransactionDataOfPointsDto {
   userAddress: string;
   contractAddress: string;
@@ -29,6 +30,10 @@ export class TxDataOfPointsRepository extends BaseRepository<TransactionDataOfPo
     super(TransactionDataOfPoints, unitOfWork);
   }
 
+  /**
+   * 
+   * @deprecated using getTxsByBlockNumber instead 
+   */
   public async getListByBlockNumber(
     startBlockNumber: number,
     endBlockNumber: number,
@@ -47,6 +52,19 @@ export class TxDataOfPointsRepository extends BaseRepository<TransactionDataOfPo
       row.timestamp = new Date(row.timestamp);
       return row;
     });
+  }
+
+  public async getTxsByBlockNumber(
+    startBlockNumber: number,
+    endBlockNumber: number
+  ) {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.find(TransactionDataOfPoints, {
+      where: {
+        blockNumber: Between(startBlockNumber, endBlockNumber),
+      }
+    })
+    return result
   }
 
   public async getTxNumberListByBlockNumber(
