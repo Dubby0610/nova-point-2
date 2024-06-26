@@ -48,24 +48,12 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
       "createdAt",
       "updatedAt",
     ]);
-    // for (const item of blockTokenPriceData) {
-    //   await lrtDataSource.query(
-    //     `INSERT INTO "addressFirstDeposits" ("blockNumber", "priceId", "usdPrice", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5)`,
-    //     [item.blockNumber, item.priceId, item.usdPrice, item.createdAt, item.updatedAt]
-    //   );
-    // }
 
     const addressFirstDepositsData = await refactorDataSource.query(`SELECT * FROM "addressFirstDeposits"`);
     await this.batchInsert(queryRunner, addressFirstDepositsData, "addressFirstDeposits", [
       "address",
       "firstDepositTime",
     ]);
-    // for (const item of addressFirstDepositsData) {
-    //   await lrtDataSource.query(`INSERT INTO "blockTokenPrice" ("address", "firstDepositTime") VALUES ($1, $2)`, [
-    //     item.address,
-    //     item.firstDepositTime,
-    //   ]);
-    // }
 
     const blockAddressPointData = await refactorDataSource.query(`SELECT * FROM "blockAddressPoint"`);
     await this.batchInsert(queryRunner, blockAddressPointData, "blockAddressPoint", [
@@ -77,29 +65,9 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
       "createdAt",
       "updatedAt",
     ]);
-    // for (const item of blockAddressPointData) {
-    //   await lrtDataSource.query(
-    //     `INSERT INTO "blockAddressPoint" ("blockNumber", "address", "depositPoint", "holdPoint", "refPoint", "createdAt", "updatedAt") VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    //     [
-    //       item.blockNumber,
-    //       item.address,
-    //       item.depositPoint,
-    //       item.holdPoint,
-    //       item.refPoint,
-    //       item.createdAt,
-    //       item.updatedAt,
-    //     ]
-    //   );
-    // }
 
     const pointsData = await refactorDataSource.query(`SELECT * FROM "points"`);
     await this.batchInsert(queryRunner, pointsData, "points", ["id", "address", "stakePoint", "refPoint"]);
-    // for (const item of pointsData) {
-    //   await lrtDataSource.query(
-    //     `INSERT INTO "points" ("id", "address", "stakePoint", "refPoint") VALUES ($1, $2, $3, $4)`,
-    //     [item.id, item.address, item.stakePoint, item.refPoint]
-    //   );
-    // }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
