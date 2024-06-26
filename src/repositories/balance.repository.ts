@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { UnitOfWork } from "../unitOfWork";
+import { ExplorerUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { Balance } from "../entities";
 
@@ -55,8 +55,34 @@ export class BalanceRepository extends BaseRepository<Balance> {
     });
   }
 
+  public async getAllAddressesByBlock(blockNumber: number): Promise<Buffer[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.query(
+      `SELECT address FROM balances WHERE "blockNumber" <= $1 group by address limit 100;`,
+      [blockNumber]
+    );
+    return result.map((row: any) => row.address);
+  }
+
+  public async getAllAddresses(): Promise<Buffer[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.query(`SELECT address FROM balances group by address;`);
+    return result.map((row: any) => row.address);
+  }
+
+  public async getAccountBalances(address: Buffer): Promise<Balance[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    return await transactionManager.query(selectBalancesScript, [address]);
+  }
+
   public async getAccountBalancesByBlock(address: Buffer, blockNumber: number): Promise<Balance[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     return await transactionManager.query(selectBalancesByBlockScript, [address, blockNumber]);
+  }
+
+  public async getLatesBlockNumber(): Promise<number> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const [latestBlockNumber] = await transactionManager.query(`SELECT MAX("blockNumber") FROM balances;`);
+    return Number(latestBlockNumber.max);
   }
 }

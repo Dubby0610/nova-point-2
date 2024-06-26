@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { Worker } from "../common/worker";
 import { BalanceRepository, BlockTokenPriceRepository, ProjectRepository } from "../repositories";
 import { TokenService } from "../token/token.service";
-import { STABLE_COIN_TYPE } from "./depositPoint.service";
+import { STABLE_COIN_TYPE } from "./baseData.service";
 
 @Injectable()
 export class ProjectTvlService extends Worker {

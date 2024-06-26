@@ -59,6 +59,7 @@ export class PointsOfLpRepository extends BaseRepository<PointsOfLp> {
     return result.map((row: any) => {
       row.address = "0x" + row.address.toString("hex");
       row.pairAddress = "0x" + row.pairAddress.toString("hex");
+      row.stakePoint = isFinite(Number(row.stakePoint)) ? Number(row.stakePoint) : 0;
       return row;
     });
   }

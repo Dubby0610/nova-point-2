@@ -1,9 +1,8 @@
 import { Injectable } from "@nestjs/common";
-import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import { FindOptionsSelect, IsNull, Not } from "typeorm";
 import { Token } from "../entities";
 import { BaseRepository } from "./base.repository";
-import { UnitOfWork } from "../unitOfWork";
+import { ExplorerUnitOfWork as UnitOfWork } from "../unitOfWork";
 
 @Injectable()
 export class TokenRepository extends BaseRepository<Token> {

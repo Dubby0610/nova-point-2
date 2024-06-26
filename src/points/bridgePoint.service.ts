@@ -10,7 +10,7 @@ import {
 } from "../repositories";
 import BigNumber from "bignumber.js";
 import { ConfigService } from "@nestjs/config";
-import BridgeConfig from "src/bridge.config";
+import BridgeConfig from "src/config/bridge.config";
 
 interface TransferItem {
   address: string;

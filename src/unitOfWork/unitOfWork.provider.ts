@@ -118,20 +118,6 @@ export class UnitOfWork {
 }
 
 @Injectable()
-export class ReferralUnitOfWork extends UnitOfWork {
-  public constructor(
-    @InjectMetric(DB_COMMIT_DURATION_METRIC_NAME)
-    readonly dbCommitDurationMetric: Histogram,
-    @InjectDataSource("refer")
-    readonly dataSource: DataSource,
-    @InjectEntityManager("refer")
-    readonly entityManager: EntityManager
-  ) {
-    super(dbCommitDurationMetric, dataSource, entityManager);
-  }
-}
-
-@Injectable()
 export class LrtUnitOfWork extends UnitOfWork {
   public constructor(
     @InjectMetric(DB_COMMIT_DURATION_METRIC_NAME)
@@ -153,6 +139,20 @@ export class ExplorerUnitOfWork extends UnitOfWork {
     @InjectDataSource("explorer")
     readonly dataSource: DataSource,
     @InjectEntityManager("explorer")
+    readonly entityManager: EntityManager
+  ) {
+    super(dbCommitDurationMetric, dataSource, entityManager);
+  }
+}
+
+@Injectable()
+export class ReferralUnitOfWork extends UnitOfWork {
+  public constructor(
+    @InjectMetric(DB_COMMIT_DURATION_METRIC_NAME)
+    readonly dbCommitDurationMetric: Histogram,
+    @InjectDataSource("refer")
+    readonly dataSource: DataSource,
+    @InjectEntityManager("refer")
     readonly entityManager: EntityManager
   ) {
     super(dbCommitDurationMetric, dataSource, entityManager);
