@@ -10,16 +10,14 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
     super(BlockAddressPointOfLp, unitOfWork);
   }
 
-  public async getBlockAddressPointKeyByBlock(
-    block: number
-  ): Promise<string[]> {
+  public async getBlockAddressPointKeyByBlock(block: number): Promise<string[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.transaction(async (entityManager) => {
       const blockAddressPoints = await entityManager.getRepository(BlockAddressPointOfLp).find({
         where: { blockNumber: block },
-        select: ["address", "pairAddress"]
-      })
-      return blockAddressPoints.map(point => `${point.address}-${point.pairAddress}`);
+        select: ["address", "pairAddress"],
+      });
+      return blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}`);
     });
     return result;
   }
@@ -37,6 +35,31 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
         "type",
       ]);
       await entityManager.upsert<PointsOfLp>(PointsOfLp, receiverAddressPoint, ["address", "pairAddress"]);
+    });
+  }
+
+  public async getAllAddressTotalPoint(
+    startTime: string,
+    endTime: string
+  ): Promise<
+    {
+      address: string;
+      pairAddress: string;
+      type: string;
+      totalPoint: number;
+    }[]
+  > {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.query(
+      `SELECT address, "pairAddress", type, sum("holdPoint") AS "totalPoint" FROM "blockAddressPointOfLp" WHERE "createdAt">='${startTime}' AND "createdAt"<'${endTime}' group by address,"pairAddress",type;`
+    );
+    return result.map((item) => {
+      return {
+        address: "0x" + item.address.toString("hex"),
+        pairAddress: "0x" + item.pairAddress.toString("hex"),
+        type: item.type,
+        totalPoint: item.totalPoint,
+      };
     });
   }
 }
