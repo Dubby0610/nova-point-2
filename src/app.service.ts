@@ -11,6 +11,7 @@ import { TxVolPointService } from "./points/txVolPoint.service";
 import { TxNumPointService } from "./points/txNumPoint.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 import { BaseDataService } from "./points/baseData.service";
+import { ReferralPointService } from "./points/referralPoints.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -26,7 +27,8 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly tvlPointService: TvlPointService,
     private readonly txVolPointService: TxVolPointService,
     private readonly txNumPointService: TxNumPointService,
-    private readonly redistributePointService: RedistributePointService
+    private readonly redistributePointService: RedistributePointService,
+    private readonly referralPointService: ReferralPointService
   ) {
     this.logger = new Logger(AppService.name);
   }
@@ -37,6 +39,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // second params is utc+8
     // await this.tvlPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
     // this.compensatePoints()
+    await this.referralPointService.handleReferralPoint();
     this.redistributePointService.runProcess();
 
     this.startWorkers();

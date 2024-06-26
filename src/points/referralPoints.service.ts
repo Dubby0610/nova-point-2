@@ -32,7 +32,9 @@ export class ReferralPointService extends Worker {
   @Cron("30 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
     try {
+      this.logger.log("Start to calculate referral point");
       await this.handleReferralPoint();
+      this.logger.log("End to calculate referral point");
     } catch (error) {
       this.logger.error("Failed to calculate referral point", error.stack);
     }
@@ -120,7 +122,7 @@ export class ReferralPointService extends Worker {
     }
 
     try {
-      await this.lrtUnitOfWork.getTransactionManager().transaction(async (manager) => {
+      await this.lrtUnitOfWork.useTransaction(async () => {
         await this.blockReferralPointsRepository.addMany(blockReferralPointFinal);
         await this.referralPointsRepository.addManyOrUpdate(referralPointFinal, ["point"], ["address", "pairAddress"]);
       });
