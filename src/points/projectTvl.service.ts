@@ -55,7 +55,12 @@ export class ProjectTvlService extends Worker {
     for (const item of balanceList) {
       const priceIdTmp = supportTokenAddressToPriceId.get(item.tokenAddress);
       const price = tokenPriceMap.get(priceIdTmp);
-      const tvl = BigNumber(item.balance).multipliedBy(price);
+      const tokenInfo = this.tokenService.getSupportToken(item.tokenAddress);
+      if (!tokenInfo) {
+        continue;
+      }
+      const tokenAmount = new BigNumber(item.balance).dividedBy(new BigNumber(10).pow(tokenInfo.decimals));
+      const tvl = tokenAmount.multipliedBy(price);
       if (tvlMap.has(item.address)) {
         tvlMap.set(item.address, tvlMap.get(item.address).plus(tvl));
       } else {
