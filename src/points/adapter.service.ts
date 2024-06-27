@@ -135,7 +135,7 @@ export class AdapterService {
     const processingStatus = new TvlProcessingStatus();
     processingStatus.adapterName = dir;
     processingStatus.blockNumber = currentBlock.number
-    await this.tvlProcessingRepository.add(processingStatus);
+    await this.tvlProcessingRepository.addManyIgnoreConflicts([processingStatus]);
     await this.processTvlData(dir, processingStatus.blockNumber)
   }
 
@@ -204,7 +204,7 @@ export class AdapterService {
     try {
       const txCommand = `npm run adapter:tx -- ${dir} ${this.txFilePrefix} ${prevBlockNumber} ${curBlockNumber}`;
       await this.runCommand(txCommand, this.adaptersPath);
-      this.logger.log(`Execute ${dir} tx file succeeded`);
+      this.logger.log(`Execute ${dir} tx file succeeded from ${prevBlockNumber} tom ${curBlockNumber}`);
       await this.saveCSVDataToDb(`${this.txFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTXDataToDb.bind(this));
       await this.txProcessingRepository.updateTxStatus(dir, { adapterProcessed: true })
     } catch (error) {

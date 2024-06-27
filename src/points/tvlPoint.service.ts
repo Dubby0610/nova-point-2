@@ -43,10 +43,10 @@ export class TvlPointService extends Worker {
   }
 
   @Cron("0 2,10,18 * * *")
-  protected async runProcess(): Promise<void> {
+  public async runProcess(): Promise<void> {
     this.logger.log(`${TvlPointService.name} initialized`);
     try {
-      const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false } })
+      const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
       pendingProcessed.forEach(item => this.handleHoldPoint(item.blockNumber, item.adapterName))
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);

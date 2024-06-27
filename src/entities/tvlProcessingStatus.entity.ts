@@ -2,8 +2,7 @@ import { Entity, Column, Unique, Index, PrimaryColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 
 @Entity({ name: 'tvlProcessingStatus' })
-@Index(['adapterName', 'adapterProcessed'])
-@Index(['adapterName', 'adapterProcessed', 'pointProcessed'])
+@Index(['adapterProcessed', 'pointProcessed'])
 export class TvlProcessingStatus extends BaseEntity {
     @PrimaryColumn()
     adapterName: string;

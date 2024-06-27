@@ -42,7 +42,7 @@ export class TxPointService extends Worker {
   protected async runProcess(): Promise<void> {
     this.logger.log(`${TxPointService.name} start...`);
     try {
-      const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false } })
+      const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
       pendingProcessed.forEach(async status => {
         this.calculateTxNumPoint(status)
       })
