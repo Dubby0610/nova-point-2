@@ -22,6 +22,9 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
                                              PRIMARY KEY ("blockNumber", "address"))`
     );
     await queryRunner.query(
+      `CREATE UNIQUE INDEX "IDX_186821d745a802779bae61191d" ON "blockAddressPoint" ("createdAt") `
+    );
+    await queryRunner.query(
       `CREATE TABLE "points" ("id" BIGSERIAL NOT NULL, "address" bytea NOT NULL, "stakePoint" decimal NOT NULL, "refPoint" decimal NOT NULL DEFAULT 0, CONSTRAINT "PK_c9bd7c6da50151b24c19e90a0f5" PRIMARY KEY ("id"))`
     );
     await queryRunner.query(`CREATE UNIQUE INDEX "IDX_186821d745a802779bae61192c" ON "points" ("address") `);
@@ -40,14 +43,25 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
     });
 
     const refactorDataSource = await typeOrmRefactorCliDataSource.initialize();
-    const blockTokenPriceData = await refactorDataSource.query(`SELECT * FROM "blockTokenPrice"`);
-    await this.batchInsert(queryRunner, blockTokenPriceData, "blockTokenPrice", [
-      "blockNumber",
-      "priceId",
-      "usdPrice",
-      "createdAt",
-      "updatedAt",
-    ]);
+
+    let offset = 0;
+    const limit = 5000000;
+    while (true) {
+      const blockTokenPriceData = await refactorDataSource.query(
+        `SELECT * FROM "blockTokenPrice" WHERE "createdAt">='2024-06-20 00:00:00' limit ${limit} offset ${offset}`
+      );
+      if (blockTokenPriceData.length === 0) {
+        break;
+      }
+      await this.batchInsert(queryRunner, blockTokenPriceData, "blockTokenPrice", [
+        "blockNumber",
+        "priceId",
+        "usdPrice",
+        "createdAt",
+        "updatedAt",
+      ]);
+      offset += limit;
+    }
 
     const addressFirstDepositsData = await refactorDataSource.query(`SELECT * FROM "addressFirstDeposits"`);
     await this.batchInsert(queryRunner, addressFirstDepositsData, "addressFirstDeposits", [
@@ -55,16 +69,26 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
       "firstDepositTime",
     ]);
 
-    const blockAddressPointData = await refactorDataSource.query(`SELECT * FROM "blockAddressPoint"`);
-    await this.batchInsert(queryRunner, blockAddressPointData, "blockAddressPoint", [
-      "blockNumber",
-      "address",
-      "depositPoint",
-      "holdPoint",
-      "refPoint",
-      "createdAt",
-      "updatedAt",
-    ]);
+    let offset2 = 0;
+    const limit2 = 5000000;
+    while (true) {
+      const blockAddressPointData = await refactorDataSource.query(
+        `SELECT * FROM "blockAddressPoint" WHERE "createdAt">='2024-06-20 00:00:00' limit ${limit2} offset ${offset2}`
+      );
+      if (blockAddressPointData.length === 0) {
+        break;
+      }
+      await this.batchInsert(queryRunner, blockAddressPointData, "blockAddressPoint", [
+        "blockNumber",
+        "address",
+        "depositPoint",
+        "holdPoint",
+        "refPoint",
+        "createdAt",
+        "updatedAt",
+      ]);
+      offset2 += limit2;
+    }
 
     const pointsData = await refactorDataSource.query(`SELECT * FROM "points"`);
     await this.batchInsert(queryRunner, pointsData, "points", ["id", "address", "stakePoint", "refPoint"]);
@@ -76,6 +100,7 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "referralPoints"`);
     await queryRunner.query(`DROP INDEX "public"."IDX_186821d745a802779bae61192c"`);
     await queryRunner.query(`DROP TABLE "points"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_186821d745a802779bae61191d"`);
     await queryRunner.query(`DROP TABLE "blockAddressPoint"`);
     await queryRunner.query(`DROP TABLE "addressFirstDeposits"`);
     await queryRunner.query(`DROP TABLE "blockTokenPrice"`);
