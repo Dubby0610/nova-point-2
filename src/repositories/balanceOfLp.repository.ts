@@ -51,7 +51,7 @@ export class BalanceOfLpRepository extends BaseRepository<BalanceOfLp> {
     });
   }
 
-  public async getProjectLpBalances(blockNumber: number, pairAddresses: Buffer[]) {
+  public async getProjectLpBalances(blockNumber: number, pairAddresses: string[]) {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.getRepository(BalanceOfLp).find({
       where: {

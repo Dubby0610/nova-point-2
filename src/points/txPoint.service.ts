@@ -84,7 +84,7 @@ export class TxPointService extends Worker {
   }
 
   async calculateTxNumPoint(status: TxProcessingStatus) {
-    const { blockNumberStart, blockNumberEnd, adapterName } = status
+    const { blockNumberStart, blockNumberEnd, projectName } = status
     this.logger.log(`txNum points from ${blockNumberStart} to ${blockNumberEnd}`);
 
     const txData = await this.txDataOfPointsRepository.getTxsByBlockNumber(
@@ -124,8 +124,8 @@ export class TxPointService extends Worker {
       }
 
 
-      if (this.projectTxBooster[this.txVol][adapterName]) {
-        const txVolPoint = this.calTxVolPoint(adapterName, txData[i], addressFirstDepositMap)
+      if (this.projectTxBooster[this.txVol][projectName]) {
+        const txVolPoint = this.calTxVolPoint(projectName, txData[i], addressFirstDepositMap)
         // update tx point
         addressPointMap.get(pointUniqueKey).stakePoint += txVolPoint
 
@@ -144,8 +144,8 @@ export class TxPointService extends Worker {
         }
       }
 
-      if (this.projectTxBooster[this.txNum][adapterName]) {
-        const txNumPoint = this.calTxNumPoint(adapterName, txData[i], addressFirstDepositMap)
+      if (this.projectTxBooster[this.txNum][projectName]) {
+        const txNumPoint = this.calTxNumPoint(projectName, txData[i], addressFirstDepositMap)
         // update tx point
         addressPointMap.get(pointUniqueKey).stakePoint += txNumPoint
 
@@ -173,7 +173,7 @@ export class TxPointService extends Worker {
       this.logger.log(`Finish txNum blockAddressPointArr, length: ${blockAddressPointArr.length}`);
       await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
       this.logger.log(`Finish txNum addressPointArr, length: ${addressPointArr.length}`);
-      this.txProcessingRepository.updateTxStatus(adapterName, { pointProcessed: true })
+      this.txProcessingRepository.upsert({ pointProcessed: true }, true, ["projectName"])
     })
   }
 

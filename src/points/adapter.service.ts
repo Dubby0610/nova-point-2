@@ -90,6 +90,7 @@ export class AdapterService {
 
       child.on('close', (code) => {
         if (code === 0) {
+          this.logger.log(`Command successfully: ${command}!`);
           resolve();
         } else {
           const error = new Error(`Command failed: ${command}\n${stderr}`);
@@ -131,21 +132,21 @@ export class AdapterService {
     // const currentBlock = await this.blockRepository.getLastBlock({
     //   select: { number: true, timestamp: true },
     // }) 
-    const currentBlock = { number: 2999935, timestamp: Math.floor(new Date().getTime() / 1000) };
-    const processingStatus = new TvlProcessingStatus();
-    processingStatus.adapterName = dir;
-    processingStatus.blockNumber = currentBlock.number
-    await this.tvlProcessingRepository.addManyIgnoreConflicts([processingStatus]);
-    await this.processTvlData(dir, processingStatus.blockNumber)
+    this.logger.log(`Start process ${dir} tvl data`)
+    const currentBlock = { number: 3189935, timestamp: Math.floor(new Date().getTime() / 1000) };
+    const record = new TvlProcessingStatus();
+    record.projectName = dir;
+    record.blockNumber = currentBlock.number
+    await this.tvlProcessingRepository.upsertStatus(record);
+    await this.processTvlData(dir, record.blockNumber)
+    await this.tvlProcessingRepository.upsertStatus({ ...record, adapterProcessed: true })
   }
 
   private async processTvlData(dir: string, curBlockNumber: number) {
     try {
       const tvlCommand = `npm run adapter:tvl -- ${dir} ${this.tvlFilePrefix} ${curBlockNumber}`;
       await this.runCommand(tvlCommand, this.adaptersPath);
-      this.logger.log(`Execute ${dir} tvl file succeeded`);
       await this.saveCSVDataToDb(`${this.tvlFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTVLDataToDb.bind(this));
-      await this.tvlProcessingRepository.updateTxStatus(dir, { adapterProcessed: true })
     } catch (error) {
       this.logger.error(`processTvlData error in ${dir}:`, error.stack);
     }
@@ -184,29 +185,30 @@ export class AdapterService {
     // const currentBlock = await this.blockRepository.getLastBlock({
     //   select: { number: true, timestamp: true },
     // })
-    const currentBlock = { number: 2999935, timestamp: Math.floor(new Date().getTime() / 1000) };
-    const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? '0'; // can be remove after re-deployment
-    const processedStatus = await this.txProcessingRepository.findOneBy({ adapterName: dir })
+    const currentBlock = { number: 3189935, timestamp: Math.floor(new Date().getTime() / 1000) };
+    const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
+    const processedStatus = await this.txProcessingRepository.findOneBy({ projectName: dir })
 
-    if (!!processedStatus && processedStatus.pointProcessed === false) {
+    if (!!processedStatus && processedStatus.adapterProcessed === true && processedStatus.pointProcessed === false) {
       return
     }
+    this.logger.log(`Start process ${dir} tx data`)
     const record = new TxProcessingStatus();
-    record.blockNumberStart = !processedStatus ? Number(prevBlockNumberInCache) : processedStatus.blockNumberEnd
+    record.projectName = dir;
+    record.blockNumberStart = !processedStatus ? Number(prevBlockNumberInCache) + 1 : processedStatus.blockNumberEnd + 1
     record.blockNumberEnd = currentBlock.number
     record.pointProcessed = false
     record.adapterProcessed = false
-    await this.txProcessingRepository.updateTxStatus(dir, record);
+    await this.txProcessingRepository.upsertStatus(record);
     await this.processTxData(dir, record.blockNumberStart, record.blockNumberEnd)
+    await this.txProcessingRepository.upsertStatus({ ...record, adapterProcessed: true });
   }
 
   private async processTxData(dir: string, prevBlockNumber: number, curBlockNumber: number) {
     try {
       const txCommand = `npm run adapter:tx -- ${dir} ${this.txFilePrefix} ${prevBlockNumber} ${curBlockNumber}`;
       await this.runCommand(txCommand, this.adaptersPath);
-      this.logger.log(`Execute ${dir} tx file succeeded from ${prevBlockNumber} tom ${curBlockNumber}`);
       await this.saveCSVDataToDb(`${this.txFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTXDataToDb.bind(this));
-      await this.txProcessingRepository.updateTxStatus(dir, { adapterProcessed: true })
     } catch (error) {
       this.logger.error(`processTxData error in ${dir}:`, error.stack);
     }

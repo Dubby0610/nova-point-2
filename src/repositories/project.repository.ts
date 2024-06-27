@@ -10,13 +10,14 @@ export class ProjectRepository extends BaseRepository<Project> {
   }
 
   // select pairAddress from project where name = projectName
-  public async getPairAddresses(projectName: string): Promise<Buffer[]> {
+  public async getPairAddresses(projectName: string) {
     const transactionManager = this.unitOfWork.getTransactionManager();
-    const result = await transactionManager.query(
-      `select "pairAddress" from project where name = $1`,
-      [projectName],
-    );
-    return result.map((row: any) => row.pairAddress);
+    const result = await transactionManager.find(Project, {
+      where: {
+        name: projectName
+      }
+    });
+    return result.map((row) => row.pairAddress);
   }
 
   public async updateTvls(pairAddress: string, tvl: string): Promise<void> {

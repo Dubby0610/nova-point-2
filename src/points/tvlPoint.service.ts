@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron } from "@nestjs/schedule";
 import BigNumber from "bignumber.js";
-import { Worker } from "../common/worker";
 import {
   PointsOfLpRepository,
   BlockRepository,
@@ -21,7 +20,7 @@ import { UnitOfWork } from "src/unitOfWork";
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 
 @Injectable()
-export class TvlPointService extends Worker {
+export class TvlPointService {
   private readonly logger: Logger;
 
   public constructor(
@@ -37,9 +36,7 @@ export class TvlPointService extends Worker {
     private readonly tvlProcessingRepository: TvlProcessingRepository,
     private readonly unitOfWork: UnitOfWork
   ) {
-    super();
     this.logger = new Logger(TvlPointService.name);
-
   }
 
   @Cron("0 2,10,18 * * *")
@@ -47,17 +44,18 @@ export class TvlPointService extends Worker {
     this.logger.log(`${TvlPointService.name} initialized`);
     try {
       const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
-      pendingProcessed.forEach(item => this.handleHoldPoint(item.blockNumber, item.adapterName))
+      pendingProcessed.forEach(item => this.handleHoldPoint(item.blockNumber, item.projectName))
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
   }
 
-  async handleHoldPoint(exeBlockNumber: number, adapterName: string) {
-    const currentStatisticalBlock = await this.blockRepository.getLastBlock({
-      where: { number: exeBlockNumber },
-      select: { number: true, timestamp: true },
-    });
+  async handleHoldPoint(exeBlockNumber: number, projectName: string) {
+    // const currentStatisticalBlock = await this.blockRepository.getLastBlock({
+    //   where: { number: exeBlockNumber },
+    //   select: { number: true, timestamp: true },
+    // });
+    const currentStatisticalBlock = { number: exeBlockNumber, timestamp: new Date() }
     if (!currentStatisticalBlock) {
       this.logger.log(`No block of lp found, block number : ${exeBlockNumber}`);
       return;
@@ -68,10 +66,9 @@ export class TvlPointService extends Worker {
     const earlyBirdMultiplier = this.boosterService.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
     this.logger.log(`Early bird multiplier: ${earlyBirdMultiplier}`);
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
-    const blockTs = currentStatisticalBlock.timestamp.getTime();
-    const [addressMap, addressTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, adapterName, tokenPriceMap);
+    const [addressSet, addressTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, projectName, tokenPriceMap);
     this.logger.log(`Address tvl map size: ${addressTvlMap.size}`);
-    let addresses = [...addressMap]
+    let addresses = [...addressSet]
 
     this.logger.log(`Address list size: ${addresses.length}`);
     // get all first deposit time
@@ -100,7 +97,9 @@ export class TvlPointService extends Worker {
       // get the last multiplier before the block timestamp
       const addressFirstDeposit = addressFirstDepositMap.get(address.toLowerCase());
       const firstDepositTime = addressFirstDeposit?.firstDepositTime;
-      const loyaltyBooster = this.boosterService.getLoyaltyBooster(blockTs, firstDepositTime?.getTime());
+
+      const blockTime = currentStatisticalBlock.timestamp.getTime();
+      const loyaltyBooster = this.boosterService.getLoyaltyBooster(blockTime, firstDepositTime?.getTime());
 
       const newHoldPoint = addressTvl
         .multipliedBy(earlyBirdMultiplier)
@@ -113,8 +112,8 @@ export class TvlPointService extends Worker {
         address: address,
         pairAddress: pairAddress,
         holdPoint: newHoldPoint.toNumber(),
-        createdAt: blockTs,
-        updatedAt: blockTs,
+        createdAt: Math.floor(blockTime / 1000),
+        updatedAt: Math.floor(blockTime / 1000),
       });
 
       let fromAddressPoint = addressPointMap[key];
@@ -143,7 +142,7 @@ export class TvlPointService extends Worker {
         `Finish addressPointArr for block: ${currentStatisticalBlock.number}, length: ${addressPointArr.length}`
       );
       await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
-      await this.tvlProcessingRepository.updateTxStatus(adapterName, { pointProcessed: true })
+      await this.tvlProcessingRepository.upsertStatus({ pointProcessed: true })
     })
 
     const statisticEndTime = new Date();
@@ -171,8 +170,7 @@ export class TvlPointService extends Worker {
     let balanceMap = new Map<string, typeof balanceList>();
     for (let index = 0; index < balanceList.length; index++) {
       const balance = balanceList[index];
-      const address = balance.address
-      const pairAddress = balance.pairAddress
+      const { address, pairAddress } = balance
 
       const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
@@ -236,7 +234,7 @@ export class TvlPointService extends Worker {
     });
     const tokenPrices: Map<string, BigNumber> = new Map();
     for (const priceId of allPriceIds) {
-      const blockTokenPrice = await this.blockTokenPriceRepository.getBlockTokenPrice(blockNumber, priceId);
+      const blockTokenPrice = await this.blockTokenPriceRepository.getBlockTokenPrice(blockNumber, priceId) ?? { usdPrice: 1 };
       if (!blockTokenPrice) {
         throw new Error(`BlockNumber : ${blockNumber}, Token ${priceId} price not found`);
       }

@@ -10,14 +10,12 @@ export class TvlProcessingRepository extends BaseRepository<TvlProcessingStatus>
     super(TvlProcessingStatus, unitOfWork);
   }
 
-  public async updateTxStatus(adapterName: string, updateData: Partial<TvlProcessingStatus>) {
+  public async upsertStatus(updateData: Partial<TvlProcessingStatus>) {
     const entityManager = this.unitOfWork.getTransactionManager();
-    const result = await entityManager.update(
+    const result = await entityManager.upsert(
       this.entityTarget,
-      {
-        adapterName: adapterName,
-      },
-      updateData
+      updateData,
+      ['projectName', 'blockNumber']
     );
 
     return result

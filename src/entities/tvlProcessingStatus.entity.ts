@@ -5,7 +5,7 @@ import { BaseEntity } from './base.entity';
 @Index(['adapterProcessed', 'pointProcessed'])
 export class TvlProcessingStatus extends BaseEntity {
     @PrimaryColumn()
-    adapterName: string;
+    projectName: string;
 
     @PrimaryColumn()
     blockNumber: number;

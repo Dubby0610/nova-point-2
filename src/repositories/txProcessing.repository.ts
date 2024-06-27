@@ -10,25 +10,23 @@ export class TxProcessingRepository extends BaseRepository<TxProcessingStatus> {
   public constructor(unitOfWork: UnitOfWork) {
     super(TxProcessingStatus, unitOfWork);
   }
-  public async getTxProcessingStatus(adapterName: string) {
+  public async getTxProcessingStatus(projectName: string) {
     const entityManager = this.unitOfWork.getTransactionManager();
     const result = await entityManager.findOne(this.entityTarget, {
       where: {
-        adapterName
+        projectName
       }
     });
 
     return result
   }
 
-  public async updateTxStatus(adapterName: string, updateData: Partial<TxProcessingStatus>) {
+  public async upsertStatus(updateData: Partial<TxProcessingStatus>) {
     const entityManager = this.unitOfWork.getTransactionManager();
-    const result = await entityManager.update(
+    const result = await entityManager.upsert(
       this.entityTarget,
-      {
-        adapterName: adapterName,
-      },
-      updateData
+      updateData,
+      ['projectName']
     );
 
     return result
