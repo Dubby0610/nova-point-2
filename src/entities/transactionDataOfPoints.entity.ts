@@ -21,7 +21,7 @@ export class TransactionDataOfPoints extends BaseEntity {
   @Column({ type: "varchar", length: 100, nullable: true })
   public readonly price: string;
 
-  @Column({ type: "bigint", transformer: bigIntNumberTransformer })
+  @Column({ type: "varchar", length: 128 })
   public readonly quantity: string;
 
   @Column({ type: "varchar", length: 100 })

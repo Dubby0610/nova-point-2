@@ -28,6 +28,7 @@ export class RedistributeBalanceService extends Worker {
   private readonly outputFileName = "/data/";
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
   private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber'
+  private readonly lrtBlockNumber = 'lrtBlockNumber'
 
   public constructor(
     private readonly redistributeBalanceRepository: RedistributeBalanceRepository,
@@ -61,11 +62,11 @@ export class RedistributeBalanceService extends Worker {
       const currentBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
       })
-      const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-      this.logger.log(`Adapter start from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
-      await this.runCommandsInAllDirectories(currentBlock.number, Number(adapterTxSyncBlockNumber));
-      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, currentBlock.number.toString())
-      this.logger.log(`Adapter end from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
+      const lrtBlockNumber = await this.cacheRepository.getValue(this.lrtBlockNumber) || await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber);
+      this.logger.log(`Adapter start from ${currentBlock.number} to ${lrtBlockNumber}`)
+      await this.runCommandsInAllDirectories(currentBlock.number, Number(lrtBlockNumber));
+      this.cacheRepository.setValue(this.lrtBlockNumber, currentBlock.number.toString())
+      this.logger.log(`Adapter end from ${currentBlock.number} to ${lrtBlockNumber}`)
     }
 
   }
@@ -132,7 +133,7 @@ export class RedistributeBalanceService extends Worker {
           }
           fs.unlinkSync(outputPath);
           this.logger.log(
-            `Adapter:${dir} hourly CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
+            `Adapter:${dir} hourly CSV file successfully processed at ${blockNumber}.`
           );
           resolve()
         });
@@ -163,7 +164,12 @@ export class RedistributeBalanceService extends Worker {
       this.projectRepository.upsert({ pairAddress: poolAddress, name: dir }, true, ["pairAddress"]);
     }
     try {
-      await this.redistributeBalanceRepository.updateCumulativeData(dataToInsert);
+      if (dataToInsert.length > 0) {
+        await this.redistributeBalanceRepository.updateCumulativeData(dataToInsert);
+        this.logger.log(
+          `Adapter:${dir} hourly CSV file successfully, insert ${dataToInsert.length} rows into db.`
+        );
+      }
     } catch (e) {
       this.logger.error(`Error inserting ${rows.length} hourly data to db: ${e.stack}`);
     }
