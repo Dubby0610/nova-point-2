@@ -3,7 +3,7 @@ import { Worker } from "../common/worker";
 import { existsSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
-import { BlockRepository, CacheRepository, RedistributeBalanceRepository, ProjectRepository } from "../repositories";
+import { BlockRepository, RedistributeBalanceRepository, ProjectRepository } from "../repositories";
 import * as csv from "csv-parser";
 import * as fs from "fs";
 import { Cron } from "@nestjs/schedule";
@@ -27,13 +27,11 @@ export class RedistributeBalanceService extends Worker {
   private readonly logger: Logger;
   private readonly outputFileName = "/data/";
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
-  private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber'
 
   public constructor(
     private readonly redistributeBalanceRepository: RedistributeBalanceRepository,
     private readonly blockRepository: BlockRepository,
     private readonly projectRepository: ProjectRepository,
-    private readonly cacheRepository: CacheRepository,
   ) {
     super();
     this.logger = new Logger(RedistributeBalanceService.name);
@@ -49,45 +47,43 @@ export class RedistributeBalanceService extends Worker {
     }
   }
 
-  public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
-    await this.executeCommandInDirectory(name, curBlockNumber, lastBlockNumber);
+  public async compensatePointsData(name: string, curBlockNumber: number) {
+    await this.executeCommandInDirectory(name, curBlockNumber);
     this.logger.log(`compensateRedistributeData ${name} at block ${curBlockNumber}`)
   }
 
-  public async loadLastBlockNumber(curBlockNumber?: number, lastBlockNumber?: number) {
-    if (lastBlockNumber && curBlockNumber) {
-      await this.runCommandsInAllDirectories(curBlockNumber, lastBlockNumber);
+  public async loadLastBlockNumber(curBlockNumber?: number) {
+    if (curBlockNumber) {
+      await this.runCommandsInAllDirectories(curBlockNumber);
     } else {
       const currentBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
       })
-      const adapterTxSyncBlockNumber = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber) ?? 0;
-      this.logger.log(`Adapter start from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
-      await this.runCommandsInAllDirectories(currentBlock.number, Number(adapterTxSyncBlockNumber));
-      this.cacheRepository.setValue(this.adapterTxSyncBlockNumber, currentBlock.number.toString())
-      this.logger.log(`Adapter end from ${currentBlock.number} to ${adapterTxSyncBlockNumber}`)
+      this.logger.log(`RedistributeBalanceService start from ${currentBlock.number}`)
+      await this.runCommandsInAllDirectories(currentBlock.number);
+      this.logger.log(`RedistributeBalanceService end from ${currentBlock.number}`)
     }
 
   }
 
-  public async runCommandsInAllDirectories(curBlockNumber: number, lastBlockNumber: number,): Promise<void> {
+  public async runCommandsInAllDirectories(curBlockNumber: number): Promise<void> {
     this.logger.log(
-      `Executing commands in all directories, curBlockNumber: ${curBlockNumber}, lastBlockNumber: ${lastBlockNumber}`
+      `Executing commands in all directories, curBlockNumber: ${curBlockNumber}`
     );
     try {
       for (const dir of DIRS) {
-        await this.executeCommandInDirectory(dir, curBlockNumber, lastBlockNumber);
+        await this.executeCommandInDirectory(dir, curBlockNumber);
       }
-      this.logger.log(`All commands executed from ${curBlockNumber} to ${lastBlockNumber} , project count : ${DIRS.length}.`);
+      this.logger.log(`All commands executed from ${curBlockNumber}, project count : ${DIRS.length}.`);
     } catch (error) {
       this.logger.error("Failed to read directories:", error.stack);
     }
   }
 
-  private async executeCommandInDirectory(dir: string, curBlockNumber: number, lastBlockNumber: number): Promise<void> {
+  private async executeCommandInDirectory(dir: string, curBlockNumber: number): Promise<void> {
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
-    const command = `node genHourlyData.js ${dir} ${curBlockNumber} ${lastBlockNumber}`;
+    const command = `node genHourlyData.js ${dir} ${curBlockNumber}`;
 
     try {
       await this.execCommand(command, this.adaptersPath);
@@ -132,7 +128,7 @@ export class RedistributeBalanceService extends Worker {
           }
           fs.unlinkSync(outputPath);
           this.logger.log(
-            `Adapter:${dir} hourly CSV file successfully processed at ${blockNumber}, insert ${results.length} rows into db.`
+            `Adapter:${dir} hourly CSV file successfully processed at ${blockNumber}.`
           );
           resolve()
         });
@@ -163,7 +159,12 @@ export class RedistributeBalanceService extends Worker {
       this.projectRepository.upsert({ pairAddress: poolAddress, name: dir }, true, ["pairAddress"]);
     }
     try {
-      await this.redistributeBalanceRepository.updateCumulativeData(dataToInsert);
+      if (dataToInsert.length > 0) {
+        await this.redistributeBalanceRepository.updateCumulativeData(dataToInsert);
+        this.logger.log(
+          `Adapter:${dir} hourly CSV file successfully, insert ${dataToInsert.length} rows into db.`
+        );
+      }
     } catch (e) {
       this.logger.error(`Error inserting ${rows.length} hourly data to db: ${e.stack}`);
     }

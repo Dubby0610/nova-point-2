@@ -6,15 +6,9 @@ const { write } = require("fast-csv");
 // Get the folder name from command line arguments
 const folderName = process.argv[2];
 const curBlockNumber = process.argv[3];
-const lastBlockNumber = process.argv[4];
 
 if (!folderName) {
   console.error("Folder name not provided. Please provide the folder name as an argument.");
-  process.exit(1);
-}
-
-if (!lastBlockNumber) {
-  console.error("lastBlockNumber not provided. Please provide the lastBlockNumber as an argument.");
   process.exit(1);
 }
 

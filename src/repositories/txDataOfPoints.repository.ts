@@ -8,7 +8,7 @@ export interface TransactionDataOfPointsDto {
   tokenAddress: string;
   decimals: number;
   price: string;
-  quantity: bigint;
+  quantity: string;
   nonce: string;
   timestamp: Date;
   txHash: string;
