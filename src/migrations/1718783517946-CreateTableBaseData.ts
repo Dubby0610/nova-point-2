@@ -6,8 +6,25 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TABLE "blockTokenPrice" ("createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "blockNumber" bigint NOT NULL, "priceId" varchar NOT NULL, "usdPrice" double precision NOT NULL, PRIMARY KEY ("priceId","blockNumber"))`
+      `CREATE TABLE "blockTokenPrice" (
+        "createdAt" TIMESTAMP NOT NULL DEFAULT now(), 
+        "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), 
+        "blockNumber" bigint NOT NULL, 
+        "priceId" varchar NOT NULL, 
+        "usdPrice" double precision NOT NULL, 
+        PRIMARY KEY ("blockNumber","priceId")
+      ) PARTITION BY RANGE ("blockNumber");`
     );
+    for (let i = 0; i < 24; i++) {
+      const startBlock = i * 1500000;
+      const endBlock = (i + 1) * 1500000;
+      const partitionTableName = `blockTokenPrice_part${i + 1}`;
+
+      await queryRunner.query(`
+          CREATE TABLE "${partitionTableName}" PARTITION OF "blockTokenPrice"
+          FOR VALUES FROM (${startBlock}) TO (${endBlock});
+      `);
+    }
     await queryRunner.query(
       `CREATE TABLE "addressFirstDeposits" ("address" bytea NOT NULL, "firstDepositTime" TIMESTAMP NOT NULL, CONSTRAINT "PK_304182e1377fdca8908cd9e4dc3" PRIMARY KEY ("address"))`
     );
@@ -19,11 +36,21 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
                                              "depositPoint" decimal NOT NULL DEFAULT 0 ,
                                              "holdPoint" decimal NOT NULL, 
                                              "refPoint" decimal NOT NULL DEFAULT 0 , 
-                                             PRIMARY KEY ("blockNumber", "address"))`
+                                             PRIMARY KEY ("blockNumber", "address")
+                                            ) PARTITION BY RANGE ("blockNumber");`
     );
-    await queryRunner.query(
-      `CREATE UNIQUE INDEX "IDX_186821d745a802779bae61191d" ON "blockAddressPoint" ("createdAt") `
-    );
+    await queryRunner.query(`CREATE INDEX "IDX_186821d745a802779bae61191d" ON "blockAddressPoint" ("createdAt") `);
+    for (let i = 0; i < 48; i++) {
+      const startBlock = i * 500000;
+      const endBlock = (i + 1) * 500000;
+      const partitionTableName = `blockAddressPoint_part${i + 1}`;
+
+      await queryRunner.query(`
+          CREATE TABLE "${partitionTableName}" PARTITION OF "blockAddressPoint"
+          FOR VALUES FROM (${startBlock}) TO (${endBlock});
+      `);
+    }
+
     await queryRunner.query(
       `CREATE TABLE "points" ("id" BIGSERIAL NOT NULL, "address" bytea NOT NULL, "stakePoint" decimal NOT NULL, "refPoint" decimal NOT NULL DEFAULT 0, CONSTRAINT "PK_c9bd7c6da50151b24c19e90a0f5" PRIMARY KEY ("id"))`
     );
