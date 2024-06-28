@@ -88,7 +88,7 @@ export class RedistributeBalanceService extends Worker {
   private async executeCommandInDirectory(dir: string, curBlockNumber: number, lastBlockNumber: number): Promise<void> {
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
-    const command = `npm run adapter:tvl -- ${dir} '${this.filePrefix}' ${curBlockNumber}`;
+    const command = `npm run adapter:tvl -- ${dir} ${this.filePrefix} ${curBlockNumber}`;
 
     try {
       await this.execCommand(command, this.adaptersPath);

@@ -43,40 +43,36 @@ export class TxPointService extends Worker {
     this.logger.log(`${TxPointService.name} start...`);
     try {
       const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
-      pendingProcessed.forEach(async status => {
-        this.calculateTxNumPoint(status)
-      })
-
-      // update todo
+      pendingProcessed.forEach(async status => { this.calculateTxNumPoint(status) })
     } catch (error) {
-      this.logger.error("Failed to calculate hold point", error.stack);
+      this.logger.error("Failed to calculate tx hold point", error.stack);
     }
   }
 
-  calTxNumPoint(itemProjectName: string, data: TransactionDataOfPoints, addressFirstDepositMap: Map<string, AddressFirstDeposit>) {
+  calTxNumPoint(itemProjectName: string, data: TransactionDataOfPoints, addressFirstDepositMap: Map<string, Date>) {
     const { userAddress, timestamp } = data
-    const addressFirstDeposit = addressFirstDepositMap.get(userAddress);
+    const addressFirstDepositTime = addressFirstDepositMap.get(userAddress);
 
     const basePoint = new BigNumber(1);
     // project booster
     const projectBooster = this.boosterService.getProjectBooster(itemProjectName, 'txNum');
     // loyalty booster
-    const loyaltyBooster = this.boosterService.getLoyaltyBooster(timestamp.getTime(), addressFirstDeposit?.firstDepositTime?.getTime());
+    const loyaltyBooster = this.boosterService.getLoyaltyBooster(timestamp.getTime(), addressFirstDepositTime?.getTime());
 
     const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster)
 
     return newHoldPoint.toNumber()
   }
 
-  calTxVolPoint(itemProjectName: string, data: TransactionDataOfPoints, addressFirstDepositMap: Map<string, AddressFirstDeposit>) {
+  calTxVolPoint(itemProjectName: string, data: TransactionDataOfPoints, addressFirstDepositMap: Map<string, Date>) {
     const { userAddress, quantity, decimals, price, timestamp } = data
-    const addressFirstDeposit = addressFirstDepositMap.get(userAddress);
+    const addressFirstDepositTime = addressFirstDepositMap.get(userAddress);
 
     const basePoint = new BigNumber(quantity.toString()).dividedBy(BigNumber(10 ** decimals)).multipliedBy(BigNumber(price));
     // project booster
     const projectBooster = this.boosterService.getProjectBooster(itemProjectName, 'txVol');
     // loyalty booster
-    const loyaltyBooster = this.boosterService.getLoyaltyBooster(timestamp.getTime(), addressFirstDeposit?.firstDepositTime?.getTime());
+    const loyaltyBooster = this.boosterService.getLoyaltyBooster(timestamp.getTime(), addressFirstDepositTime?.getTime());
 
     const newHoldPoint = basePoint.multipliedBy(projectBooster).multipliedBy(loyaltyBooster)
 
@@ -92,7 +88,8 @@ export class TxPointService extends Worker {
       blockNumberEnd,
     );
     if (txData.length === 0) {
-      this.logger.error(`volume details is empty, from lastBlockNumber: ${blockNumberStart}`);
+      this.logger.error(`volume details is empty, from ${blockNumberStart} to ${blockNumberEnd}`);
+      this.txProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
       return;
     }
 
@@ -114,6 +111,7 @@ export class TxPointService extends Worker {
     for (let i = 0; i < txData.length; i++) {
       const { blockNumber, userAddress, contractAddress } = txData[i];
       const pointUniqueKey = `${userAddress}-${contractAddress}`;
+
       if (!addressPointMap.has(pointUniqueKey)) {
         addressPointMap.set(pointUniqueKey, {
           id: 0,
@@ -131,7 +129,6 @@ export class TxPointService extends Worker {
 
         const uniqueKey = `${userAddress}-${contractAddress}-${blockNumber}-${this.txVol}`;
         if (!blockAddressPointMap.has(uniqueKey)) {
-          this.logger.log(`get block address point empty, key is : ${uniqueKey}`);
           blockAddressPointMap.set(uniqueKey, {
             blockNumber: blockNumber,
             address: userAddress,
@@ -151,7 +148,6 @@ export class TxPointService extends Worker {
 
         const uniqueKey = `${userAddress}-${contractAddress}-${blockNumber}-${this.txVol}`;
         if (!blockAddressPointMap.has(uniqueKey)) {
-          this.logger.log(`get block address point empty, key is : ${uniqueKey}`);
           blockAddressPointMap.set(uniqueKey, {
             blockNumber: blockNumber,
             address: userAddress,
@@ -173,7 +169,7 @@ export class TxPointService extends Worker {
       this.logger.log(`Finish txNum blockAddressPointArr, length: ${blockAddressPointArr.length}`);
       await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
       this.logger.log(`Finish txNum addressPointArr, length: ${addressPointArr.length}`);
-      this.txProcessingRepository.upsert({ pointProcessed: true }, true, ["projectName"])
+      this.txProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
     })
   }
 

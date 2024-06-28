@@ -39,7 +39,7 @@ export class AdapterService {
     this.txPaths = Object.keys(this.configService.get('projectTxBooster')).flatMap(key => Object.keys(this.configService.get('projectTxBooster')[key]));
   }
 
-  @Cron("20 1,9,17 * * *")
+  @Cron("0 2,10,18 * * *")
   public async runProcess(): Promise<void> {
     this.logger.log(`${AdapterService.name} initialized`);
     try {
@@ -137,19 +137,18 @@ export class AdapterService {
     const record = new TvlProcessingStatus();
     record.projectName = dir;
     record.blockNumber = currentBlock.number
-    await this.tvlProcessingRepository.upsertStatus(record);
-    await this.processTvlData(dir, record.blockNumber)
-    await this.tvlProcessingRepository.upsertStatus({ ...record, adapterProcessed: true })
+    const status = await this.tvlProcessingRepository.upsertStatus(record);
+    if (!status.adapterProcessed) {
+      await this.processTvlData(dir, record.blockNumber)
+      await this.tvlProcessingRepository.upsertStatus({ ...record, adapterProcessed: true })
+    }
   }
 
   private async processTvlData(dir: string, curBlockNumber: number) {
-    try {
-      const tvlCommand = `npm run adapter:tvl -- ${dir} ${this.tvlFilePrefix} ${curBlockNumber}`;
-      await this.runCommand(tvlCommand, this.adaptersPath);
-      await this.saveCSVDataToDb(`${this.tvlFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTVLDataToDb.bind(this));
-    } catch (error) {
-      this.logger.error(`processTvlData error in ${dir}:`, error.stack);
-    }
+    const tvlCommand = `npm run adapter:tvl -- ${dir} ${this.tvlFilePrefix} ${curBlockNumber}`;
+    await this.runCommand(tvlCommand, this.adaptersPath);
+    await this.saveCSVDataToDb(`${this.tvlFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTVLDataToDb.bind(this));
+    this.logger.log(`finish processing ${dir} tvl data!`)
   }
 
   private async insertTVLDataToDb(rows: any[], dir: string): Promise<void> {
@@ -173,11 +172,7 @@ export class AdapterService {
     for (const poolAddress of poolAddresses) {
       await this.projectRepository.upsert({ pairAddress: poolAddress, name: dir }, true, ["pairAddress"]);
     }
-    try {
-      await this.balanceOfLpRepository.addManyIgnoreConflicts(dataToInsert);
-    } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} TVL data to db: ${e.stack}`);
-    }
+    await this.balanceOfLpRepository.addManyIgnoreConflicts(dataToInsert);
   }
 
   private async pipeTxData(dir: string) {
@@ -185,33 +180,36 @@ export class AdapterService {
     // const currentBlock = await this.blockRepository.getLastBlock({
     //   select: { number: true, timestamp: true },
     // })
-    const currentBlock = { number: 3189935, timestamp: Math.floor(new Date().getTime() / 1000) };
-    const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
-    const processedStatus = await this.txProcessingRepository.findOneBy({ projectName: dir })
-
-    if (!!processedStatus && processedStatus.adapterProcessed === true && processedStatus.pointProcessed === false) {
-      return
-    }
-    this.logger.log(`Start process ${dir} tx data`)
-    const record = new TxProcessingStatus();
-    record.projectName = dir;
-    record.blockNumberStart = !processedStatus ? Number(prevBlockNumberInCache) + 1 : processedStatus.blockNumberEnd + 1
-    record.blockNumberEnd = currentBlock.number
-    record.pointProcessed = false
-    record.adapterProcessed = false
-    await this.txProcessingRepository.upsertStatus(record);
-    await this.processTxData(dir, record.blockNumberStart, record.blockNumberEnd)
-    await this.txProcessingRepository.upsertStatus({ ...record, adapterProcessed: true });
-  }
-
-  private async processTxData(dir: string, prevBlockNumber: number, curBlockNumber: number) {
     try {
-      const txCommand = `npm run adapter:tx -- ${dir} ${this.txFilePrefix} ${prevBlockNumber} ${curBlockNumber}`;
-      await this.runCommand(txCommand, this.adaptersPath);
-      await this.saveCSVDataToDb(`${this.txFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTXDataToDb.bind(this));
+      const currentBlock = { number: 3189935, timestamp: Math.floor(new Date().getTime() / 1000) };
+      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
+      const processedStatus = await this.txProcessingRepository.findOneBy({ projectName: dir })
+
+      if (!!processedStatus && processedStatus.adapterProcessed === true && processedStatus.pointProcessed === false) {
+        return
+      }
+      this.logger.log(`Start process ${dir} tx data`)
+      const record = new TxProcessingStatus();
+      record.projectName = dir;
+      record.blockNumberStart = !processedStatus ? Number(prevBlockNumberInCache) + 1 : processedStatus.blockNumberEnd + 1
+      record.blockNumberEnd = currentBlock.number
+      record.pointProcessed = false
+      record.adapterProcessed = false
+      const status = await this.txProcessingRepository.upsertStatus(record);
+      if (!status.adapterProcessed) {
+        await this.processTxData(dir, record.blockNumberStart, record.blockNumberEnd)
+        await this.txProcessingRepository.upsertStatus({ ...record, adapterProcessed: true });
+      }
+
     } catch (error) {
       this.logger.error(`processTxData error in ${dir}:`, error.stack);
     }
+  }
+
+  private async processTxData(dir: string, prevBlockNumber: number, curBlockNumber: number) {
+    const txCommand = `npm run adapter:tx -- ${dir} ${this.txFilePrefix} ${prevBlockNumber} ${curBlockNumber}`;
+    await this.runCommand(txCommand, this.adaptersPath);
+    await this.saveCSVDataToDb(`${this.txFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTXDataToDb.bind(this));
   }
 
 
@@ -242,10 +240,6 @@ export class AdapterService {
     for (const poolAddress of poolAddresses) {
       await this.projectRepository.upsert({ pairAddress: poolAddress, name: dir }, true, ["pairAddress"]);
     }
-    try {
-      await this.transactionDataOfPointsRepository.addManyIgnoreConflicts(dataToInsert);
-    } catch (e) {
-      this.logger.error(`Error inserting ${rows.length} tx data to db: ${e.stack}`);
-    }
+    await this.transactionDataOfPointsRepository.addManyIgnoreConflicts(dataToInsert);
   }
 }

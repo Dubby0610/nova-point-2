@@ -21,7 +21,7 @@ export class TxProcessingRepository extends BaseRepository<TxProcessingStatus> {
     return result
   }
 
-  public async upsertStatus(updateData: Partial<TxProcessingStatus>) {
+  public async upsertStatus(updateData: Partial<TxProcessingStatus>): Promise<TxProcessingStatus> {
     const entityManager = this.unitOfWork.getTransactionManager();
     const result = await entityManager.upsert(
       this.entityTarget,
@@ -29,6 +29,6 @@ export class TxProcessingRepository extends BaseRepository<TxProcessingStatus> {
       ['projectName']
     );
 
-    return result
+    return result.raw[0]
   }
 }

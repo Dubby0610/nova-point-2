@@ -268,6 +268,7 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     UserHoldingRepository,
     UserStakedRepository,
     UserWithdrawRepository,
+    ProjectTvlService,
     TvlProcessingRepository,
     TxProcessingRepository,
   ],

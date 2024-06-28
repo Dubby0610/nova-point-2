@@ -68,16 +68,16 @@ export class PointsOfLpRepository extends BaseRepository<PointsOfLp> {
    * @param addresses user addresses
    * @returns a Map which key is userAddress.toLowerCase()_pairAddress.toLowerCase()
    */
-  public async getPointMapForAddresses(addresses: string[]): Promise<Map<string, PointsOfLp>> {
+  public async getPointMapForAddresses(addresses: string[]) {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const addressesBuff = addresses.map((item) => Buffer.from(item.substring(2), "hex"));
-    const result = await transactionManager.query(`SELECT * FROM public."pointsOfLp" WHERE address = ANY($1);`, [
-      addressesBuff,
-    ]);
-    return new Map(result.map((row: any) => {
-      row.address = "0x" + row.address.toString("hex");
-      row.pairAddress = "0x" + row.pairAddress.toString("hex");
-      return [`${row.address.toLowerCase()}_${row.pairAddress.toLowerCase()}`, row];
+    const result = await transactionManager.getRepository(PointsOfLp)
+      .createQueryBuilder("p")
+      .where("p.address = ANY(:addresses)", { addresses: addressesBuff })
+      .getMany();
+
+    return new Map(result.map((row) => {
+      return [`${row.address.toLowerCase()}-${row.pairAddress.toLowerCase()}`, row];
     }));
   }
 

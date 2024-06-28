@@ -3,7 +3,6 @@ import {
   getAllLidsAtBlock,
   getAmountsForLiquidity,
   getOneSideBoosterByToken,
-  getPoolState,
   getPositionDetailsAtBlock,
   getTimestampAtBlock,
 } from './sdk/lib';
@@ -46,7 +45,7 @@ const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
         const [data0, data1] = await processLid(lid, blockNumber, timestamp)
         if (data0.balance !== 0n) {
           const uniqueKey = `${data0.userAddress}_${data0.tokenAddress}_${data0.poolAddress}`
-          if(!tvlMap.get(uniqueKey)) {
+          if (!tvlMap.get(uniqueKey)) {
             tvlMap.set(uniqueKey, data0)
           } else {
             const data = tvlMap.get(uniqueKey)
@@ -56,7 +55,7 @@ const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
 
         if (data1.balance !== 0n) {
           const uniqueKey = `${data1.userAddress}_${data1.tokenAddress}_${data1.poolAddress}`
-          if(!tvlMap.get(uniqueKey)) {
+          if (!tvlMap.get(uniqueKey)) {
             tvlMap.set(uniqueKey, data1)
           } else {
             const data = tvlMap.get(uniqueKey)
