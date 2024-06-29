@@ -3,7 +3,7 @@ import { Worker } from "../common/worker";
 import waitFor from "../utils/waitFor";
 import { CacheRepository, TransferRepository } from "../repositories";
 import { ConfigService } from "@nestjs/config";
-import BridgeConfig from "src/bridge.config";
+import BridgeConfig from "src/config/bridge.config";
 
 interface TransferItem {
   address: string;

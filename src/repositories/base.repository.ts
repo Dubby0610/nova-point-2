@@ -1,13 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { EntityTarget, FindOptionsWhere, FindManyOptions } from "typeorm";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
-import { UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 
 const BATCH_SIZE = 1000;
 
 @Injectable()
 export abstract class BaseRepository<T> {
-  public constructor(protected readonly entityTarget: EntityTarget<T>, protected readonly unitOfWork: UnitOfWork) { }
+  public constructor(
+    protected readonly entityTarget: EntityTarget<T>,
+    protected readonly unitOfWork: UnitOfWork
+  ) {}
 
   public async addMany(records: Partial<T>[]): Promise<void> {
     if (!records?.length) {
@@ -91,11 +94,11 @@ export abstract class BaseRepository<T> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const recordToUpsert = shouldExcludeNullValues
       ? Object.keys(record).reduce((acc, key) => {
-        if (record[key] !== null && record[key] !== undefined) {
-          acc[key] = record[key];
-        }
-        return acc;
-      }, {})
+          if (record[key] !== null && record[key] !== undefined) {
+            acc[key] = record[key];
+          }
+          return acc;
+        }, {})
       : record;
     await transactionManager.upsert<T>(this.entityTarget, recordToUpsert, {
       conflictPaths,

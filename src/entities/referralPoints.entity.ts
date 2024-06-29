@@ -1,16 +1,15 @@
 import { Entity, Column, PrimaryColumn, Index } from "typeorm";
-import { BaseEntity } from "./base.entity";
 import { hexTransformer } from "../transformers/hex.transformer";
 
-@Entity({ name: "addressTvls" })
-@Index(["address"])
-export class AddressTvl extends BaseEntity {
+@Entity({ name: "referralPoints" })
+export class ReferralPoints {
   @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
   public readonly address: string;
 
-  @Column("decimal")
-  public tvl: number;
+  @Index()
+  @PrimaryColumn({ type: "bytea", transformer: hexTransformer })
+  public readonly pairAddress: string;
 
   @Column("decimal")
-  public referralTvl: number;
+  public point: number;
 }

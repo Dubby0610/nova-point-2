@@ -1,9 +1,10 @@
-  import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, OnModuleInit, OnModuleDestroy } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectMetric } from "@willsoto/nestjs-prometheus";
 import { Gauge } from "prom-client";
 import { DataSource, Driver } from "typeorm";
 import { DB_CONNECTION_POOL_SIZE_METRIC_NAME, DbConnectionPoolSizeMetricLabels } from "./metrics";
+import { InjectDataSource } from "@nestjs/typeorm";
 
 type ConnectionPoolInfo = {
   totalCount: number;
@@ -23,7 +24,7 @@ export class DbMetricsService implements OnModuleInit, OnModuleDestroy {
   constructor(
     @InjectMetric(DB_CONNECTION_POOL_SIZE_METRIC_NAME)
     private readonly dbConnectionPoolSizeMetric: Gauge<DbConnectionPoolSizeMetricLabels>,
-    private readonly dataSource: DataSource,
+    @InjectDataSource("lrt") private readonly dataSource: DataSource,
     configService: ConfigService
   ) {
     this.collectDbConnectionPoolMetricsInterval = configService.get<number>(
