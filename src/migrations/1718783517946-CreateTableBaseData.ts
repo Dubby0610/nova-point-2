@@ -75,7 +75,7 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
     const limit = 5000000;
     while (true) {
       const blockTokenPriceData = await refactorDataSource.query(
-        `SELECT * FROM "blockTokenPrice" WHERE "createdAt">='2024-06-20 00:00:00' limit ${limit} offset ${offset}`
+        `SELECT * FROM "blockTokenPrice" WHERE "createdAt">='2024-05-30 00:00:00' limit ${limit} offset ${offset}`
       );
       if (blockTokenPriceData.length === 0) {
         break;
@@ -100,7 +100,7 @@ export class CreateTableBaseData1718783517946 implements MigrationInterface {
     const limit2 = 5000000;
     while (true) {
       const blockAddressPointData = await refactorDataSource.query(
-        `SELECT * FROM "blockAddressPoint" WHERE "createdAt">='2024-06-20 00:00:00' limit ${limit2} offset ${offset2}`
+        `SELECT * FROM "blockAddressPoint" WHERE "createdAt">='2024-05-30 00:00:00' limit ${limit2} offset ${offset2}`
       );
       if (blockAddressPointData.length === 0) {
         break;
