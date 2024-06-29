@@ -17,16 +17,12 @@ import { BridgePointService } from "./points/bridgePoint.service";
 import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
-import { ProjectTvlService } from "./points/projectTvl.service";
+import { ReferralPointService } from "./points/referralPoints.service";
 import {
-  BatchRepository,
   BlockRepository,
   TokenRepository,
   TransferRepository,
-  LogRepository,
   BalanceRepository,
-  PointsRepository,
-  PointsHistoryRepository,
   AddressFirstDepositRepository,
   ProjectRepository,
   CacheRepository,
@@ -36,31 +32,23 @@ import {
   UserHoldingRepository,
   UserStakedRepository,
   UserWithdrawRepository,
+  PointsRepository,
+  BlockAddressPointRepository,
+  ReferralRepository,
+  BlockReferralPointsRepository,
+  ReferralPointsRepository,
   TvlProcessingRepository,
   TxProcessingRepository,
 } from "./repositories";
 import {
-  Batch,
   Block,
-  Transaction,
-  AddressTransaction,
-  TransactionReceipt,
-  Log,
   Token,
-  Address,
   Transfer,
-  AddressTransfer,
   Balance,
-  Point,
-  PointsHistory,
   Referral,
-  BlockAddressPoint,
-  Invite,
-  AddressTvl,
-  AddressTokenTvl,
-  GroupTvl,
   PointsOfLp,
   BlockAddressPointOfLp,
+  BlockAddressPoint,
   BalanceOfLp,
   Project,
   Cache,
@@ -71,92 +59,36 @@ import {
   UserHolding,
   UserStaked,
   UserWithdraw,
+  Point,
+  BlockReferralPoints,
+  ReferralPoints,
   TvlProcessingStatus,
   TxProcessingStatus
 } from "./entities";
-import {
-  typeOrmModuleOptions,
-  typeOrmReferModuleOptions,
-  typeOrmLrtModuleOptions,
-  typeOrmExplorerModuleOptions,
-} from "./typeorm.config";
+import { typeOrmReferModuleOptions, typeOrmLrtModuleOptions, typeOrmExplorerModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
 import { MetricsModule } from "./metrics";
 import { DbMetricsService } from "./dbMetrics.service";
 import { UnitOfWorkModule } from "./unitOfWork";
-import { DepositPointService } from "./points/depositPoint.service";
+import { BaseDataService } from "./points/baseData.service";
 import { BlockTokenPriceRepository } from "./repositories";
 import { BlockTokenPrice } from "./entities";
-import { BlockAddressPointRepository } from "./repositories";
-import { InviteRepository } from "./repositories";
-import { ReferrerRepository } from "./repositories";
-import { BlockGroupTvl } from "./entities/blockGroupTvl.entity";
-import { GroupTvlRepository } from "./repositories";
-import { AddressTvlRepository } from "./repositories";
 import { AddressFirstDeposit } from "./entities/addressFirstDeposit.entity";
 import { BalanceOfLpRepository } from "./repositories";
 import { PointsOfLpRepository } from "./repositories";
 import { BlockAddressPointOfLpRepository, TxDataOfPointsRepository } from "./repositories";
-import { TvlPointService } from "./points/tvlPoint.service";
-import { TxPointService } from "./points/txPoint.service";
 import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
 import { RedistributeBalanceService } from "./points/redistributeBalance.service";
+import { DirectPointService } from "./points/directPoint.service";
+import { TvlPointService } from "./points/tvlPoint.service";
+import { TxPointService } from "./points/txPoint.service";
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [config] }),
     ScheduleModule.forRoot(),
     PrometheusModule.register(),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: () => {
-        return {
-          ...typeOrmModuleOptions,
-          autoLoadEntities: true,
-          retryDelay: 3000, // to cover 3 minute DB failover window
-          retryAttempts: 70, // try to reconnect for 3.5 minutes,
-        };
-      },
-    }),
-    TypeOrmModule.forFeature([
-      Batch,
-      Block,
-      Transaction,
-      AddressTransaction,
-      TransactionReceipt,
-      Log,
-      Token,
-      Address,
-      AddressTransfer,
-      Balance,
-      Point,
-      PointsHistory,
-      BlockTokenPrice,
-      BlockAddressPoint,
-      BlockGroupTvl,
-      AddressTvl,
-      AddressTokenTvl,
-      AddressFirstDeposit,
-      GroupTvl,
-      Transfer,
-    ]),
-
-    TypeOrmModule.forRootAsync({
-      name: "refer",
-      imports: [ConfigModule],
-      useFactory: () => {
-        return {
-          ...typeOrmReferModuleOptions,
-          autoLoadEntities: true,
-          retryDelay: 3000, // to cover 3 minute DB failover window
-          retryAttempts: 70, // try to reconnect for 3.5 minutes,
-          name: 'refer'
-        };
-      },
-    }),
-    TypeOrmModule.forFeature([Invite, Referral], "refer"),
-
     TypeOrmModule.forRootAsync({
       name: "lrt",
       imports: [ConfigModule],
@@ -166,14 +98,41 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
           autoLoadEntities: true,
           retryDelay: 3000, // to cover 3 minute DB failover window
           retryAttempts: 70, // try to reconnect for 3.5 minutes,
-          name: 'lrt'
+        };
+      },
+    }),
+    TypeOrmModule.forRootAsync({
+      name: "explorer",
+      imports: [ConfigModule],
+      useFactory: () => {
+        return {
+          ...typeOrmExplorerModuleOptions,
+          autoLoadEntities: true,
+          retryDelay: 3000, // to cover 3 minute DB failover window
+          retryAttempts: 70, // try to reconnect for 3.5 minutes,
+        };
+      },
+    }),
+    TypeOrmModule.forRootAsync({
+      name: "refer",
+      imports: [ConfigModule],
+      useFactory: () => {
+        return {
+          ...typeOrmReferModuleOptions,
+          autoLoadEntities: true,
+          retryDelay: 3000, // to cover 3 minute DB failover window
+          retryAttempts: 70, // try to reconnect for 3.5 minutes,
         };
       },
     }),
     TypeOrmModule.forFeature(
       [
+        BlockTokenPrice,
+        AddressFirstDeposit,
         PointsOfLp,
         BlockAddressPointOfLp,
+        BlockAddressPoint,
+        Point,
         BalanceOfLp,
         Project,
         Cache,
@@ -184,26 +143,15 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
         UserHolding,
         UserStaked,
         UserWithdraw,
+        BlockReferralPoints,
+        ReferralPoints,
         TvlProcessingStatus,
         TxProcessingStatus
       ],
       "lrt"
     ),
-
-    TypeOrmModule.forRootAsync({
-      name: "explorer",
-      imports: [ConfigModule],
-      useFactory: () => {
-        return {
-          ...typeOrmExplorerModuleOptions,
-          autoLoadEntities: true,
-          retryDelay: 3000, // to cover 3 minute DB failover window
-          retryAttempts: 70, // try to reconnect for 3.5 minutes,
-          name: 'explorer'
-        };
-      },
-    }),
-    // TypeOrmModule.forFeature([Transfer], "explorer"),
+    TypeOrmModule.forFeature([Referral], "refer"),
+    TypeOrmModule.forFeature([Block, Token, Balance, Transfer], "explorer"),
 
     EventEmitterModule.forRoot(),
     MetricsModule,
@@ -228,35 +176,24 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
       inject: [ConfigService, HttpService],
     },
     TokenOffChainDataSaverService,
-    BatchRepository,
     BlockRepository,
     TokenRepository,
     TransferRepository,
     BalanceRepository,
-    LogRepository,
-    PointsRepository,
-    PointsHistoryRepository,
     Logger,
     RetryDelayProvider,
     DbMetricsService,
-    DepositPointService,
+    BaseDataService,
     BlockTokenPriceRepository,
-    BlockAddressPointRepository,
-    InviteRepository,
-    ReferrerRepository,
-    GroupTvlRepository,
-    AddressTvlRepository,
     AddressFirstDepositRepository,
     BalanceOfLpRepository,
     PointsOfLpRepository,
     BlockAddressPointOfLpRepository,
     AdapterService,
-    TvlPointService,
     ProjectRepository,
     CacheRepository,
     BridgePointService,
     BoosterService,
-    TxPointService,
     TxDataOfPointsRepository,
     BridgeActiveService,
     RedistributeBalanceService,
@@ -268,9 +205,17 @@ import { RedistributeBalanceService } from "./points/redistributeBalance.service
     UserHoldingRepository,
     UserStakedRepository,
     UserWithdrawRepository,
-    ProjectTvlService,
+    DirectPointService,
+    PointsRepository,
+    BlockAddressPointRepository,
+    ReferralRepository,
+    ReferralPointService,
+    BlockReferralPointsRepository,
+    ReferralPointsRepository,
     TvlProcessingRepository,
     TxProcessingRepository,
+    TvlPointService,
+    TxPointService,
   ],
 })
 export class AppModule { }

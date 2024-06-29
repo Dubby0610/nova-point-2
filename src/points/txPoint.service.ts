@@ -11,8 +11,8 @@ import {
   TxDataOfPointsRepository,
   TxProcessingRepository,
 } from "../repositories";
-import { AddressFirstDeposit, TransactionDataOfPoints, TxProcessingStatus } from "src/entities";
-import { UnitOfWork } from "src/unitOfWork";
+import { TransactionDataOfPoints, TxProcessingStatus } from "src/entities";
+import { LrtUnitOfWork } from "src/unitOfWork";
 
 
 @Injectable()
@@ -23,7 +23,7 @@ export class TxPointService extends Worker {
   private readonly txVol: string = "txVol";
 
   public constructor(
-    private readonly unitOfWork: UnitOfWork,
+    private readonly unitOfWork: LrtUnitOfWork,
     private readonly txDataOfPointsRepository: TxDataOfPointsRepository,
     private readonly pointsOfLpRepository: PointsOfLpRepository,
     private readonly blockAddressPointOfLpRepository: BlockAddressPointOfLpRepository,
@@ -43,7 +43,7 @@ export class TxPointService extends Worker {
     this.logger.log(`${TxPointService.name} start...`);
     try {
       const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
-      pendingProcessed.forEach(async status => { this.calculateTxNumPoint(status) })
+      await Promise.all(pendingProcessed.map(async status => { this.calculateTxNumPoint(status) }))
     } catch (error) {
       this.logger.error("Failed to calculate tx hold point", error.stack);
     }
@@ -161,16 +161,19 @@ export class TxPointService extends Worker {
 
       }
     }
-
-    this.unitOfWork.useTransaction(async () => {
-      const blockAddressPointArr = Array.from(blockAddressPointMap.values());
-      const addressPointArr = Array.from(addressPointMap.values());
-      await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
-      this.logger.log(`Finish txNum blockAddressPointArr, length: ${blockAddressPointArr.length}`);
-      await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
-      this.logger.log(`Finish txNum addressPointArr, length: ${addressPointArr.length}`);
-      this.txProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
+    return new Promise<void>((resolve) => {
+      this.unitOfWork.useTransaction(async () => {
+        const blockAddressPointArr = Array.from(blockAddressPointMap.values());
+        const addressPointArr = Array.from(addressPointMap.values());
+        await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
+        this.logger.log(`Finish txNum blockAddressPointArr, length: ${blockAddressPointArr.length}`);
+        await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
+        this.logger.log(`Finish txNum addressPointArr, length: ${addressPointArr.length}`);
+        this.txProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
+        resolve()
+      })
     })
+
   }
 
 

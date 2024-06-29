@@ -1,6 +1,5 @@
 import { Entity, Column, PrimaryColumn, Check, Index, JoinColumn, ManyToOne } from "typeorm";
 import { Block } from "./block.entity";
-import { Transaction } from "./transaction.entity";
 import { bigIntNumberTransformer } from "../transformers/bigIntNumber.transformer";
 import { stringTransformer } from "../transformers/string.transformer";
 import { hexTransformer } from "../transformers/hex.transformer";
@@ -44,10 +43,6 @@ export class Token extends BaseEntity {
 
   @Column({ type: "bigint", transformer: bigIntNumberTransformer })
   public readonly blockNumber: number;
-
-  @ManyToOne(() => Transaction)
-  @JoinColumn({ name: "transactionHash" })
-  private readonly _transaction: never;
 
   @Index()
   @Column({ type: "bytea", transformer: hexTransformer })

@@ -9,12 +9,15 @@ import { AdapterService } from "./points/adapter.service";
 import { TvlPointService } from "./points/tvlPoint.service";
 import { TxPointService } from "./points/txPoint.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
+import { BaseDataService } from "./points/baseData.service";
+import { ReferralPointService } from "./points/referralPoints.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
   private readonly logger: Logger;
 
   public constructor(
+    private readonly baseDataService: BaseDataService,
     private readonly bridgePointService: BridgePointService,
 
     private readonly bridgeActiveService: BridgeActiveService,
@@ -22,7 +25,8 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly adapterService: AdapterService,
     private readonly tvlPointService: TvlPointService,
     private readonly txPointService: TxPointService,
-    private readonly redistributePointService: RedistributePointService
+    private readonly redistributePointService: RedistributePointService,
+    private readonly referralPointService: ReferralPointService
   ) {
     this.logger = new Logger(AppService.name);
   }
@@ -49,12 +53,15 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   private startWorkers() {
-    const tasks = [this.bridgeActiveService.start(), this.bridgePointService.start()];
-    return Promise.all(tasks);
+    return Promise.all([
+      this.baseDataService.start(),
+      this.bridgeActiveService.start(),
+      this.bridgePointService.start(),
+    ]);
   }
 
   private stopWorkers() {
-    return Promise.all([this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
+    return Promise.all([this.baseDataService.stop(), this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 
   private async compensatePoints() { }

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { BaseRepository } from "./base.repository";
-import { UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { AddressFirstDeposit } from "../entities/addressFirstDeposit.entity";
 import { In } from "typeorm";
 

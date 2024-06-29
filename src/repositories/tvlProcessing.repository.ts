@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
-import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
+import { LrtUnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
 import { TvlProcessingStatus } from "../entities";
 
 
 @Injectable()
 export class TvlProcessingRepository extends BaseRepository<TvlProcessingStatus> {
-  public constructor(unitOfWork: UnitOfWork) {
+  public constructor(unitOfWork: LrtUnitOfWork) {
     super(TvlProcessingStatus, unitOfWork);
   }
 

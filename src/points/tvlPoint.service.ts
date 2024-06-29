@@ -12,10 +12,10 @@ import {
   ProjectRepository,
 } from "../repositories";
 import { TokenService } from "../token/token.service";
-import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./depositPoint.service";
+import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service";
 import { PointsOfLp, BalanceOfLp, TvlProcessingStatus } from "src/entities";
 import { BoosterService } from "../booster/booster.service";
-import { UnitOfWork } from "src/unitOfWork";
+import { LrtUnitOfWork } from "src/unitOfWork";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 
@@ -34,7 +34,7 @@ export class TvlPointService {
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
     private readonly boosterService: BoosterService,
     private readonly tvlProcessingRepository: TvlProcessingRepository,
-    private readonly unitOfWork: UnitOfWork
+    private readonly unitOfWork: LrtUnitOfWork
   ) {
     this.logger = new Logger(TvlPointService.name);
   }
@@ -44,7 +44,7 @@ export class TvlPointService {
     this.logger.log(`${TvlPointService.name} initialized`);
     try {
       const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
-      pendingProcessed.forEach(processingStatus => this.handleHoldPoint(processingStatus))
+      await Promise.all(pendingProcessed.map(processingStatus => this.handleHoldPoint(processingStatus)))
     } catch (error) {
       this.logger.error("Failed to calculate tvl hold point", error.stack);
     }
@@ -68,7 +68,7 @@ export class TvlPointService {
     this.logger.log(`Early bird multiplier: ${earlyBirdMultiplier}`);
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
     const [addressSet, userLpTvlMap] = await this.getAddressTvlMap(currentStatisticalBlock.number, projectName, tokenPriceMap);
-    let addresses = [...addressSet]
+    let addresses = [...addressSet];
 
     // get all first deposit time
     const addressFirstDepositMap = await this.addressFirstDepositRepository.getFirstDepositMapForAddresses(addresses);
@@ -92,7 +92,7 @@ export class TvlPointService {
     for (const key of userLpTvlMap.keys()) {
       const [address, pairAddress] = key.split("-");
       const addressTvl = userLpTvlMap.get(key);
-      if (!addressTvl) continue
+      if (!addressTvl) continue;
       // get the last multiplier before the block timestamp
       const addressFirstDepositTime = addressFirstDepositMap.get(address.toLowerCase());
 
@@ -126,20 +126,24 @@ export class TvlPointService {
       fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + newHoldPoint.toNumber();
       addressPointArr.push(fromAddressPoint);
     }
-    this.unitOfWork.useTransaction(async () => {
-      this.logger.log(`Start insert ${projectName} point into db for block: ${currentStatisticalBlock.number}`);
-      await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
-      this.logger.log(
-        `Finish ${projectName} blockAddressPointArr for block: ${currentStatisticalBlock.number}, length: ${blockAddressPointArr.length}`
-      );
-      await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
-      this.logger.log(
-        `Finish ${projectName} addressPointArr for block: ${currentStatisticalBlock.number}, length: ${addressPointArr.length}`
-      );
-      await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
-      await this.tvlProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
-      this.logger.log(`Finish ${projectName} point statistic for block: ${currentStatisticalBlock.number}`);
+    return new Promise<void>((resolve) => {
+      this.unitOfWork.useTransaction(async () => {
+        this.logger.log(`Start insert ${projectName} point into db for block: ${currentStatisticalBlock.number}`);
+        await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
+        this.logger.log(
+          `Finish ${projectName} blockAddressPointArr for block: ${currentStatisticalBlock.number}, length: ${blockAddressPointArr.length}`
+        );
+        await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
+        this.logger.log(
+          `Finish ${projectName} addressPointArr for block: ${currentStatisticalBlock.number}, length: ${addressPointArr.length}`
+        );
+        await this.pointsOfLpRepository.setHoldPointStatisticalBlockNumber(currentStatisticalBlock.number);
+        await this.tvlProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
+        this.logger.log(`Finish ${projectName} point statistic for block: ${currentStatisticalBlock.number}`);
+        resolve()
+      })
     })
+
   }
 
   async getAddressTvlMap(
@@ -175,9 +179,9 @@ export class TvlPointService {
       if (addressTvl.isZero()) {
         continue;
       }
-      const [address] = key.split('-')
+      const [address] = key.split("-");
       if (!addressSet.has(address)) {
-        addressSet.add(address)
+        addressSet.add(address);
       }
       userLpTvlMap.set(key, addressTvl);
     }
@@ -190,7 +194,7 @@ export class TvlPointService {
   async calculateAddressTvl(
     projectName: string,
     addressBalances: Partial<BalanceOfLp>[],
-    tokenPrices: Map<string, BigNumber>,
+    tokenPrices: Map<string, BigNumber>
   ): Promise<BigNumber> {
     let holdBasePoint: BigNumber = new BigNumber(0);
     for (const balanceInfo of addressBalances) {
@@ -206,8 +210,8 @@ export class TvlPointService {
       const tokenAmount = new BigNumber(balanceInfo.balance).dividedBy(new BigNumber(10).pow(tokenInfo.decimals));
       const tokenTvl = tokenAmount.multipliedBy(tokenPrice).dividedBy(ethPrice);
       // base point = Token Multiplier * Token Amount * Token Price / ETH_Price
-      const tokenMultiplier = this.tokenService.getPoolTokenBooster(projectName, tokenAddress)
-      const tokenHoldBasePoint = tokenTvl.multipliedBy(tokenMultiplier)
+      const tokenMultiplier = this.tokenService.getPoolTokenBooster(projectName, tokenAddress);
+      const tokenHoldBasePoint = tokenTvl.multipliedBy(tokenMultiplier);
       holdBasePoint = holdBasePoint.plus(tokenHoldBasePoint);
     }
     return holdBasePoint;

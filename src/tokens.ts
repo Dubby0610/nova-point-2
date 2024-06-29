@@ -1,5 +1,5 @@
-// Version 20240317-1448
-// Add Arbitrum rsETH, please note that cg does not have Arbitrum rsETH price
+// Version 20240620-1200
+// Add zkSync zk
 
 export default [
   {
@@ -63,6 +63,11 @@ export default [
         l1Address: "0x68f180fcce6836688e9084f035309e29bf0a2095",
         l2Address: "0xA011145882C392e17C468CF0A85d2b385eAeDdd9",
       },
+      {
+        chain: "scroll",
+        l1Address: "0x3C1BCa5a656e69edCD0D4E36BEbb3FcDAcA60Cf1",
+        l2Address: "0xCA1838084F8078EffF0E1FDEf79fad7e725A7F41",
+      },
     ],
     symbol: "wBTC",
     decimals: 8,
@@ -103,26 +108,6 @@ export default [
   {
     address: [
       {
-        chain: "Nova",
-        l1Address: "",
-        l2Address: "0xbEAf16cFD8eFe0FC97C2a07E349B9411F5dC272C",
-      },
-    ],
-    symbol: "solvBTC",
-    decimals: 18,
-    cgPriceId: "bitcoin",
-    type: "Native",
-    yieldType: ["NOVA Points"],
-    multipliers: [
-      {
-        multiplier: 1.5,
-        timestamp: 0,
-      },
-    ],
-  },
-  {
-    address: [
-      {
         chain: "Mantle",
         l1Address: "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
         l2Address: "0xc0eF13025202901aAD1659E048647659FD0fDa7A",
@@ -137,6 +122,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 0,
+      },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -176,6 +165,11 @@ export default [
         chain: "Optimism",
         l1Address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
         l2Address: "0x6aFb043b4955505fc9B2B965FCF6972Fa561291d",
+      },
+      {
+        chain: "scroll",
+        l1Address: "0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df",
+        l2Address: "0x003Dfe7ac51b36f184795448427fec9BA4947C02",
       },
     ],
     symbol: "USDT",
@@ -256,6 +250,11 @@ export default [
         l1Address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         l2Address: "0x70064389730D2BDBcF85D8565A855716Cda0Bfca",
       },
+      {
+        chain: "scroll",
+        l1Address: "0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4",
+        l2Address: "0x2d258E25ecB7861C95bB88a10BdF00FE7fB677Cc",
+      },
     ],
     decimals: 6,
     symbol: "USDC",
@@ -311,6 +310,10 @@ export default [
         multiplier: 2,
         timestamp: 0,
       },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -330,6 +333,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 0,
+      },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -356,6 +363,10 @@ export default [
         multiplier: 1.5,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -375,6 +386,30 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "zkSync",
+        l1Address: "0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E",
+        l2Address: "0x6D316F7bFC72D3924Ef37C782f066044A4347DA8",
+      },
+    ],
+    symbol: "ZK",
+    decimals: 18,
+    cgPriceId: "zksync",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 1,
+        timestamp: 1718856000,
       },
     ],
   },
@@ -396,6 +431,10 @@ export default [
         multiplier: 1.5,
         timestamp: 0,
       },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -415,6 +454,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -443,6 +486,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 1712224800,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -477,6 +524,10 @@ export default [
         multiplier: 1.5,
         timestamp: 1712224800,
       },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -490,6 +541,11 @@ export default [
         chain: "Manta",
         l1Address: "0xEc901DA9c68E90798BbBb74c11406A32A70652C3",
         l2Address: "0xDeEC33dc735Baf36b473598C33BCD077A0f32049",
+      },
+      {
+        chain: "scroll",
+        l1Address: "0x80137510979822322193FC997d400D5A6C747bf7",
+        l2Address: "0xAC8EDAfBa11FeC19C8C4Fe23de45b5f5CA6c7Ac2",
       },
     ],
     symbol: "Stone",
@@ -510,6 +566,10 @@ export default [
         multiplier: 1.5,
         timestamp: 1712224800,
       },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -529,6 +589,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -554,6 +618,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -584,6 +652,11 @@ export default [
         l1Address: "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
         l2Address: "0xBBAeCf969a0b239dc4A21C2489BdD16e17EAF4e8",
       },
+      {
+        chain: "scroll",
+        l1Address: "0xf610A9dfB7C89644979b4A0f27063E9e7d7Cda32",
+        l2Address: "0x63DD43944Fd31C84121121E30F565B0FA9fA0648",
+      },
     ],
     symbol: "wstETH",
     decimals: 18,
@@ -594,6 +667,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -615,6 +692,10 @@ export default [
         multiplier: 1.5,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -630,7 +711,7 @@ export default [
         l2Address: "0xb8FF1eD3CEC08533F32E85Bd44a37e8822DDd368",
       },
       {
-        chain: "Linea",
+        chain: "linea",
         l1Address: "0x15EEfE5B297136b8712291B632404B66A8eF4D25",
         l2Address: "0xd77c50384edA6018d4a9951521E9B77c2af1842E",
       },
@@ -644,6 +725,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 2,
+        timestamp: 1716825600,
       },
     ],
   },
@@ -780,6 +865,11 @@ export default [
         l1Address: "0x4186BFC76E2E237523CBC30FD220FE055156b41F",
         l2Address: "0x4A2da287deB06163fB4D77c52901683d69bD06f4",
       },
+      {
+        chain: "scroll",
+        l1Address: "0x65421ba909200b81640d98B979d07487C9781B66",
+        l2Address: "0xd6E8412457E6B99d998018a52868c897a878299c",
+      },
     ],
     symbol: "rsETH",
     decimals: 18,
@@ -794,6 +884,10 @@ export default [
       {
         multiplier: 1.2,
         timestamp: 1711015200,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -853,6 +947,10 @@ export default [
       {
         multiplier: 1.15,
         timestamp: 1712559600,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -1053,6 +1151,10 @@ export default [
         multiplier: 1,
         timestamp: 0,
       },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -1064,7 +1166,7 @@ export default [
       },
     ],
     decimals: 6,
-    symbol: "USDC",
+    symbol: "USDC.e",
     cgPriceId: "usd-coin",
     type: "Stablecoin",
     yieldType: ["NOVA Points", "Native Yield"],
@@ -1072,6 +1174,10 @@ export default [
       {
         multiplier: 1,
         timestamp: 0,
+      },
+      {
+        multiplier: 0,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -1113,6 +1219,10 @@ export default [
         multiplier: 1.5,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
@@ -1132,6 +1242,10 @@ export default [
       {
         multiplier: 1.5,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },
@@ -1153,12 +1267,16 @@ export default [
         multiplier: 1.5,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
     ],
   },
   {
     address: [
       {
-        chain: "Nova",
+        chain: "zkLinkNova",
         l1Address: "",
         l2Address: "0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169",
       },
@@ -1166,7 +1284,7 @@ export default [
     decimals: 18,
     symbol: "WETH",
     cgPriceId: "ethereum",
-    type: "zkLinkNova",
+    type: "Native",
     yieldType: ["NOVA Points"],
     multipliers: [
       {
@@ -1176,6 +1294,66 @@ export default [
       {
         multiplier: 5,
         timestamp: 1715594400,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "Ethereum",
+        l1Address: "0x004E9C3EF86bc1ca1f0bB5C7662861Ee93350568",
+        l2Address: "0x9f02D615bC201e596681ac707b7B9d6AF0a3fA77",
+      },
+    ],
+    decimals: 8,
+    symbol: "uniBTC",
+    cgPriceId: "bitcoin",
+    type: "LRT",
+    yieldType: ["NOVA Points", "Native Yield", "EL Points", "Bedrock Diamonds"],
+    multipliers: [
+      {
+        multiplier: 1,
+        timestamp: 0,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "zkLinkNova",
+        l1Address: "",
+        l2Address: "0x7118D8700B1b635CA37992294349Dc616fDC94Fe",
+      },
+    ],
+    decimals: 18,
+    symbol: "BBTC",
+    cgPriceId: "bitcoin",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
+      },
+    ],
+  },
+  {
+    address: [
+      {
+        chain: "zkLinkNova",
+        l1Address: "",
+        l2Address: "0x7F934E97101e2239b9cB438A4B07d9474AD51406",
+      },
+    ],
+    decimals: 18,
+    symbol: "BBUSD",
+    cgPriceId: "tether",
+    type: "Stablecoin",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 1,
+        timestamp: 1717516800,
       },
     ],
   },

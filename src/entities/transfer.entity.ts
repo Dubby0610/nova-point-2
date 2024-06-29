@@ -1,7 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index, PrimaryColumn } from "typeorm";
-import { CountableEntity } from "./countable.entity";
 import { Block } from "./block.entity";
-import { Transaction } from "./transaction.entity";
 import { TokenType } from "./token.entity";
 import { hash64HexTransformer } from "../transformers/hash64Hex.transformer";
 import { hexTransformer } from "../transformers/hex.transformer";
@@ -24,9 +22,9 @@ export enum TransferType {
 @Index(["transactionHash", "isInternal", "blockNumber", "logIndex"])
 @Index(["isInternal", "blockNumber", "logIndex"])
 @Index(["from", "type"])
-export class Transfer extends CountableEntity {
+export class Transfer {
   @PrimaryColumn({ generated: true, type: "bigint" })
-  public override readonly number: number;
+  public readonly number: number;
 
   @Column({ type: "bytea", transformer: hexTransformer })
   public readonly from: string;
@@ -40,11 +38,7 @@ export class Transfer extends CountableEntity {
 
   @Index()
   @Column({ type: "bigint", transformer: bigIntNumberTransformer })
-  public override readonly blockNumber: number;
-
-  @ManyToOne(() => Transaction)
-  @JoinColumn({ name: "transactionHash" })
-  private readonly _transaction: never;
+  public readonly blockNumber: number;
 
   @Column({ type: "bytea", nullable: true, transformer: hash64HexTransformer })
   public readonly transactionHash?: string;
