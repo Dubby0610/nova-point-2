@@ -42,4 +42,26 @@ export class BlockAddressPointRepository extends BaseRepository<BlockAddressPoin
       await entityManager.upsert<Point>(Point, receiverAddressPoint, ["address"]);
     });
   }
+
+  public async getAllAddressTotalPoint(
+    startTime: string,
+    endTime: string
+  ): Promise<
+    {
+      address: string;
+      pairAddress: string;
+      totalPoint: number;
+    }[]
+  > {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const result = await transactionManager.query(
+      `SELECT address, sum("depositPoint"+"holdPoint") AS "totalPoint" FROM "blockAddressPoint" WHERE ("createdAt">='${startTime}' AND "createdAt"<'${endTime}') or ("updatedAt">='${startTime}' AND "updatedAt"<'${endTime}') group by address;`
+    );
+    return result.map((item) => {
+      return {
+        address: "0x" + item.address.toString("hex"),
+        totalPoint: item.totalPoint,
+      };
+    });
+  }
 }

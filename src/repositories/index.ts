@@ -21,3 +21,5 @@ export * from "./blockAddressPoint.repository";
 export * from "./referral.repository";
 export * from "./referralPoints.repository";
 export * from "./blockReferralPoints.repository";
+export * from "./seasonTotalPoint.repository";
+export * from "./invites.repository";

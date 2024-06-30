@@ -18,6 +18,7 @@ import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 import { ReferralPointService } from "./points/referralPoints.service";
+import { SeasonTotalPointService } from "./points/seasonTotalPoint.service";
 import {
   BlockRepository,
   TokenRepository,
@@ -37,6 +38,8 @@ import {
   ReferralRepository,
   BlockReferralPointsRepository,
   ReferralPointsRepository,
+  InvitesRepository,
+  SeasonTotalPointRepository,
 } from "./repositories";
 import {
   Block,
@@ -60,6 +63,8 @@ import {
   Point,
   BlockReferralPoints,
   ReferralPoints,
+  Invites,
+  SeasonTotalPoint,
 } from "./entities";
 import { typeOrmReferModuleOptions, typeOrmLrtModuleOptions, typeOrmExplorerModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
@@ -142,6 +147,8 @@ import { DirectPointService } from "./points/directPoint.service";
         UserWithdraw,
         BlockReferralPoints,
         ReferralPoints,
+        Invites,
+        SeasonTotalPoint,
       ],
       "lrt"
     ),
@@ -210,6 +217,9 @@ import { DirectPointService } from "./points/directPoint.service";
     ReferralPointService,
     BlockReferralPointsRepository,
     ReferralPointsRepository,
+    SeasonTotalPointRepository,
+    SeasonTotalPointService,
+    InvitesRepository,
   ],
 })
 export class AppModule {}
