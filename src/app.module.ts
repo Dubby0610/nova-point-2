@@ -18,6 +18,7 @@ import { BridgeActiveService } from "./points/bridgeActive.service";
 import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 import { ReferralPointService } from "./points/referralPoints.service";
+import { SeasonTotalPointService } from "./points/seasonTotalPoint.service";
 import {
   BlockRepository,
   TokenRepository,
@@ -39,6 +40,8 @@ import {
   ReferralPointsRepository,
   TvlProcessingRepository,
   TxProcessingRepository,
+  InvitesRepository,
+  SeasonTotalPointRepository,
 } from "./repositories";
 import {
   Block,
@@ -63,7 +66,9 @@ import {
   BlockReferralPoints,
   ReferralPoints,
   TvlProcessingStatus,
-  TxProcessingStatus
+  TxProcessingStatus,
+  Invites,
+  SeasonTotalPoint,
 } from "./entities";
 import { typeOrmReferModuleOptions, typeOrmLrtModuleOptions, typeOrmExplorerModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
@@ -146,7 +151,9 @@ import { TxPointService } from "./points/txPoint.service";
         BlockReferralPoints,
         ReferralPoints,
         TvlProcessingStatus,
-        TxProcessingStatus
+        TxProcessingStatus,
+        Invites,
+        SeasonTotalPoint,
       ],
       "lrt"
     ),
@@ -216,6 +223,9 @@ import { TxPointService } from "./points/txPoint.service";
     TxProcessingRepository,
     TvlPointService,
     TxPointService,
+    SeasonTotalPointRepository,
+    SeasonTotalPointService,
+    InvitesRepository,
   ],
 })
 export class AppModule { }

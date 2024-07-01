@@ -22,5 +22,7 @@ export * from "./points.entity";
 export * from "./blockAddressPoint.entity";
 export * from "./referralPoints.entity";
 export * from "./blockReferralPoints.entity";
-export * from "./txProcessingStatus.entity"
-export * from "./tvlProcessingStatus.entity"
+export * from "./txProcessingStatus.entity";
+export * from "./tvlProcessingStatus.entity";
+export * from "./seasonTotalPoint.entity";
+export * from "./invites.entity";

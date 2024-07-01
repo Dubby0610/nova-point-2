@@ -11,6 +11,7 @@ import { TxPointService } from "./points/txPoint.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 import { BaseDataService } from "./points/baseData.service";
 import { ReferralPointService } from "./points/referralPoints.service";
+import { SeasonTotalPointService } from "./points/seasonTotalPoint.service";
 
 @Injectable()
 export class AppService implements OnModuleInit, OnModuleDestroy {
@@ -26,7 +27,8 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     private readonly tvlPointService: TvlPointService,
     private readonly txPointService: TxPointService,
     private readonly redistributePointService: RedistributePointService,
-    private readonly referralPointService: ReferralPointService
+    private readonly referralPointService: ReferralPointService,
+    private readonly seasonTotalPointService: SeasonTotalPointService
   ) {
     this.logger = new Logger(AppService.name);
   }

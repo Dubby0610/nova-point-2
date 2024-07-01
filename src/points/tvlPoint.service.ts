@@ -165,11 +165,11 @@ export class TvlPointService {
       const balance = balanceList[index];
       const { address, pairAddress } = balance
 
-      const key = `${address}-${pairAddress}`;
+      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
-        if (!alreadyCalculatedPointsKey.includes(key)) {
+        if (!alreadyCalculatedPointsKey.has(key)) {
           balanceMap.set(key, [balance]);
         }
       }
