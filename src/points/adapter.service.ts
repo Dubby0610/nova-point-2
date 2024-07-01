@@ -147,7 +147,7 @@ export class AdapterService extends Worker {
   }
 
   private async runCommand(command: string, cwd: string): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const [cmd, ...args] = command.split(' ');
       const child = spawn(cmd, args, { cwd, shell: true });
 
@@ -163,7 +163,7 @@ export class AdapterService extends Worker {
           resolve();
         } else {
           const error = new Error(`Command failed: ${command} ${stderr}`);
-          throw new Error(error.message);
+          reject(error);
         }
       });
     });
@@ -171,7 +171,7 @@ export class AdapterService extends Worker {
 
   private async genCSVDataToDb<T>(projectName: string, filePrefix: string, blockNumber: number): Promise<T[]> {
     const fileName = `${filePrefix}.${blockNumber}.csv`;
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       const outputPath = join(this.adaptersPath, projectName, this.outputPath, fileName);
       if (!existsSync(outputPath)) {
         this.logger.error(`${fileName} file not found`);
@@ -187,8 +187,15 @@ export class AdapterService extends Worker {
           if (results.length > 0) {
             resolve(results);
           }
-          this.logger.log(`Adapter:${projectName} ${fileName} successfully processed at ${blockNumber}, inserted ${results.length} rows into db.`);
-          await fs.unlinkSync(outputPath);
+          try {
+            this.logger.log(`Adapter:${projectName} ${fileName} successfully processed at ${blockNumber}, inserted ${results.length} rows into db.`);
+            await fs.unlinkSync(outputPath);
+          } catch (error) {
+            reject(error)
+          }
+        })
+        .on('error', (error) => {
+          reject(error);
         });
     })
   }
