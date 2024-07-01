@@ -43,30 +43,33 @@ export class TxNumPointService extends Worker {
   protected async runProcess(): Promise<void> {
     this.logger.log(`${TxNumPointService.name} start...`);
     try {
-      await this.handleCalculatePoint();
+      const lastBlockNumberStr = await this.cacheRepository.getValue(txNumberLastBlockNumberKey);
+      const lastBlockNumber = lastBlockNumberStr ? Number(lastBlockNumberStr) : 0;
+      const endBlockNumberStr = await this.cacheRepository.getValue(transactionDataBlockNumberKey);
+      const endBlockNumber = endBlockNumberStr ? Number(endBlockNumberStr) : 0;
+      this.logger.log(`${TxNumPointService.name} points from ${lastBlockNumber} to ${endBlockNumber}`);
+      await this.handleCalculatePoint(lastBlockNumber, endBlockNumber);
+      await this.cacheRepository.setValue(txNumberLastBlockNumberKey, endBlockNumberStr);
+      this.logger.log(`Finish ${TxNumPointService.name} end at ${endBlockNumberStr}`);
     } catch (error) {
       this.logger.error("Failed to calculate hold point", error.stack);
     }
   }
 
-  async handleCalculatePoint() {
+  async handleCalculatePoint(startBlock: number, endBlock: number) {
     if (this.projectNames.length == 0) {
       this.logger.log(`None project calculate ${this.type} points.`);
       return;
     }
-    const lastBlockNumberStr = await this.cacheRepository.getValue(txNumberLastBlockNumberKey);
-    const lastBlockNumber = lastBlockNumberStr ? Number(lastBlockNumberStr) : 0;
-    const endBlockNumberStr = await this.cacheRepository.getValue(transactionDataBlockNumberKey);
-    const endBlockNumber = endBlockNumberStr ? Number(endBlockNumberStr) : 0;
-    this.logger.log(`${TxNumPointService.name} points from ${lastBlockNumber} to ${endBlockNumber}`);
+
 
     const volDetails: TransactionDataOfPointsDto[] = await this.transactionDataOfPointsRepository.getListByBlockNumber(
-      lastBlockNumber,
-      endBlockNumber,
+      startBlock,
+      endBlock,
       this.projectNames
     );
     if (volDetails.length === 0) {
-      this.logger.error(`volume details is empty, from lastBlockNumber: ${lastBlockNumber}`);
+      this.logger.error(`volume details is empty, from ${startBlock} to ${endBlock}`);
       return;
     }
     // get all addresses
@@ -103,6 +106,8 @@ export class TxNumPointService extends Worker {
         addressPointMap.set(key, item);
       }
     }
+    const alreadyCalculatedPointsKey =
+      await this.blockAddressPointOfLpRepository.getUniquePointKeyByBlockRange(startBlock, endBlock, 'txNum');
 
     for (let i = 0; i < volDetails.length; i++) {
       const item = volDetails[i];
@@ -111,6 +116,10 @@ export class TxNumPointService extends Worker {
       const itemTimestamp = item.timestamp.getTime();
       const itemUserAddress = item.userAddress;
       const itemPoolAddress = item.contractAddress;
+      if (alreadyCalculatedPointsKey.has(`${itemUserAddress}-${itemPoolAddress}`)) {
+        continue;
+      }
+
       const basePoint = new BigNumber(1);
       // group booster
       const projectBooster = this.boosterService.getProjectBooster(itemProjectName, this.type);
@@ -163,7 +172,5 @@ export class TxNumPointService extends Worker {
     this.logger.log(`Finish ${TxNumPointService.name} blockAddressPointArr, length: ${blockAddressPointArr.length}`);
     await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
     this.logger.log(`Finish ${TxNumPointService.name} addressPointArr, length: ${addressPointArr.length}`);
-    await this.cacheRepository.setValue(txNumberLastBlockNumberKey, endBlockNumberStr);
-    this.logger.log(`Finish ${TxNumPointService.name} end at ${endBlockNumberStr}`);
   }
 }

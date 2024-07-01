@@ -3,6 +3,7 @@ import { BaseRepository } from "./base.repository";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BlockAddressPointOfLp, PointsOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
+import { Between } from "typeorm";
 
 @Injectable()
 export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddressPointOfLp> {
@@ -20,6 +21,15 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
       return blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}`);
     });
     return result;
+  }
+
+  public async getUniquePointKeyByBlockRange(startBlock: number, endBlock: number, type: string) {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const blockAddressPoints = await transactionManager.getRepository(BlockAddressPointOfLp).find({
+      where: { blockNumber: Between(startBlock, endBlock), type: type },
+      select: ["address", "pairAddress"],
+    });
+    return new Set(blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}`));
   }
 
   public async upsertUserPoints(
