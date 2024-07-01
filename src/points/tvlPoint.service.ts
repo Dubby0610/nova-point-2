@@ -1,5 +1,4 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { Cron } from "@nestjs/schedule";
 import BigNumber from "bignumber.js";
 import {
   PointsOfLpRepository,
@@ -16,11 +15,13 @@ import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service
 import { PointsOfLp, BalanceOfLp, TvlProcessingStatus } from "src/entities";
 import { BoosterService } from "../booster/booster.service";
 import { LrtUnitOfWork } from "src/unitOfWork";
+import { Worker } from "src/common/worker";
+import waitFor from "src/utils/waitFor";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 
 @Injectable()
-export class TvlPointService {
+export class TvlPointService extends Worker {
   private readonly logger: Logger;
 
   public constructor(
@@ -36,15 +37,21 @@ export class TvlPointService {
     private readonly tvlProcessingRepository: TvlProcessingRepository,
     private readonly unitOfWork: LrtUnitOfWork
   ) {
+    super()
     this.logger = new Logger(TvlPointService.name);
   }
 
-  @Cron("0 * * * * *")
   public async runProcess(): Promise<void> {
-    this.logger.log(`${TvlPointService.name} initialized`);
     try {
+      this.logger.log(`${TvlPointService.name} initialized`);
       const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
       await Promise.all(pendingProcessed.map(processingStatus => this.handleHoldPoint(processingStatus)))
+
+      await waitFor(() => !this.currentProcessPromise, 10000, 10000);
+      if (!this.currentProcessPromise) {
+        return;
+      }
+      return this.runProcess();
     } catch (error) {
       this.logger.error("Failed to calculate tvl hold point", error.stack);
     }
@@ -52,11 +59,11 @@ export class TvlPointService {
 
   async handleHoldPoint(status: TvlProcessingStatus) {
     const { blockNumber, projectName } = status
-    // const currentStatisticalBlock = await this.blockRepository.getLastBlock({
-    //   where: { number: exeBlockNumber },
-    //   select: { number: true, timestamp: true },
-    // });
-    const currentStatisticalBlock = { number: blockNumber, timestamp: new Date() }
+    const currentStatisticalBlock = await this.blockRepository.getLastBlock({
+      where: { number: blockNumber },
+      select: { number: true, timestamp: true },
+    });
+    // const currentStatisticalBlock = { number: blockNumber, timestamp: new Date() }
     if (!currentStatisticalBlock) {
       this.logger.log(`No block of lp found, block number : ${blockNumber}`);
       return;

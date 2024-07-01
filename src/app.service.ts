@@ -59,7 +59,9 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
       this.baseDataService.start(),
       this.bridgeActiveService.start(),
       this.bridgePointService.start(),
-      this.adapterService.start()
+      this.adapterService.start(),
+      this.tvlPointService.start(),
+      this.txPointService.start()
     ]);
   }
 

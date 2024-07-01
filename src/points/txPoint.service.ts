@@ -1,7 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
 import BigNumber from "bignumber.js";
-import { Cron } from "@nestjs/schedule";
 import { ConfigService } from "@nestjs/config";
 import { BoosterService } from "../booster/booster.service";
 import {
@@ -13,6 +12,7 @@ import {
 } from "../repositories";
 import { TransactionDataOfPoints, TxProcessingStatus } from "src/entities";
 import { LrtUnitOfWork } from "src/unitOfWork";
+import waitFor from "src/utils/waitFor";
 
 
 @Injectable()
@@ -38,12 +38,17 @@ export class TxPointService extends Worker {
     this.projectTxBooster = this.configService.get('projectTxBooster')
   }
 
-  @Cron("0 2,10,18 * * *")
   protected async runProcess(): Promise<void> {
-    this.logger.log(`${TxPointService.name} start...`);
     try {
+      this.logger.log(`${TxPointService.name} start...`);
       const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
       await Promise.all(pendingProcessed.map(async status => { this.calculateTxNumPoint(status) }))
+
+      await waitFor(() => !this.currentProcessPromise, 10000, 10000);
+      if (!this.currentProcessPromise) {
+        return;
+      }
+      return this.runProcess();
     } catch (error) {
       this.logger.error("Failed to calculate tx hold point", error.stack);
     }
