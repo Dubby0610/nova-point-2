@@ -112,6 +112,8 @@ export class AdapterService extends Worker {
       const record = new TvlProcessingStatus();
       record.projectName = projectName;
       record.blockNumber = currentBlock.number;
+      record.adapterProcessed = false;
+      record.pointProcessed = false;
       await this.tvlProcessingRepository.upsertStatus(record);
     } catch (error) {
       throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
@@ -130,6 +132,8 @@ export class AdapterService extends Worker {
       record.projectName = projectName;
       record.blockNumberStart = processedStatus ? processedStatus.blockNumberEnd + 1 : Number(prevBlockNumberInCache) + 1
       record.blockNumberEnd = currentBlock.number
+      record.adapterProcessed = false;
+      record.pointProcessed = false;
       await this.txProcessingRepository.upsertStatus(record);
     } catch (error) {
       throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
