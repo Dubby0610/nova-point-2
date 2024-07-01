@@ -27,6 +27,7 @@ export class ReferralPointService extends Worker {
     private readonly configService: ConfigService
   ) {
     super();
+    this.logger = new Logger(ReferralPointService.name);
   }
 
   @Cron("30 2,10,18 * * *")

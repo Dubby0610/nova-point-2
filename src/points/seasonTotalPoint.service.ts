@@ -33,6 +33,7 @@ export class SeasonTotalPointService extends Worker {
     private readonly configService: ConfigService
   ) {
     super();
+    this.logger = new Logger(SeasonTotalPointService.name);
   }
 
   @Cron("0 3,11,19 * * *")
