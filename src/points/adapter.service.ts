@@ -8,15 +8,39 @@ import fs from "fs";
 import { Cron } from "@nestjs/schedule";
 import { ConfigService } from "@nestjs/config";
 import { TxProcessingStatus, TvlProcessingStatus } from "src/entities";
+import { Worker } from "src/common/worker";
+import waitFor from "src/utils/waitFor";
 
 const OTHER_CHAINS_ETH_ADDRESS = "0x0000000000000000000000000000000000000000";
 const NOVA_CHAIN_ETH_ADDRESS = "0x000000000000000000000000000000000000800a";
 
+interface UserTVLData {
+  userAddress: string;
+  poolAddress: string;
+  tokenAddress: string;
+  blockNumber: string;
+  balance: string;
+  timestamp: string;
+}
+
+interface UserTransactionData {
+  timestamp: string;
+  userAddress: string;
+  contractAddress: string;
+  tokenAddress: string;
+  decimals: string;
+  price: string;
+  quantity: string;
+  txHash: string;
+  nonce: string;
+  blockNumber: string;
+}
+
 @Injectable()
-export class AdapterService {
+export class AdapterService extends Worker {
   private readonly logger: Logger;
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
-  private readonly outputFileName = "/data";
+  private readonly outputPath = "/data";
   private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber';
   private readonly tvlFilePrefix = 'tvl';
   private readonly txFilePrefix = 'tx';
@@ -34,51 +58,92 @@ export class AdapterService {
     private readonly tvlProcessingRepository: TvlProcessingRepository,
     private readonly txProcessingRepository: TxProcessingRepository
   ) {
+    super()
     this.logger = new Logger(AdapterService.name);
     this.tvlPaths = Object.keys(this.configService.get('projectTokenBooster'))
     this.txPaths = Object.keys(this.configService.get('projectTxBooster')).flatMap(key => Object.keys(this.configService.get('projectTxBooster')[key]));
   }
 
   @Cron("0 2,10,18 * * *")
-  public async runProcess(): Promise<void> {
-    this.logger.log(`${AdapterService.name} initialized`);
+  public async runTask(): Promise<void> {
     try {
+      this.logger.log(`${AdapterService.name} initialized`);
       const dirs = await this.getAllDirectories();
-      await Promise.all(dirs.map((dir) => {
-        this.processDirectory(dir)
+
+      await Promise.all(dirs.map(async (dir) => {
+        this.updateTvlProcessStatus(dir)
+        this.updateTxProcessStatus(dir)
       }));
     } catch (error) {
-      this.logger.error("Failed to initialize or process tasks", error.stack);
+      this.logger.error(`Error in runTask ${error.stack}`)
+    }
+  }
+
+  protected async runProcess(): Promise<void> {
+    try {
+      this.logger.log(`${AdapterService.name} initialized`);
+      const dirs = await this.getAllDirectories();
+      await Promise.all(dirs.map(async (dir) => {
+        await this.initDirectory(dir);
+        await Promise.all([this.pipeTvlData(dir), this.pipeTxData(dir)])
+      }));
+
+      await waitFor(() => !this.currentProcessPromise, 30000, 30000);
+      if (!this.currentProcessPromise) {
+        return;
+      }
+      return this.runProcess();
+    } catch (error) {
+      this.logger.error(`Error in runProcess ${error.stack}`)
     }
   }
 
   private async getAllDirectories(): Promise<string[]> {
-    const files = await promisesFs.readdir(this.adaptersPath, { withFileTypes: true });
-    return files.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
+    const files = await promisesFs.readdir(this.adaptersPath);
+    return files.filter(dir => dir !== 'example');
   }
 
-  // public async compensatePointsData(name: string, curBlockNumber: number, lastBlockNumber: number) {
-  //   await this.processDirectory(name);
-  //   this.logger.log(`compensatePointsData ${name} at block ${curBlockNumber}`)
-  // }
-
-  private async processDirectory(dir: string): Promise<void> {
-    await this.initDirectory(dir);
-    await Promise.all([this.pipeTvlData(dir), this.pipeTxData(dir)])
-  }
-
-  private async initDirectory(dir: string): Promise<void> {
+  private async updateTvlProcessStatus(projectName: string) {
     try {
-      this.logger.log(`initDirectory start ${dir}`);
-      await this.runCommand(`npm i && npm run compile`, join(this.adaptersPath, dir, 'execution'));
-      this.logger.log(`initDirectory finished ${dir}`);
+      if (!this.tvlPaths.includes(projectName)) return
+      const currentBlock = await this.blockRepository.getLastBlock({
+        select: { number: true },
+      })
+      const record = new TvlProcessingStatus();
+      record.projectName = projectName;
+      record.blockNumber = currentBlock.number;
+      await this.tvlProcessingRepository.upsertStatus(record);
     } catch (error) {
-      this.logger.error(`initDirectory error ${error.stack}`)
+      throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
     }
   }
 
+  private async updateTxProcessStatus(projectName: string) {
+    try {
+      if (!this.txPaths.includes(projectName)) return
+      const currentBlock = await this.blockRepository.getLastBlock({
+        select: { number: true },
+      })
+      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
+      const processedStatus = await this.txProcessingRepository.findOneBy({ projectName })
+      const record = new TxProcessingStatus();
+      record.projectName = projectName;
+      record.blockNumberStart = processedStatus ? processedStatus.blockNumberEnd + 1 : Number(prevBlockNumberInCache) + 1
+      record.blockNumberEnd = currentBlock.number
+      await this.txProcessingRepository.upsertStatus(record);
+    } catch (error) {
+      throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
+    }
+  }
+
+  private async initDirectory(dir: string): Promise<void> {
+    this.logger.log(`initDirectory start ${dir}`);
+    await this.runCommand(`npm i && npm run compile`, join(this.adaptersPath, dir, 'execution'));
+    this.logger.log(`initDirectory finished ${dir}`);
+  }
+
   private async runCommand(command: string, cwd: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const [cmd, ...args] = command.split(' ');
       const child = spawn(cmd, args, { cwd, shell: true });
 
@@ -93,153 +158,127 @@ export class AdapterService {
           this.logger.log(`Command successfully: ${command}!`);
           resolve();
         } else {
-          const error = new Error(`Command failed: ${command}\n${stderr}`);
-          this.logger.error(error.message);
-          reject(error);
+          const error = new Error(`Command failed: ${command} ${stderr}`);
+          throw new Error(error.message);
         }
       });
     });
   }
 
-  private async saveCSVDataToDb(fileName: string, dir: string, blockNumber: number, insertFunction: (rows: any[], dir: string) => Promise<void>): Promise<void> {
+  private async genCSVDataToDb<T>(projectName: string, filePrefix: string, blockNumber: number): Promise<T[]> {
+    const fileName = `${filePrefix}.${blockNumber}.csv`;
     return new Promise(resolve => {
-      const outputPath = join(this.adaptersPath, dir, this.outputFileName, fileName);
+      const outputPath = join(this.adaptersPath, projectName, this.outputPath, fileName);
       if (!existsSync(outputPath)) {
         this.logger.error(`${fileName} file not found`);
-        resolve()
+        resolve([])
         return;
       }
 
-      const results = [];
+      const results: T[] = [];
       fs.createReadStream(outputPath)
         .pipe(csv())
         .on("data", (row) => results.push(row))
         .on("end", async () => {
           if (results.length > 0) {
-            await insertFunction(results, dir);
+            resolve(results);
           }
-          fs.unlinkSync(outputPath);
-          this.logger.log(`Adapter:${dir} ${fileName} successfully processed at ${blockNumber}, inserted ${results.length} rows into db.`);
-          resolve()
+          this.logger.log(`Adapter:${projectName} ${fileName} successfully processed at ${blockNumber}, inserted ${results.length} rows into db.`);
+          await fs.unlinkSync(outputPath);
         });
     })
   }
 
   private async pipeTvlData(dir: string) {
-    if (!this.tvlPaths.includes(dir)) {
-      return
-    }
-    // const currentBlock = await this.blockRepository.getLastBlock({
-    //   select: { number: true, timestamp: true },
-    // }) 
+    if (!this.tvlPaths.includes(dir)) return
+
     this.logger.log(`Start process ${dir} tvl data`)
-    const currentBlock = { number: 3189935, timestamp: Math.floor(new Date().getTime() / 1000) };
-    const record = new TvlProcessingStatus();
-    record.projectName = dir;
-    record.blockNumber = currentBlock.number
-    const status = await this.tvlProcessingRepository.upsertStatus(record);
-    if (!status.adapterProcessed) {
-      await this.processTvlData(dir, record.blockNumber)
-      await this.tvlProcessingRepository.upsertStatus({ ...record, adapterProcessed: true })
-    }
+    const pendingProcess = await this.tvlProcessingRepository.find({ where: { adapterProcessed: false, projectName: dir } });
+    await Promise.all(pendingProcess.map(async status => {
+      await this.processTvlData(dir, status.blockNumber)
+      await this.tvlProcessingRepository.upsertStatus({ ...status, adapterProcessed: true })
+    }))
+    this.logger.log(`End process ${dir} tvl data`)
   }
 
   private async processTvlData(dir: string, curBlockNumber: number) {
     const tvlCommand = `npm run adapter:tvl -- ${dir} ${this.tvlFilePrefix} ${curBlockNumber}`;
     await this.runCommand(tvlCommand, this.adaptersPath);
-    await this.saveCSVDataToDb(`${this.tvlFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTVLDataToDb.bind(this));
-    this.logger.log(`finish processing ${dir} tvl data!`)
+    const csvData = await this.genCSVDataToDb<UserTVLData>(dir, this.txFilePrefix, curBlockNumber);
+    const insertedData = await this.insertTVLDataToDb(csvData)
+    await this.updateTvlProjects(insertedData, dir)
+    this.logger.log(`Finish processing ${dir} tvl data at ${curBlockNumber}!`)
   }
 
-  private async insertTVLDataToDb(rows: any[], dir: string): Promise<void> {
-    const poolAddresses: string[] = [];
+  private async insertTVLDataToDb(rows: UserTVLData[]) {
     const dataToInsert = rows.map((row) => {
-      if (!poolAddresses.includes(row.poolAddress)) {
-        poolAddresses.push(row.poolAddress);
-      }
-      let tokenAddress = row.tokenAddress;
-      if (row.tokenAddress === OTHER_CHAINS_ETH_ADDRESS) {
-        tokenAddress = NOVA_CHAIN_ETH_ADDRESS;
-      }
       return {
         address: row.userAddress,
-        tokenAddress: tokenAddress,
+        tokenAddress: this.mapETHTokenAddress(row.tokenAddress),
         pairAddress: row.poolAddress,
-        blockNumber: row.blockNumber,
+        blockNumber: Number(row.blockNumber),
         balance: row.balance,
       };
     });
-    for (const poolAddress of poolAddresses) {
-      await this.projectRepository.upsert({ pairAddress: poolAddress, name: dir }, true, ["pairAddress"]);
-    }
+
     await this.balanceOfLpRepository.addManyIgnoreConflicts(dataToInsert);
+    return dataToInsert;
   }
 
   private async pipeTxData(dir: string) {
     if (!this.txPaths.includes(dir)) return
-    // const currentBlock = await this.blockRepository.getLastBlock({
-    //   select: { number: true, timestamp: true },
-    // })
-    try {
-      const currentBlock = { number: 3189935, timestamp: Math.floor(new Date().getTime() / 1000) };
-      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
-      const processedStatus = await this.txProcessingRepository.findOneBy({ projectName: dir })
 
-      if (!!processedStatus && processedStatus.adapterProcessed === true && processedStatus.pointProcessed === false) {
-        return
-      }
-      this.logger.log(`Start process ${dir} tx data`)
-      const record = new TxProcessingStatus();
-      record.projectName = dir;
-      record.blockNumberStart = !processedStatus ? Number(prevBlockNumberInCache) + 1 : processedStatus.blockNumberEnd + 1
-      record.blockNumberEnd = currentBlock.number
-      record.pointProcessed = false
-      record.adapterProcessed = false
-      const status = await this.txProcessingRepository.upsertStatus(record);
-      if (!status.adapterProcessed) {
-        await this.processTxData(dir, record.blockNumberStart, record.blockNumberEnd)
-        await this.txProcessingRepository.upsertStatus({ ...record, adapterProcessed: true });
-      }
-
-    } catch (error) {
-      this.logger.error(`processTxData error in ${dir}:`, error.stack);
-    }
+    this.logger.log(`Start process ${dir} tx data`)
+    const pendingProcess = await this.txProcessingRepository.find({ where: { adapterProcessed: false, projectName: dir } });
+    await Promise.all(pendingProcess.map(async status => {
+      await this.processTxData(dir, status.blockNumberStart, status.blockNumberEnd)
+      await this.txProcessingRepository.upsertStatus({ ...status, adapterProcessed: true })
+    }))
+    this.logger.log(`End process ${dir} tx data`)
   }
 
   private async processTxData(dir: string, prevBlockNumber: number, curBlockNumber: number) {
     const txCommand = `npm run adapter:tx -- ${dir} ${this.txFilePrefix} ${prevBlockNumber} ${curBlockNumber}`;
     await this.runCommand(txCommand, this.adaptersPath);
-    await this.saveCSVDataToDb(`${this.txFilePrefix}.${curBlockNumber}.csv`, dir, curBlockNumber, this.insertTXDataToDb.bind(this));
+    const csvData = await this.genCSVDataToDb<UserTransactionData>(dir, this.txFilePrefix, curBlockNumber);
+    const insertedData = await this.insertTXDataToDb(csvData)
+    await this.updateTxProjects(insertedData, dir)
+    this.logger.log(`Finish processing ${dir} tx data from ${prevBlockNumber} to ${curBlockNumber}!`)
   }
 
-
-
-  private async insertTXDataToDb(rows: any[], dir: string): Promise<void> {
-    const poolAddresses: string[] = [];
+  private async insertTXDataToDb(rows: UserTransactionData[]) {
     const dataToInsert = rows.map((row) => {
-      if (!poolAddresses.includes(row.contractAddress)) {
-        poolAddresses.push(row.contractAddress);
-      }
-      let tokenAddress = row.tokenAddress;
-      if (row.tokenAddress === OTHER_CHAINS_ETH_ADDRESS) {
-        tokenAddress = NOVA_CHAIN_ETH_ADDRESS;
-      }
       return {
-        timestamp: new Date(row.timestamp * 1000),
+        timestamp: new Date(Number(row.timestamp) * 1000),
         userAddress: row.userAddress,
         contractAddress: row.contractAddress,
-        tokenAddress: tokenAddress,
-        decimals: row.decimals,
+        tokenAddress: this.mapETHTokenAddress(row.tokenAddress),
+        decimals: Number(row.decimals),
         price: row.price,
         quantity: row.quantity,
         txHash: row.txHash,
         nonce: row.nonce,
-        blockNumber: row.blockNumber,
+        blockNumber: Number(row.blockNumber),
       };
     });
-    for (const poolAddress of poolAddresses) {
-      await this.projectRepository.upsert({ pairAddress: poolAddress, name: dir }, true, ["pairAddress"]);
-    }
     await this.transactionDataOfPointsRepository.addManyIgnoreConflicts(dataToInsert);
+
+    return dataToInsert
+  }
+
+  private mapETHTokenAddress = (tokenAddress: string) => {
+    return tokenAddress === OTHER_CHAINS_ETH_ADDRESS ? NOVA_CHAIN_ETH_ADDRESS : tokenAddress
+  }
+
+  private updateTvlProjects = async (rows: Awaited<ReturnType<typeof this.insertTVLDataToDb>>, projectName: string) => {
+    const pairAddresses = rows.map(i => i.pairAddress);
+    const uniquePairAddresses = [...new Set(pairAddresses)]
+    await this.projectRepository.addManyIgnoreConflicts(uniquePairAddresses.map(item => ({ pairAddress: item, dir: projectName })))
+  }
+
+  private updateTxProjects = async (rows: Awaited<ReturnType<typeof this.insertTXDataToDb>>, projectName: string) => {
+    const pairAddresses = rows.map(i => i.contractAddress);
+    const uniquePairAddresses = pairAddresses
+    await this.projectRepository.addManyIgnoreConflicts(uniquePairAddresses.map(item => ({ pairAddress: item, dir: projectName })))
   }
 }
