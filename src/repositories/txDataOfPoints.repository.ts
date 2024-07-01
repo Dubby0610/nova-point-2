@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
-import { TransactionDataOfPoints } from "../entities";
+import { Project, TransactionDataOfPoints } from "../entities";
 import { Between, MoreThanOrEqual } from "typeorm";
 export interface TransactionDataOfPointsDto {
   userAddress: string;
@@ -54,16 +54,18 @@ export class TxDataOfPointsRepository extends BaseRepository<TransactionDataOfPo
     });
   }
 
-  public async getTxsByBlockNumber(
+  public async getProjectTxsByBlockNumber(
+    projectName: string,
     startBlockNumber: number,
     endBlockNumber: number
   ) {
     const transactionManager = this.unitOfWork.getTransactionManager();
-    const result = await transactionManager.find(TransactionDataOfPoints, {
-      where: {
-        blockNumber: Between(startBlockNumber, endBlockNumber),
-      }
-    })
+    const result = await transactionManager
+      .createQueryBuilder(TransactionDataOfPoints, "tdp")
+      .innerJoin(Project, "project", "tdp.contractAddress = project.pairAddress")
+      .where("project.name = :projectName", { projectName })
+      .andWhere("tdp.blockNumber BETWEEN :startBlockNumber AND :endBlockNumber", { startBlockNumber, endBlockNumber })
+      .getMany();
     return result
   }
 

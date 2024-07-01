@@ -83,7 +83,8 @@ export class TxPointService extends Worker {
     const { blockNumberStart, blockNumberEnd, projectName } = status
     this.logger.log(`txNum points from ${blockNumberStart} to ${blockNumberEnd}`);
 
-    const txData = await this.txDataOfPointsRepository.getTxsByBlockNumber(
+    const txData = await this.txDataOfPointsRepository.getProjectTxsByBlockNumber(
+      projectName,
       blockNumberStart,
       blockNumberEnd,
     );
