@@ -41,10 +41,10 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // second params is utc+8
     // await this.tvlPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
     // this.compensatePoints()
-    await this.seasonTotalPointService.handlePoint();
     this.redistributePointService.runProcess();
 
     this.startWorkers();
+    this.compensatePoints()
   }
 
   public onModuleDestroy() {
@@ -72,5 +72,15 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     return Promise.all([this.baseDataService.stop(), this.bridgeActiveService.stop(), this.bridgePointService.stop()]);
   }
 
-  private async compensatePoints() {}
+  private async compensatePoints() {
+    await this.adapterService.compensatePointsData('logx', 3412767, 2411133)
+    await this.adapterService.compensatePointsData('eddy', 3412767, 2411133)
+    await this.adapterService.compensatePointsData('agx', 3412767, 2411133)
+    await this.adapterService.compensatePointsData('wagmi', 3412767, 2411133)
+    await this.adapterService.compensatePointsData('zkdx', 3412767, 2411133)
+    await this.adapterService.compensatePointsData('rubic', 3412767, 2411133)
+    await this.adapterService.compensatePointsData('allspark', 3412767, 2411133)
+    await this.txNumPointService.handleCalculatePoint(2411133, 3412767)
+    await this.txVolPointService.handleCalculatePoint(2411133, 3412767)
+  }
 }
