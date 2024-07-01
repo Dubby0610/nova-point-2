@@ -116,7 +116,7 @@ export class TxNumPointService extends Worker {
       const itemTimestamp = item.timestamp.getTime();
       const itemUserAddress = item.userAddress;
       const itemPoolAddress = item.contractAddress;
-      if (alreadyCalculatedPointsKey.has(`${itemUserAddress}-${itemPoolAddress}`)) {
+      if (alreadyCalculatedPointsKey.has(`${itemUserAddress}-${itemPoolAddress}-${itemBlockNumber}`)) {
         continue;
       }
 

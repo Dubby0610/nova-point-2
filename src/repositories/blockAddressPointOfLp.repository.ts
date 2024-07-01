@@ -11,25 +11,25 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
     super(BlockAddressPointOfLp, unitOfWork);
   }
 
-  public async getBlockAddressPointKeyByBlock(block: number): Promise<string[]> {
+  public async getBlockAddressPointKeyByBlock(block: number) {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.transaction(async (entityManager) => {
       const blockAddressPoints = await entityManager.getRepository(BlockAddressPointOfLp).find({
         where: { blockNumber: block },
-        select: ["address", "pairAddress"],
+        select: ["address", "pairAddress", 'blockNumber'],
       });
-      return blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}`);
+      return blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}-${point.blockNumber}`);
     });
-    return result;
+    return new Set(result);
   }
 
   public async getUniquePointKeyByBlockRange(startBlock: number, endBlock: number, type: string) {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const blockAddressPoints = await transactionManager.getRepository(BlockAddressPointOfLp).find({
       where: { blockNumber: Between(startBlock, endBlock), type: type },
-      select: ["address", "pairAddress"],
+      select: ["address", "pairAddress", "blockNumber"],
     });
-    return new Set(blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}`));
+    return new Set(blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}-${point.blockNumber}`));
   }
 
   public async upsertUserPoints(

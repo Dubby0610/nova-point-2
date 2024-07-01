@@ -166,8 +166,7 @@ export class TvlPointService extends Worker {
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(
-      `Finish hold point statistic for block: ${currentStatisticalBlock.number}, elapsed time: ${
-        statisticElapsedTime / 1000
+      `Finish hold point statistic for block: ${currentStatisticalBlock.number}, elapsed time: ${statisticElapsedTime / 1000
       } seconds`
     );
   }
@@ -192,11 +191,11 @@ export class TvlPointService extends Worker {
       const address = hexTransformer.from(balance.address);
       const pairAddress = hexTransformer.from(balance.pairAddress);
 
-      const key = `${address}-${pairAddress}`;
+      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
-        if (!alreadyCalculatedPointsKey.includes(key)) {
+        if (!alreadyCalculatedPointsKey.has(key)) {
           balanceMap.set(key, [balance]);
         }
       }
