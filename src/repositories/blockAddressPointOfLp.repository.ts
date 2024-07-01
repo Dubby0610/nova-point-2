@@ -15,7 +15,7 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.transaction(async (entityManager) => {
       const blockAddressPoints = await entityManager.getRepository(BlockAddressPointOfLp).find({
-        where: { blockNumber: block },
+        where: { blockNumber: block, type: 'tvl' },
         select: ["address", "pairAddress", 'blockNumber'],
       });
       return blockAddressPoints.map((point) => `${point.address}-${point.pairAddress}-${point.blockNumber}`);
