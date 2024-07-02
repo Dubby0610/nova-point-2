@@ -20,7 +20,7 @@ export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddress
         where: { blockNumber: block, pairAddress: In(pairAddresses), type: 'tvl' },
         select: ["address", "pairAddress"]
       })
-      return blockAddressPoints.map(point => `${point.address}-${point.pairAddress}`);
+      return blockAddressPoints.map(point => `${point.address}-${point.pairAddress}-${point.blockNumber}`);
     });
     return new Set(result);
   }
