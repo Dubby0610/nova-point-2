@@ -76,7 +76,7 @@ export class ReferralPointService extends Worker {
       const referralAddresses = addressReferralMap.get(address);
       for (const referralAddress of referralAddresses) {
         const referralStakePointArr = referralStakePointMap.get(referralAddress);
-        if (referralStakePointArr.length > 0) {
+        if (referralStakePointArr?.length > 0) {
           for (const referralStakePoint of referralStakePointArr) {
             const referralPoint = referralStakePoint.stakePoint * REFERRAL_BOOSTER;
             if (referralPoint <= 0) {
@@ -88,6 +88,8 @@ export class ReferralPointService extends Worker {
               point: referralPoint,
             });
           }
+        } else {
+          this.logger.log(`referral address ${referralAddress} has no stake point`);
         }
       }
     }
