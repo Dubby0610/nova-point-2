@@ -2,12 +2,10 @@ import { Injectable, Logger } from "@nestjs/common";
 import { promises as promisesFs, existsSync } from "fs";
 import { join } from "path";
 import { spawn } from "child_process";
-import { TxProcessingRepository, TvlProcessingRepository, BalanceOfLpRepository, BlockRepository, CacheRepository, ProjectRepository, TxDataOfPointsRepository } from "../repositories";
+import { TxProcessingRepository, TvlProcessingRepository, BalanceOfLpRepository, ProjectRepository, TxDataOfPointsRepository } from "../repositories";
 import csv from "csv-parser";
 import fs from "fs";
-import { Cron } from "@nestjs/schedule";
 import { ConfigService } from "@nestjs/config";
-import { TxProcessingStatus, TvlProcessingStatus } from "src/entities";
 import { Worker } from "src/common/worker";
 import waitFor from "src/utils/waitFor";
 
@@ -37,11 +35,10 @@ interface UserTransactionData {
 }
 
 @Injectable()
-export class AdapterService extends Worker {
+export class GenAdapterDataService extends Worker {
   private readonly logger: Logger;
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
   private readonly outputPath = "/data";
-  private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber';
   private readonly tvlFilePrefix = 'tvl';
   private readonly txFilePrefix = 'tx';
   private readonly tvlPaths: string[]
@@ -50,8 +47,6 @@ export class AdapterService extends Worker {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly cacheRepository: CacheRepository,
-    private readonly blockRepository: BlockRepository,
     private readonly projectRepository: ProjectRepository,
     private readonly transactionDataOfPointsRepository: TxDataOfPointsRepository,
     private readonly balanceOfLpRepository: BalanceOfLpRepository,
@@ -59,36 +54,21 @@ export class AdapterService extends Worker {
     private readonly txProcessingRepository: TxProcessingRepository
   ) {
     super()
-    this.logger = new Logger(AdapterService.name);
+    this.logger = new Logger(GenAdapterDataService.name);
     this.tvlPaths = Object.keys(this.configService.get('projectTokenBooster'))
     this.txPaths = Object.keys(this.configService.get('projectTxBooster')).flatMap(key => Object.keys(this.configService.get('projectTxBooster')[key]));
   }
 
-  @Cron("0 2,10,18 * * *")
-  public async runTask(): Promise<void> {
-    try {
-      this.logger.log(`${AdapterService.name} initialized`);
-      const dirs = await this.getAllDirectories();
-
-      await Promise.all(dirs.map(async (dir) => {
-        this.updateTvlProcessStatus(dir)
-        this.updateTxProcessStatus(dir)
-      }));
-    } catch (error) {
-      this.logger.error(`Error in runTask ${error.stack}`)
-    }
-  }
-
   protected async runProcess(): Promise<void> {
     try {
-      this.logger.log(`${AdapterService.name} initialized`);
+      this.logger.log(`${GenAdapterDataService.name} initialized`);
       const dirs = await this.getAllDirectories();
       await Promise.all(dirs.map(async (dir) => {
         await this.initDirectory(dir);
         await Promise.all([this.pipeTvlData(dir), this.pipeTxData(dir)])
       }));
 
-      await waitFor(() => !this.currentProcessPromise, 30000, 30000);
+      await waitFor(() => !this.currentProcessPromise, 10000, 10000);
       if (!this.currentProcessPromise) {
         return;
       }
@@ -101,43 +81,6 @@ export class AdapterService extends Worker {
   private async getAllDirectories(): Promise<string[]> {
     const files = await promisesFs.readdir(this.adaptersPath);
     return files.filter(dir => dir !== 'example');
-  }
-
-  private async updateTvlProcessStatus(projectName: string) {
-    try {
-      if (!this.tvlPaths.includes(projectName)) return
-      const currentBlock = await this.blockRepository.getLastBlock({
-        select: { number: true },
-      })
-      const record = new TvlProcessingStatus();
-      record.projectName = projectName;
-      record.blockNumber = currentBlock.number;
-      record.adapterProcessed = false;
-      record.pointProcessed = false;
-      await this.tvlProcessingRepository.upsertStatus(record);
-    } catch (error) {
-      throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
-    }
-  }
-
-  private async updateTxProcessStatus(projectName: string) {
-    try {
-      if (!this.txPaths.includes(projectName)) return
-      const currentBlock = await this.blockRepository.getLastBlock({
-        select: { number: true },
-      })
-      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
-      const processedStatus = await this.txProcessingRepository.findOneBy({ projectName })
-      const record = new TxProcessingStatus();
-      record.projectName = projectName;
-      record.blockNumberStart = processedStatus ? processedStatus.blockNumberEnd + 1 : Number(prevBlockNumberInCache) + 1
-      record.blockNumberEnd = currentBlock.number
-      record.adapterProcessed = false;
-      record.pointProcessed = false;
-      await this.txProcessingRepository.upsertStatus(record);
-    } catch (error) {
-      throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
-    }
   }
 
   private async initDirectory(dir: string): Promise<void> {

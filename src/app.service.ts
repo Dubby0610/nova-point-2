@@ -5,9 +5,9 @@ import { BLOCKS_REVERT_DETECTED_EVENT } from "./constants";
 import { BridgePointService } from "./points/bridgePoint.service";
 
 import { BridgeActiveService } from "./points/bridgeActive.service";
-import { AdapterService } from "./points/adapter.service";
-import { TvlPointService } from "./points/tvlPoint.service";
-import { TxPointService } from "./points/txPoint.service";
+import { GenAdapterDataService } from "./points/genAdapterData.service";
+import { CalTvlPointService } from "./points/calTvlPoint.service";
+import { CalTxPointService } from "./points/calTxPoint.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 import { BaseDataService } from "./points/baseData.service";
 import { ReferralPointService } from "./points/referralPoints.service";
@@ -23,9 +23,9 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
 
     private readonly bridgeActiveService: BridgeActiveService,
     private readonly configService: ConfigService,
-    private readonly adapterService: AdapterService,
-    private readonly tvlPointService: TvlPointService,
-    private readonly txPointService: TxPointService,
+    private readonly genAdapterDataService: GenAdapterDataService,
+    private readonly calTvlPointService: CalTvlPointService,
+    private readonly calTxPointService: CalTxPointService,
     private readonly redistributePointService: RedistributePointService,
     private readonly referralPointService: ReferralPointService,
     private readonly seasonTotalPointService: SeasonTotalPointService
@@ -37,7 +37,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // example:
     // await this.adapterService.runProcess();
     // second params is utc+8
-
+    this.redistributePointService.runProcess();
     this.startWorkers();
   }
 
@@ -59,9 +59,9 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
       this.baseDataService.start(),
       this.bridgeActiveService.start(),
       this.bridgePointService.start(),
-      this.adapterService.start(),
-      this.tvlPointService.start(),
-      this.txPointService.start()
+      this.genAdapterDataService.start(),
+      this.calTvlPointService.start(),
+      this.calTxPointService.start()
     ]);
   }
 

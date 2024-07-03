@@ -16,7 +16,7 @@ import waitFor from "src/utils/waitFor";
 
 
 @Injectable()
-export class TxPointService extends Worker {
+export class CalTxPointService extends Worker {
   private readonly logger: Logger;
   private readonly projectTxBooster: unknown
   private readonly txNum: string = "txNum";
@@ -34,13 +34,13 @@ export class TxPointService extends Worker {
 
   ) {
     super();
-    this.logger = new Logger(TxPointService.name);
+    this.logger = new Logger(CalTxPointService.name);
     this.projectTxBooster = this.configService.get('projectTxBooster')
   }
 
   protected async runProcess(): Promise<void> {
     try {
-      this.logger.log(`${TxPointService.name} start...`);
+      this.logger.log(`${CalTxPointService.name} start...`);
       const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
       await Promise.all(pendingProcessed.map(async status => { this.calculateTxNumPoint(status) }))
 
@@ -152,14 +152,14 @@ export class TxPointService extends Worker {
         // update tx point
         addressPointMap.get(pointUniqueKey).stakePoint += txNumPoint
 
-        const uniqueKey = `${userAddress}-${contractAddress}-${blockNumber}-${this.txVol}`;
+        const uniqueKey = `${userAddress}-${contractAddress}-${blockNumber}-${this.txNum}`;
         if (!blockAddressPointMap.has(uniqueKey)) {
           blockAddressPointMap.set(uniqueKey, {
             blockNumber: blockNumber,
             address: userAddress,
             pairAddress: contractAddress,
             holdPoint: txNumPoint,
-            type: this.txVol,
+            type: this.txNum,
           });
         } else {
           blockAddressPointMap.get(uniqueKey).holdPoint += txNumPoint;
@@ -181,7 +181,4 @@ export class TxPointService extends Worker {
     })
 
   }
-
-
-
 }

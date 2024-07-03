@@ -8,7 +8,7 @@ import config from "./config/index";
 import { HealthModule } from "./health/health.module";
 import { AppService } from "./app.service";
 import { TokenService } from "./token/token.service";
-import { AdapterService } from "./points/adapter.service";
+import { GenAdapterDataService } from "./points/genAdapterData.service";
 import { TokenOffChainDataProvider } from "./token/tokenOffChainData/tokenOffChainDataProvider.abstract";
 import { CoingeckoTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/coingecko/coingeckoTokenOffChainDataProvider";
 import { PortalsFiTokenOffChainDataProvider } from "./token/tokenOffChainData/providers/portalsFi/portalsFiTokenOffChainDataProvider";
@@ -86,8 +86,9 @@ import { BoosterService } from "./booster/booster.service";
 import { ScheduleModule } from "@nestjs/schedule";
 import { RedistributeBalanceService } from "./points/redistributeBalance.service";
 import { DirectPointService } from "./points/directPoint.service";
-import { TvlPointService } from "./points/tvlPoint.service";
-import { TxPointService } from "./points/txPoint.service";
+import { UpdatePointStatusService } from './points/updatePointStatus.service'
+import { CalTvlPointService } from "./points/calTvlPoint.service";
+import { CalTxPointService } from "./points/calTxPoint.service";
 
 @Module({
   imports: [
@@ -196,7 +197,7 @@ import { TxPointService } from "./points/txPoint.service";
     BalanceOfLpRepository,
     PointsOfLpRepository,
     BlockAddressPointOfLpRepository,
-    AdapterService,
+    GenAdapterDataService,
     ProjectRepository,
     CacheRepository,
     BridgePointService,
@@ -213,6 +214,7 @@ import { TxPointService } from "./points/txPoint.service";
     UserStakedRepository,
     UserWithdrawRepository,
     DirectPointService,
+    UpdatePointStatusService,
     PointsRepository,
     BlockAddressPointRepository,
     ReferralRepository,
@@ -221,8 +223,8 @@ import { TxPointService } from "./points/txPoint.service";
     ReferralPointsRepository,
     TvlProcessingRepository,
     TxProcessingRepository,
-    TvlPointService,
-    TxPointService,
+    CalTvlPointService,
+    CalTxPointService,
     SeasonTotalPointRepository,
     SeasonTotalPointService,
     InvitesRepository,

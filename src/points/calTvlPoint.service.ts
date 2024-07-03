@@ -21,7 +21,7 @@ import waitFor from "src/utils/waitFor";
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 
 @Injectable()
-export class TvlPointService extends Worker {
+export class CalTvlPointService extends Worker {
   private readonly logger: Logger;
 
   public constructor(
@@ -38,12 +38,12 @@ export class TvlPointService extends Worker {
     private readonly unitOfWork: LrtUnitOfWork
   ) {
     super()
-    this.logger = new Logger(TvlPointService.name);
+    this.logger = new Logger(CalTvlPointService.name);
   }
 
   public async runProcess(): Promise<void> {
     try {
-      this.logger.log(`${TvlPointService.name} initialized`);
+      this.logger.log(`${CalTvlPointService.name} initialized`);
       const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
       await Promise.all(pendingProcessed.map(processingStatus => this.handleHoldPoint(processingStatus)))
 
@@ -69,7 +69,6 @@ export class TvlPointService extends Worker {
       return;
     }
     this.logger.log(`Start calculate ${projectName} tvl points at blockNumber:${currentStatisticalBlock.number}`);
-    const statisticStartTime = new Date();
     // get the early bird weight
     const earlyBirdMultiplier = this.boosterService.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
     this.logger.log(`Early bird multiplier: ${earlyBirdMultiplier}`);
