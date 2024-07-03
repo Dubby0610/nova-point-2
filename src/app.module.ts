@@ -147,12 +147,11 @@ import { DirectPointService } from "./points/directPoint.service";
         UserWithdraw,
         BlockReferralPoints,
         ReferralPoints,
-        Invites,
         SeasonTotalPoint,
       ],
       "lrt"
     ),
-    TypeOrmModule.forFeature([Referral], "refer"),
+    TypeOrmModule.forFeature([Referral, Invites], "refer"),
     TypeOrmModule.forFeature([Block, Token, Balance, Transfer], "explorer"),
 
     EventEmitterModule.forRoot(),
