@@ -12,6 +12,7 @@ import { ConfigService } from "@nestjs/config";
 import seasonConfig from "../config/season";
 import { ZERO_HASH_64 } from "src/constants";
 import { SeasonTotalPoint } from "src/entities";
+import { OtherPointRepository } from "src/repositories/otherPoint.repository";
 
 interface seasonTotalPoint {
   userAddress: string;
@@ -30,6 +31,7 @@ export class SeasonTotalPointService extends Worker {
     private readonly blockAddressPointRepository: BlockAddressPointRepository,
     private readonly invitesRepository: InvitesRepository,
     private readonly seasonTotalPointRepository: SeasonTotalPointRepository,
+    private readonly otherPointRepository: OtherPointRepository,
     private readonly configService: ConfigService
   ) {
     super();
@@ -57,7 +59,8 @@ export class SeasonTotalPointService extends Worker {
     const directHoldPointList = await this.getDirectHoldPoint(startBlockNumber, endBlockNumber);
     const lpPointList = await this.getLpPoint(startBlockNumber, endBlockNumber);
     const referralPointList = await this.getReferralPoint(startTime, endTime);
-    const allPointList = directHoldPointList.concat(lpPointList).concat(referralPointList);
+    const otherPointList = await this.getOtherPoint(startTime, endTime);
+    const allPointList = directHoldPointList.concat(lpPointList).concat(referralPointList).concat(otherPointList);
     const userAddresses = [...new Set(allPointList.map((item) => item.userAddress))];
     const usernameMap = await this.getUsername(userAddresses);
     const data: SeasonTotalPoint[] = [];
@@ -79,7 +82,7 @@ export class SeasonTotalPointService extends Worker {
   }
 
   // get current season time
-  private getCurrentSeasonTime(): {
+  public getCurrentSeasonTime(): {
     startTime: string;
     endTime: string;
     startBlockNumber: number;
@@ -137,6 +140,22 @@ export class SeasonTotalPointService extends Worker {
       });
     }
     return referralPointList;
+  }
+
+  // get all address's other points
+  private async getOtherPoint(startTime: string, endTime: string): Promise<seasonTotalPoint[]> {
+    // get daily point
+    const otherPointList = [];
+    const result = await this.otherPointRepository.getOtherPointByAddress(startTime, endTime);
+    for (const item of result) {
+      otherPointList.push({
+        userAddress: item.address,
+        pairAddress: ZERO_HASH_64,
+        point: item.totalPoint,
+        type: "other",
+      });
+    }
+    return otherPointList;
   }
 
   private async getUsername(userAddresses: string[]): Promise<Map<string, string>> {
