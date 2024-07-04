@@ -5,8 +5,8 @@ import poolABI from '../abi/pool.json'
 import { PositionMath } from "../utils/positionMath";
 
 const provider = new JsonRpcProvider("https://rpc.zklink.io");
-const positionManagerAddress = '0x18bC9fcD4C14DDdd0086FF4b661D97CF42505075';
-const poolFactoryAddress = '0xf8D35842f37800E349A993503372fb9E2CBb7E3d'
+const positionManagerAddress = '0xcd81E4B6D1Ac4C2C3647eA3F91AAd22Af86A4E26';
+const poolFactoryAddress = '0x9f94c91b178F5bc9fCcA3e5428b09A3d01CE5AC6';
 const poolFactoryContract = new ethers.Contract(poolFactoryAddress, poolFactoryABI, provider);
 const positionManager = new ethers.Contract(positionManagerAddress, positionManagerABI, provider);
 
