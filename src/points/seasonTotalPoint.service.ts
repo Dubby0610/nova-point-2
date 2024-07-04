@@ -10,7 +10,7 @@ import {
 } from "../repositories";
 import { ConfigService } from "@nestjs/config";
 import seasonConfig from "../config/season";
-import { ZERO_HASH_64 } from "src/constants";
+import { OTHER_HASH_64, ZERO_HASH_64 } from "src/constants";
 import { SeasonTotalPoint } from "src/entities";
 import { OtherPointRepository } from "src/repositories/otherPoint.repository";
 
@@ -150,7 +150,7 @@ export class SeasonTotalPointService extends Worker {
     for (const item of result) {
       otherPointList.push({
         userAddress: item.address,
-        pairAddress: ZERO_HASH_64,
+        pairAddress: OTHER_HASH_64,
         point: item.totalPoint,
         type: "other",
       });
