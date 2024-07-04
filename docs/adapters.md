@@ -89,9 +89,9 @@ Check this [example](./example/)，
 Create your own adapter directory under the adapters folder, which consists of three parts.
 
 - **execution**: This directory houses the Node.js execution files for your adapter. It is a complete npm project, with a `package.json` to ensure correct installation of dependencies. The compilation output entry file is located in `dist/index.js`. It provides the necessary output functions `getUserTransactionData` and `getUserTVLData`. We will pass the block height as a parameter, execute your function, and write the results to a CSV file.
-- **subgraph**: We strongly recommend using a subgraph as the data source for Execution because it offers more transparent logic and data. We will review your code to ensure the data originates from the blockchain. If you choose to use a subgraph, please build it in this directory. Refer to the example, create a `.env` file, and you can use the `deploySubgraph` script located in the root directory of adapters to deploy your subgraph to Nova's subgraph testing environment.
+- **subgraph**: We strongly recommend using a subgraph as the data source for Execution because it offers more transparent logic and data. We will review your code to ensure the data originates from the blockchain. If you choose to use a subgraph, please build it in this directory. Refer to the example, create your own subgraph, and you can use the npm script `npm run deploy-subgraph:dev -- -p <projectName>`to deploy your subgraph on dev environment.
 
-- **data**: You can refer to [example/data](./example/data). You don't need to create this folder as it will be included in .gitignore. We just want you to explain what the output CSV file looks like. It will be located in the data directory. We will input block heights as needed and execute the getUserTransactionData and getUserTVLData functions you expose in the execution folder, finally outputting the CSV to the data folder.
+- **data**: You can refer to [example/data](./example/data). You don't need to create this folder as it will be included in .gitignore. We just want to explain what the output CSV file looks like. It will be located in the data directory. We will input block heights as needed and execute the getUserTransactionData and getUserTVLData functions you expose in the `execution/dist` folder, finally outputting the CSV to the data folder.
 
 ## Installation & Setup
 
@@ -103,21 +103,15 @@ The zkLink Nova network is not yet supported in _The Graph_'s list of supported 
 
 ### How to deploy and test your own subgraph?
 
-Copy example/subgraph folder to your own directory. Then check the **.env.example** file in the **subgraph** folder of your project, create your own **.env** file, and change the `SUBGRAPH_PATH_SECRET` to a random value which is known only within your team.
+1. Copy example/subgraph folder to your own directory and run the following npm script
+
+2. run the following command:
 
 ```bash
-cd src/adapters/<project folder>/subgraph/ && cp .env.example .env
+npm run deploy-subgraph:dev -- -p <projectName> -n <subgraphName>
 ```
 
-### Launch subgraph
-
-Return to the root directory of the adapters, you can use this script to deploy subgraph onto Nova subgraph service. Execute the deploySubgraph.js script with the following command:
-
-```bash
-cd src/adapters && node ../deploySubgraph.js --directory <project folder>
-```
-
-Upon successful deployment, a subgraph URL will be returned and displayed in your terminal.
+3. Upon successful deployment, a subgraph URL will be returned and displayed in your terminal.
 
 ### Create your adapter
 
@@ -166,13 +160,19 @@ For TVL points calculation, you need to provide the balance portion quantity of 
 
 ## Testing & Validation
 
-You can validate whether the script can output a CSV file that meets the data requirements by executing `runScript`. If the execution is successful, a CSV file with the corresponding block height will be generated in the `data` root folder under the directory you created.
+You can validate whether the script can output a CSV file that meets the data requirements by executing `npm run adapter:tvl` and `npm run adapter:tx`. If the execution is successful, a CSV file with the corresponding block height will be generated in the `data` root folder under the directory you created.
 
 ```bash
-# @params folderName: The name of the folder where the script will be executed.
+# @params projectName: The name of the folder where the script will be executed.
+# @params filePrefix: file prefix, eg: tvl/tx/hourly or any other prefix etc.
 # @params startBlock: The starting block number.
 # @params endBlock: The ending block number. If you only generate TVL data and do not export the `getUserTransactionData` method, you can use any number.
-cd src/adapters && node runScript.js <projectFolder> <startBlock> <endBlock>
+
+# for tvl data
+npm run adapter:tvl -- <projectName> <filePrefix> <endBlock>
+
+# for tx data
+npm run adapter:tx -- <projectName> <filePrefix> <endBlock> <startBlock>
 ```
 
 We will conduct a sampling verification of your CSV results. Teams are required to provide detailed methods of verification, including the approach and information utilized in the verification process.

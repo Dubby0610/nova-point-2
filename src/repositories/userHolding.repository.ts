@@ -8,5 +8,4 @@ export class UserHoldingRepository extends BaseRepository<UserHolding> {
   public constructor(unitOfWork: UnitOfWork) {
     super(UserHolding, unitOfWork);
   }
-
 }

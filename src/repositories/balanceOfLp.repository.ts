@@ -4,6 +4,7 @@ import { BaseRepository } from "./base.repository";
 import { BalanceOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
 import projectTokenBooster from "src/config/projectTokenBooster";
+import { In } from "typeorm";
 
 export interface BalanceOfLpDto {
   address: Buffer;
@@ -50,28 +51,22 @@ export class BalanceOfLpRepository extends BaseRepository<BalanceOfLp> {
     });
   }
 
-  public async getAllByBlocks(blockNumbers: number[]): Promise<Array<EnhancedBalanceOfLp>> {
+  public async getProjectLpBalances(blockNumber: number, pairAddresses: string[]) {
     const transactionManager = this.unitOfWork.getTransactionManager();
-    const result = await transactionManager.createQueryBuilder('balancesOfLp', 'b')
-      .leftJoin('project', 'p', 'b.pairAddress = p.pairAddress')
-      .where('b.blockNumber IN (:...blockNumbers)', { blockNumbers })
-      .select([
-        'encode(b.address, \'hex\') AS "address"',
-        'encode(b.tokenAddress, \'hex\') AS "tokenAddress"',
-        'encode(b.pairAddress, \'hex\') AS "pairAddress"',
-        'b.blockNumber AS "blockNumber"',
-        'b.balance AS "balance"',
-        'p.name AS "projectName"'
-      ])
-      .getRawMany();
+    const result = await transactionManager.getRepository(BalanceOfLp).find({
+      where: {
+        blockNumber,
+        pairAddress: In(pairAddresses)
+      },
+      select: ["address", "tokenAddress", "pairAddress", "blockNumber", "balance"]
+    })
 
     return result.map(row => ({
       address: row.address,
       tokenAddress: row.tokenAddress,
       pairAddress: row.pairAddress,
       blockNumber: Number(row.blockNumber),
-      balance: row.balance,
-      projectName: row.projectName
+      balance: row.balance
     }));
   }
 
@@ -92,14 +87,6 @@ export class BalanceOfLpRepository extends BaseRepository<BalanceOfLp> {
   ): Promise<BalanceOfLp[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     return await transactionManager.query(selectBalancesOfLpByBlockScript, [address, pairAddress, blockNumber]);
-  }
-
-  public async getLastOrderByBlock(): Promise<BalanceOfLp> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    return await transactionManager.findOne<BalanceOfLp>(BalanceOfLp, {
-      where: {},
-      order: { blockNumber: "DESC" },
-    });
   }
 
   public async insertBalance(balanceOfLp: QueryDeepPartialEntity<BalanceOfLp>): Promise<void> {

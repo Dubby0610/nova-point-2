@@ -3,15 +3,17 @@ import { BaseRepository } from "./base.repository";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BlockAddressPointOfLp, PointsOfLp } from "../entities";
 import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
-import { Between } from "typeorm";
+import { In, Between } from "typeorm";
 
 @Injectable()
 export class BlockAddressPointOfLpRepository extends BaseRepository<BlockAddressPointOfLp> {
-  public constructor(unitOfWork: UnitOfWork) {
+  public constructor(
+    unitOfWork: UnitOfWork,
+  ) {
     super(BlockAddressPointOfLp, unitOfWork);
   }
 
-  public async getBlockAddressPointKeyByBlock(block: number) {
+  public async getBlockAddressPointKeyByBlock(block: number, pairAddresses: string[],) {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.transaction(async (entityManager) => {
       const blockAddressPoints = await entityManager.getRepository(BlockAddressPointOfLp).find({
