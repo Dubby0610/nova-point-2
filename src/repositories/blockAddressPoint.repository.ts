@@ -44,8 +44,8 @@ export class BlockAddressPointRepository extends BaseRepository<BlockAddressPoin
   }
 
   public async getAllAddressTotalPoint(
-    startTime: string,
-    endTime: string
+    startBlockNumber: number,
+    endBlockNumber: number
   ): Promise<
     {
       address: string;
@@ -55,7 +55,7 @@ export class BlockAddressPointRepository extends BaseRepository<BlockAddressPoin
   > {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
-      `SELECT address, sum("depositPoint"+"holdPoint") AS "totalPoint" FROM "blockAddressPoint" WHERE ("createdAt">='${startTime}' AND "createdAt"<'${endTime}') or ("updatedAt">='${startTime}' AND "updatedAt"<'${endTime}') group by address;`
+      `SELECT address, sum("depositPoint"+"holdPoint") AS "totalPoint" FROM "blockAddressPoint" WHERE "blockNumber">=${startBlockNumber} AND "blockNumber"<${endBlockNumber} group by address;`
     );
     return result.map((item) => {
       return {

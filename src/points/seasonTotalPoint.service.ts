@@ -53,10 +53,10 @@ export class SeasonTotalPointService extends Worker {
       this.logger.log("No season time");
       return;
     }
-    const { startTime, endTime } = seasonTime;
-    const directHoldPointList = await this.getDirectHoldPoint(startTime, endTime);
-    const lpPointList = await this.getLpPoint(startTime, endTime);
-    const referralPointList = []; //await this.getReferralPoint(startTime, endTime);
+    const { startTime, endTime, startBlockNumber, endBlockNumber } = seasonTime;
+    const directHoldPointList = await this.getDirectHoldPoint(startBlockNumber, endBlockNumber);
+    const lpPointList = await this.getLpPoint(startBlockNumber, endBlockNumber);
+    const referralPointList = await this.getReferralPoint(startTime, endTime);
     const allPointList = directHoldPointList.concat(lpPointList).concat(referralPointList);
     const userAddresses = [...new Set(allPointList.map((item) => item.userAddress))];
     const usernameMap = await this.getUsername(userAddresses);
@@ -82,6 +82,8 @@ export class SeasonTotalPointService extends Worker {
   private getCurrentSeasonTime(): {
     startTime: string;
     endTime: string;
+    startBlockNumber: number;
+    endBlockNumber: number;
     season: number;
   } {
     const now = new Date();
@@ -94,9 +96,9 @@ export class SeasonTotalPointService extends Worker {
   }
 
   // get all address's hold point
-  private async getDirectHoldPoint(startTime: string, endTime: string): Promise<seasonTotalPoint[]> {
+  private async getDirectHoldPoint(startBlockNumber: number, endBlockNumber: number): Promise<seasonTotalPoint[]> {
     const holdPointMap = new Map<string, number>();
-    const result = await this.blockAddressPointRepository.getAllAddressTotalPoint(startTime, endTime);
+    const result = await this.blockAddressPointRepository.getAllAddressTotalPoint(startBlockNumber, endBlockNumber);
     return result.map((item) => {
       return {
         userAddress: item.address,
@@ -108,9 +110,9 @@ export class SeasonTotalPointService extends Worker {
   }
 
   // get all address's tvl point, tx num point, tx vol point, bridgeTxNum point
-  private async getLpPoint(startTime: string, endTime: string): Promise<seasonTotalPoint[]> {
+  private async getLpPoint(startBlockNumber: number, endBlockNumber: number): Promise<seasonTotalPoint[]> {
     const lpPointList = [];
-    const result = await this.blockAddressPointOfLpRepository.getAllAddressTotalPoint(startTime, endTime);
+    const result = await this.blockAddressPointOfLpRepository.getAllAddressTotalPoint(startBlockNumber, endBlockNumber);
     for (const item of result) {
       lpPointList.push({
         userAddress: item.address,

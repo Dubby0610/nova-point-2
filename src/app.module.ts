@@ -153,12 +153,11 @@ import { CalTxPointService } from "./points/calTxPoint.service";
         ReferralPoints,
         TvlProcessingStatus,
         TxProcessingStatus,
-        Invites,
         SeasonTotalPoint,
       ],
       "lrt"
     ),
-    TypeOrmModule.forFeature([Referral], "refer"),
+    TypeOrmModule.forFeature([Referral, Invites], "refer"),
     TypeOrmModule.forFeature([Block, Token, Balance, Transfer], "explorer"),
 
     EventEmitterModule.forRoot(),
