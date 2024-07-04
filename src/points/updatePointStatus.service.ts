@@ -59,6 +59,7 @@ export class UpdatePointStatusService {
       record.adapterProcessed = false;
       record.pointProcessed = false;
       await this.tvlProcessingRepository.upsertStatus(record);
+      this.logger.log(`updateTvlProcessStatus at ${record.blockNumber}`)
     } catch (error) {
       throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
     }
@@ -79,6 +80,7 @@ export class UpdatePointStatusService {
       record.adapterProcessed = false;
       record.pointProcessed = false;
       await this.txProcessingRepository.upsertStatus(record);
+      this.logger.log(`updateTxProcessStatus from ${record.blockNumberStart} to ${record.blockNumberEnd}`)
     } catch (error) {
       throw new Error(`Error in updateTxProcessStatus at ${error.stack}`)
     }

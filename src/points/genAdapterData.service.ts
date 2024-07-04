@@ -127,9 +127,7 @@ export class GenAdapterDataService extends Worker {
         .pipe(csv())
         .on("data", (row) => results.push(row))
         .on("end", async () => {
-          if (results.length > 0) {
-            resolve(results);
-          }
+          resolve(results);
           try {
             this.logger.log(`Adapter:${projectName} ${fileName} successfully processed at ${blockNumber}, inserted ${results.length} rows into db.`);
             await fs.unlinkSync(outputPath);
@@ -146,19 +144,19 @@ export class GenAdapterDataService extends Worker {
   private async pipeTvlData(dir: string) {
     if (!this.tvlPaths.includes(dir)) return
 
-    this.logger.log(`Start process ${dir} tvl data`)
+    this.logger.log(`Start pipeTvlData ${dir} tvl data`)
     const pendingProcess = await this.tvlProcessingRepository.find({ where: { adapterProcessed: false, projectName: dir } });
     await Promise.all(pendingProcess.map(async status => {
       await this.processTvlData(dir, status.blockNumber)
       await this.tvlProcessingRepository.upsertStatus({ ...status, adapterProcessed: true })
     }))
-    this.logger.log(`End process ${dir} tvl data`)
+    this.logger.log(`End pipeTvlData ${dir} tvl data`)
   }
 
   private async processTvlData(dir: string, curBlockNumber: number) {
     const tvlCommand = `npm run adapter:tvl -- ${dir} ${this.tvlFilePrefix} ${curBlockNumber}`;
     await this.runCommand(tvlCommand, this.adaptersPath);
-    const csvData = await this.genCSVDataToDb<UserTVLData>(dir, this.txFilePrefix, curBlockNumber);
+    const csvData = await this.genCSVDataToDb<UserTVLData>(dir, this.tvlFilePrefix, curBlockNumber);
     const insertedData = await this.insertTVLDataToDb(csvData)
     await this.updateTvlProjects(insertedData, dir)
     this.logger.log(`Finish processing ${dir} tvl data at ${curBlockNumber}!`)
@@ -182,13 +180,13 @@ export class GenAdapterDataService extends Worker {
   private async pipeTxData(dir: string) {
     if (!this.txPaths.includes(dir)) return
 
-    this.logger.log(`Start process ${dir} tx data`)
+    this.logger.log(`Start pipeTxData ${dir} tx data`)
     const pendingProcess = await this.txProcessingRepository.find({ where: { adapterProcessed: false, projectName: dir } });
     await Promise.all(pendingProcess.map(async status => {
       await this.processTxData(dir, status.blockNumberStart, status.blockNumberEnd)
       await this.txProcessingRepository.upsertStatus({ ...status, adapterProcessed: true })
     }))
-    this.logger.log(`End process ${dir} tx data`)
+    this.logger.log(`End pipeTxData ${dir} tx data`)
   }
 
   private async processTxData(dir: string, prevBlockNumber: number, curBlockNumber: number) {
