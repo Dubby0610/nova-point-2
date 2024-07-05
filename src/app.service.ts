@@ -44,7 +44,6 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     this.redistributePointService.runProcess();
 
     this.startWorkers();
-    this.compensatePoints();
   }
 
   public onModuleDestroy() {
