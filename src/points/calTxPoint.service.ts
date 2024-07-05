@@ -94,7 +94,7 @@ export class CalTxPointService extends Worker {
       blockNumberEnd,
     );
     if (txData.length === 0) {
-      this.logger.error(`volume details is empty, from ${blockNumberStart} to ${blockNumberEnd}`);
+      this.logger.log(`volume details is empty, from ${blockNumberStart} to ${blockNumberEnd}`);
       this.txProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
       return;
     }
