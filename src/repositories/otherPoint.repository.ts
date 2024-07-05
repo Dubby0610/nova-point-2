@@ -20,7 +20,7 @@ export class OtherPointRepository extends BaseRepository<OtherPoint> {
   > {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
-      `SELECT address, sum("points") AS "totalPoint" FROM "points" WHERE "createdAt">='${startTime}' AND "createdAt"<'${endTime}' AND type='daily_check' group by address;`
+      `SELECT address, sum("points") AS "totalPoint" FROM "points" WHERE "createdAt">='${startTime}' AND "createdAt"<'${endTime}' AND type in ('daily_check','invite_box_s2') group by address;`
     );
     return result.map((item) => {
       return {
