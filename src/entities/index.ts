@@ -24,3 +24,4 @@ export * from "./referralPoints.entity";
 export * from "./blockReferralPoints.entity";
 export * from "./seasonTotalPoint.entity";
 export * from "./invites.entity";
+export * from "./otherPoints.entity";

@@ -3,14 +3,15 @@ import { Worker } from "../common/worker";
 import { Cron } from "@nestjs/schedule";
 import {
   BlockReferralPointsRepository,
-  PointsOfLpRepository,
   ReferralPointsRepository,
   ReferralRepository,
+  SeasonTotalPointRepository,
 } from "../repositories";
 import { ConfigService } from "@nestjs/config";
 import { BlockReferralPoints } from "src/entities/blockReferralPoints.entity";
 import { ReferralPoints } from "src/entities/referralPoints.entity";
 import { LrtUnitOfWork } from "../unitOfWork";
+import { SeasonTotalPointService } from "./seasonTotalPoint.service";
 
 export const REFERRAL_BOOSTER: number = 0.1;
 
@@ -20,7 +21,8 @@ export class ReferralPointService extends Worker {
 
   public constructor(
     private readonly referralRepository: ReferralRepository,
-    private readonly pointsOfLpRepository: PointsOfLpRepository,
+    private readonly seasonTotalPointService: SeasonTotalPointService,
+    private readonly seasonTotalPointRepository: SeasonTotalPointRepository,
     private readonly blockReferralPointsRepository: BlockReferralPointsRepository,
     private readonly referralPointsRepository: ReferralPointsRepository,
     private readonly lrtUnitOfWork: LrtUnitOfWork,
@@ -45,7 +47,12 @@ export class ReferralPointService extends Worker {
     // 1. get all address that need to calculate referral point
     // 2. get all referral address's holding point
     // 3. calculate referral point = ReferralBooster * sum(holding point of every referral address)
-
+    const seasonTime = this.seasonTotalPointService.getCurrentSeasonTime();
+    if (!seasonTime) {
+      this.logger.log("No season time");
+      return;
+    }
+    const season = seasonTime.season;
     const addressReferralMap = await this.referralRepository.getAllAddressReferral();
     const addressArr = Array.from(addressReferralMap.keys());
     // get address referral points from referralPointsRepository
@@ -58,15 +65,15 @@ export class ReferralPointService extends Worker {
     // addressReferralMap.values() are all the referral addresses
     const referralAddresses = Array.from(addressReferralMap.values()).flat();
     // get all referral address's holding point
-    const referralStakePoints = await this.pointsOfLpRepository.getPointByAddresses(referralAddresses);
+    const referralStakePoints = await this.seasonTotalPointRepository.getPointByAddresses(referralAddresses, season);
     const referralStakePointMap = new Map<string, { pairAddress: string; stakePoint: number }[]>();
     for (const item of referralStakePoints) {
-      if (!referralStakePointMap.has(item.address)) {
-        referralStakePointMap.set(item.address, []);
+      if (!referralStakePointMap.has(item.userAddress)) {
+        referralStakePointMap.set(item.userAddress, []);
       }
-      referralStakePointMap.get(item.address).push({
+      referralStakePointMap.get(item.userAddress).push({
         pairAddress: item.pairAddress,
-        stakePoint: item.stakePoint,
+        stakePoint: item.point,
       });
     }
 

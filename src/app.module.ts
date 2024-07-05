@@ -40,6 +40,7 @@ import {
   ReferralPointsRepository,
   InvitesRepository,
   SeasonTotalPointRepository,
+  OtherPointRepository,
 } from "./repositories";
 import {
   Block,
@@ -65,6 +66,7 @@ import {
   ReferralPoints,
   Invites,
   SeasonTotalPoint,
+  OtherPoint,
 } from "./entities";
 import { typeOrmReferModuleOptions, typeOrmLrtModuleOptions, typeOrmExplorerModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
@@ -151,7 +153,7 @@ import { DirectPointService } from "./points/directPoint.service";
       ],
       "lrt"
     ),
-    TypeOrmModule.forFeature([Referral, Invites], "refer"),
+    TypeOrmModule.forFeature([Referral, Invites, OtherPoint], "refer"),
     TypeOrmModule.forFeature([Block, Token, Balance, Transfer], "explorer"),
 
     EventEmitterModule.forRoot(),
@@ -219,6 +221,7 @@ import { DirectPointService } from "./points/directPoint.service";
     SeasonTotalPointRepository,
     SeasonTotalPointService,
     InvitesRepository,
+    OtherPointRepository,
   ],
 })
 export class AppModule {}
