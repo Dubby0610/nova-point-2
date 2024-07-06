@@ -63,11 +63,16 @@ export class GenAdapterDataService extends Worker {
     try {
       this.logger.log(`${GenAdapterDataService.name} initialized`);
       const dirs = await this.getAllDirectories();
-      await Promise.all(dirs.map(async (dir) => {
-        await this.initDirectory(dir);
-        await Promise.all([this.pipeTvlData(dir), this.pipeTxData(dir)])
-      }));
-
+      const dirPromises = dirs.map(async (dir) => {
+        try {
+          await this.initDirectory(dir);
+          await Promise.allSettled([this.pipeTvlData(dir), this.pipeTxData(dir)]);
+        } catch (error) {
+          this.logger.error(`Error processing directory ${dir}: ${error.stack}`);
+        }
+      });
+      await Promise.all(dirPromises);
+      this.logger.log(`${GenAdapterDataService.name} end`);
       await waitFor(() => !this.currentProcessPromise, 10000, 10000);
       if (!this.currentProcessPromise) {
         return;
@@ -79,8 +84,8 @@ export class GenAdapterDataService extends Worker {
   }
 
   private async getAllDirectories(): Promise<string[]> {
-    const files = await promisesFs.readdir(this.adaptersPath);
-    return files.filter(dir => dir !== 'example');
+    const files = await promisesFs.readdir(this.adaptersPath, { withFileTypes: true });
+    return files.filter(dir => dir.isDirectory() && dir.name !== 'example').map((dirent) => dirent.name);;
   }
 
   private async initDirectory(dir: string): Promise<void> {
