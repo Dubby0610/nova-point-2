@@ -66,7 +66,12 @@ export class GenAdapterDataService extends Worker {
       const dirPromises = dirs.map(async (dir) => {
         try {
           await this.initDirectory(dir);
-          await Promise.allSettled([this.pipeTvlData(dir), this.pipeTxData(dir)]);
+          const results = await Promise.allSettled([this.pipeTvlData(dir), this.pipeTxData(dir)]);
+          results.forEach(result => {
+            if (result.status === 'rejected') {
+              this.logger.error(`Error in ${dir}: ${result.reason.stack}`);
+            }
+          });
         } catch (error) {
           this.logger.error(`Error processing directory ${dir}: ${error.stack}`);
         }
@@ -113,6 +118,10 @@ export class GenAdapterDataService extends Worker {
           const error = new Error(`Command failed: ${command} ${stderr}`);
           reject(error);
         }
+      });
+
+      child.on('error', (err) => {
+        reject(err);
       });
     });
   }
