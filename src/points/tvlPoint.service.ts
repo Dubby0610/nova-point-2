@@ -191,7 +191,7 @@ export class TvlPointService extends Worker {
       const address = hexTransformer.from(balance.address);
       const pairAddress = hexTransformer.from(balance.pairAddress);
 
-      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
+      const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {
