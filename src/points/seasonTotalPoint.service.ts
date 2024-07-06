@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
 import { Cron } from "@nestjs/schedule";
+import waitFor from "../utils/waitFor";
 import {
   BlockReferralPointsRepository,
   BlockAddressPointOfLpRepository,
@@ -39,7 +40,7 @@ export class SeasonTotalPointService extends Worker {
   }
 
   @Cron("0 3,11,19 * * *")
-  protected async runProcess(): Promise<void> {
+  protected async runHoldProcess(): Promise<void> {
     try {
       this.logger.log("Start to calculate season point");
       await this.handlePoint();
@@ -47,6 +48,22 @@ export class SeasonTotalPointService extends Worker {
     } catch (error) {
       this.logger.error("Failed to calculate season point", error.stack);
     }
+  }
+
+  protected async runProcess(): Promise<void> {
+    try {
+      this.logger.log("Start to calculate other point");
+      await this.handleOtherPoint();
+      this.logger.log("End to calculate other point");
+    } catch (error) {
+      this.logger.error("Failed to calculate other point", error.stack);
+    }
+
+    await waitFor(() => !this.currentProcessPromise, 1 * 1000, 1 * 1000);
+    if (!this.currentProcessPromise) {
+      return;
+    }
+    return this.runProcess();
   }
 
   async handlePoint() {
@@ -61,6 +78,34 @@ export class SeasonTotalPointService extends Worker {
     const referralPointList = await this.getReferralPoint(startTime, endTime);
     const otherPointList = await this.getOtherPoint(startTime, endTime);
     const allPointList = directHoldPointList.concat(lpPointList).concat(referralPointList).concat(otherPointList);
+    const userAddresses = [...new Set(allPointList.map((item) => item.userAddress))];
+    const usernameMap = await this.getUsername(userAddresses);
+    const data: SeasonTotalPoint[] = [];
+    for (const item of allPointList) {
+      const tmp = new SeasonTotalPoint();
+      tmp.userAddress = item.userAddress;
+      tmp.pairAddress = item.pairAddress;
+      tmp.point = item.point;
+      tmp.type = item.type;
+      tmp.season = seasonTime.season;
+      tmp.userName = usernameMap.get(item.userAddress) ?? "user-" + item.userAddress.slice(10);
+      data.push(tmp);
+    }
+    await this.seasonTotalPointRepository.addManyOrUpdate(
+      data,
+      ["point", "userName"],
+      ["userAddress", "pairAddress", "type", "season"]
+    );
+  }
+
+  async handleOtherPoint() {
+    const seasonTime = this.getCurrentSeasonTime();
+    if (!seasonTime) {
+      this.logger.log("No season time");
+      return;
+    }
+    const { startTime, endTime } = seasonTime;
+    const allPointList = await this.getOtherPoint(startTime, endTime);
     const userAddresses = [...new Set(allPointList.map((item) => item.userAddress))];
     const usernameMap = await this.getUsername(userAddresses);
     const data: SeasonTotalPoint[] = [];
