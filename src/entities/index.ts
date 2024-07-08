@@ -26,3 +26,4 @@ export * from "./txProcessingStatus.entity";
 export * from "./tvlProcessingStatus.entity";
 export * from "./seasonTotalPoint.entity";
 export * from "./invites.entity";
+export * from "./otherPoints.entity";

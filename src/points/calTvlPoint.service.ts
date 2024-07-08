@@ -171,7 +171,7 @@ export class CalTvlPointService extends Worker {
       const balance = balanceList[index];
       const { address, pairAddress } = balance
 
-      const key = `${address}-${pairAddress}-${balance.blockNumber}`;
+      const key = `${address}-${pairAddress}`;
       if (balanceMap.has(key)) {
         balanceMap.get(key).push(balance);
       } else {

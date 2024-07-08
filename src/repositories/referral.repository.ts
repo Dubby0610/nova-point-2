@@ -16,10 +16,10 @@ export class ReferralRepository extends BaseRepository<Referral> {
     for (const row of data) {
       const address = "0x" + row.address.toString("hex");
       const referrer = "0x" + row.referrer.toString("hex");
-      if (!result.has(address)) {
-        result.set(address, []);
+      if (!result.has(referrer)) {
+        result.set(referrer, []);
       }
-      result.get(address).push(referrer);
+      result.get(referrer).push(address);
     }
     return result;
   }
