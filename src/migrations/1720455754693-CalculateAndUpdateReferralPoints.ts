@@ -6,7 +6,7 @@ export class CalculateAndUpdateReferralPoints1720455754693 implements MigrationI
     await queryRunner.query(`ALTER TABLE "referralPoints" ADD COLUMN "season" numeric DEFAULT 0;`);
     await queryRunner.query(`CREATE TABLE "referralPoints_backup" AS SELECT * FROM "referralPoints";`);
     await queryRunner.query(`TRUNCATE TABLE "referralPoints";`);
-    await queryRunner.query(`DROP INDEX "PK_1893dd931640dcef5cc364e2727";`);
+    await queryRunner.query(`ALTER TABLE "referralPoints" DROP CONSTRAINT "PK_1893dd931640dcef5cc364e2727";`);
     await queryRunner.query(
       `CREATE UNIQUE INDEX "PK_1893dd931640dcef5cc364e2727" ON "referralPoints" ("address", "pairAddress", "season");`
     );
@@ -17,8 +17,9 @@ export class CalculateAndUpdateReferralPoints1720455754693 implements MigrationI
     await queryRunner.query(`DROP TABLE "referralPoints";`);
     await queryRunner.query(`ALTER TABLE "referralPoints_backup" RENAME TO "referralPoints";`);
     await queryRunner.query(`ALTER TABLE "referralPoints" DROP COLUMN "season";`);
+
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "PK_1893dd931640dcef5cc364e2727" ON "referralPoints" ("address", "pairAddress");`
+      `ALTER TABLE "referralPoints" ADD CONSTRAINT "PK_1893dd931640dcef5cc364e2727" PRIMARY KEY ("address", "pairAddress");`
     );
     await queryRunner.query(`ALTER TABLE "blockReferralPoints_delete" RENAME TO "blockReferralPoints";`);
   }
