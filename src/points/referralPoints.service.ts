@@ -1,16 +1,9 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Worker } from "../common/worker";
 import { Cron } from "@nestjs/schedule";
-import {
-  BlockReferralPointsRepository,
-  ReferralPointsRepository,
-  ReferralRepository,
-  SeasonTotalPointRepository,
-} from "../repositories";
+import { ReferralPointsRepository, ReferralRepository, SeasonTotalPointRepository } from "../repositories";
 import { ConfigService } from "@nestjs/config";
-import { BlockReferralPoints } from "src/entities/blockReferralPoints.entity";
 import { ReferralPoints } from "src/entities/referralPoints.entity";
-import { LrtUnitOfWork } from "../unitOfWork";
 import { SeasonTotalPointService } from "./seasonTotalPoint.service";
 
 export const REFERRAL_BOOSTER: number = 0.1;
@@ -23,9 +16,7 @@ export class ReferralPointService extends Worker {
     private readonly referralRepository: ReferralRepository,
     private readonly seasonTotalPointService: SeasonTotalPointService,
     private readonly seasonTotalPointRepository: SeasonTotalPointRepository,
-    private readonly blockReferralPointsRepository: BlockReferralPointsRepository,
     private readonly referralPointsRepository: ReferralPointsRepository,
-    private readonly lrtUnitOfWork: LrtUnitOfWork,
     private readonly configService: ConfigService
   ) {
     super();
@@ -55,13 +46,6 @@ export class ReferralPointService extends Worker {
     const season = seasonTime.season;
     const addressReferralMap = await this.referralRepository.getAllAddressReferral();
     const addressArr = Array.from(addressReferralMap.keys());
-    // get address referral points from referralPointsRepository
-    const referralPoints = await this.referralPointsRepository.getReferralPointsByAddresses(addressArr);
-    const referralPointsMap = new Map<string, ReferralPoints>();
-    // key is address-pairAddress
-    for (const item of referralPoints) {
-      referralPointsMap.set(item.address + "-" + item.pairAddress, item);
-    }
     // addressReferralMap.values() are all the referral addresses
     const referralAddresses = Array.from(addressReferralMap.values()).flat();
     // get all referral address's holding point
@@ -78,7 +62,7 @@ export class ReferralPointService extends Worker {
     }
 
     // calculate referral point = ReferralBooster * sum(holding point of every referral address)
-    const blockReferralPointResultArr: BlockReferralPoints[] = [];
+    const blockReferralPointResultArr: ReferralPoints[] = [];
     for (const address of addressArr) {
       const referralAddresses = addressReferralMap.get(address);
       for (const referralAddress of referralAddresses) {
@@ -93,6 +77,7 @@ export class ReferralPointService extends Worker {
               address: address,
               pairAddress: referralStakePoint.pairAddress,
               point: referralPoint,
+              season: season,
             });
           }
         } else {
@@ -111,31 +96,14 @@ export class ReferralPointService extends Worker {
       }
       return acc;
     }, {});
-    const blockReferralPointFinal: BlockReferralPoints[] = Object.values(blockReferralPointReduceMap);
-    const referralPointFinal: ReferralPoints[] = [];
-    for (const item of blockReferralPointFinal) {
-      const key = item.address + "-" + item.pairAddress;
-      if (referralPointsMap.has(key)) {
-        const beforePoint = referralPointsMap.get(key).point;
-        referralPointFinal.push({
-          address: item.address,
-          pairAddress: item.pairAddress,
-          point: Number(beforePoint) + Number(item.point),
-        });
-      } else {
-        referralPointFinal.push({
-          address: item.address,
-          pairAddress: item.pairAddress,
-          point: item.point,
-        });
-      }
-    }
+    const referralPointFinal: ReferralPoints[] = Object.values(blockReferralPointReduceMap);
 
     try {
-      await this.lrtUnitOfWork.useTransaction(async () => {
-        await this.blockReferralPointsRepository.addMany(blockReferralPointFinal);
-        await this.referralPointsRepository.addManyOrUpdate(referralPointFinal, ["point"], ["address", "pairAddress"]);
-      });
+      await this.referralPointsRepository.addManyOrUpdate(
+        referralPointFinal,
+        ["point"],
+        ["address", "pairAddress", "season"]
+      );
     } catch (error) {
       this.logger.error("Failed to save referral point to db", error.stack);
     }

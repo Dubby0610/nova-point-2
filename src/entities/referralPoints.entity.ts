@@ -12,4 +12,7 @@ export class ReferralPoints {
 
   @Column("decimal")
   public point: number;
+
+  @Column("numeric", { default: 0 })
+  public season: number;
 }

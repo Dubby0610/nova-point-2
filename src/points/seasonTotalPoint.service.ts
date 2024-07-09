@@ -3,11 +3,11 @@ import { Worker } from "../common/worker";
 import { Cron } from "@nestjs/schedule";
 import waitFor from "../utils/waitFor";
 import {
-  BlockReferralPointsRepository,
   BlockAddressPointOfLpRepository,
   BlockAddressPointRepository,
   InvitesRepository,
   SeasonTotalPointRepository,
+  ReferralPointsRepository,
 } from "../repositories";
 import { ConfigService } from "@nestjs/config";
 import seasonConfig from "../config/season";
@@ -27,7 +27,7 @@ export class SeasonTotalPointService extends Worker {
   private readonly logger: Logger;
 
   public constructor(
-    private readonly blockReferralPointsRepository: BlockReferralPointsRepository,
+    private readonly referralPointsRepository: ReferralPointsRepository,
     private readonly blockAddressPointOfLpRepository: BlockAddressPointOfLpRepository,
     private readonly blockAddressPointRepository: BlockAddressPointRepository,
     private readonly invitesRepository: InvitesRepository,
@@ -72,12 +72,11 @@ export class SeasonTotalPointService extends Worker {
       this.logger.log("No season time");
       return;
     }
-    const { startTime, endTime, startBlockNumber, endBlockNumber } = seasonTime;
+    const { startBlockNumber, endBlockNumber, season } = seasonTime;
     const directHoldPointList = await this.getDirectHoldPoint(startBlockNumber, endBlockNumber);
     const lpPointList = await this.getLpPoint(startBlockNumber, endBlockNumber);
-    const referralPointList = await this.getReferralPoint(startTime, endTime);
-    const otherPointList = await this.getOtherPoint(startTime, endTime);
-    const allPointList = directHoldPointList.concat(lpPointList).concat(referralPointList).concat(otherPointList);
+    const referralPointList = await this.getReferralPoint(season);
+    const allPointList = directHoldPointList.concat(lpPointList).concat(referralPointList);
     const userAddresses = [...new Set(allPointList.map((item) => item.userAddress))];
     const usernameMap = await this.getUsername(userAddresses);
     const data: SeasonTotalPoint[] = [];
@@ -173,14 +172,14 @@ export class SeasonTotalPointService extends Worker {
   }
 
   // get all address's referral point
-  private async getReferralPoint(startTime: string, endTime: string): Promise<seasonTotalPoint[]> {
+  private async getReferralPoint(season: number): Promise<seasonTotalPoint[]> {
     const referralPointList = [];
-    const result = await this.blockReferralPointsRepository.getAllAddressTotalPoint(startTime, endTime);
+    const result = await this.referralPointsRepository.getAllAddressTotalPoint(season);
     for (const item of result) {
       referralPointList.push({
         userAddress: item.address,
         pairAddress: item.pairAddress,
-        point: item.totalPoint,
+        point: item.point,
         type: "referral",
       });
     }
