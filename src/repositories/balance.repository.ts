@@ -58,7 +58,7 @@ export class BalanceRepository extends BaseRepository<Balance> {
   public async getAllAddressesByBlock(blockNumber: number): Promise<Buffer[]> {
     const transactionManager = this.unitOfWork.getTransactionManager();
     const result = await transactionManager.query(
-      `SELECT address FROM balances WHERE "blockNumber" <= $1 group by address limit 100;`,
+      `SELECT address FROM balances WHERE "blockNumber" <= $1 group by address;`,
       [blockNumber]
     );
     return result.map((row: any) => row.address);
