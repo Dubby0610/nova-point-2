@@ -6,6 +6,11 @@ export class SupplementData6201720531609946 implements MigrationInterface {
     const typeOrmRefactorCliDataSource = new DataSource({
       ...typeOrmRefactorModuleOptions,
     });
+    const startTime = "2024-07-08 00:00:00";
+    const endTime = "2024-07-09 00:00:00";
+    await queryRunner.query(
+      `delete from "blockAddressPoint" where "createdAt">='${startTime}' and "createdAt"<'${endTime}';`
+    );
 
     const refactorDataSource = await typeOrmRefactorCliDataSource.initialize();
 
@@ -13,7 +18,7 @@ export class SupplementData6201720531609946 implements MigrationInterface {
     const limit = 5000000;
     while (true) {
       const blockAddressPointData = await refactorDataSource.query(
-        `SELECT * FROM "blockAddressPoint" WHERE "createdAt">='2024-06-19 00:00:00' ORDER BY "blockNumber" asc, "address" asc limit ${limit} offset ${offset}`
+        `SELECT * FROM "blockAddressPoint" WHERE "createdAt">='${startTime}' and "createdAt">='${endTime}' ORDER BY "blockNumber" asc, "address" asc limit ${limit} offset ${offset}`
       );
       if (blockAddressPointData.length === 0) {
         break;
