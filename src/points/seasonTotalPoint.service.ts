@@ -173,12 +173,12 @@ export class SeasonTotalPointService extends Worker {
     const lpPointList = [];
     const result = await this.blockAddressPointOfLpRepository.getAllAddressTotalPoint(startBlockNumber, endBlockNumber);
     for (const item of result) {
-      // lpPointList.push({
-      //   userAddress: item.address,
-      //   pairAddress: item.pairAddress,
-      //   point: item.totalPoint,
-      //   type: item.type,
-      // });
+      lpPointList.push({
+        userAddress: item.address,
+        pairAddress: item.pairAddress,
+        point: item.totalPoint,
+        type: item.type,
+      });
     }
     return lpPointList;
   }
