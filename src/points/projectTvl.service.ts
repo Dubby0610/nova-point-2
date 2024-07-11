@@ -52,6 +52,10 @@ export class ProjectTvlService extends Worker {
     for (const item of balanceList) {
       const priceIdTmp = supportTokenAddressToPriceId.get(item.tokenAddress);
       const price = tokenPriceMap.get(priceIdTmp);
+      if (!isFinite(Number(price))) {
+        this.logger.error(`${priceIdTmp}'price is not a number: ${price}`);
+        continue;
+      }
       const tokenInfo = this.tokenService.getSupportToken(item.tokenAddress);
       if (!tokenInfo) {
         continue;
