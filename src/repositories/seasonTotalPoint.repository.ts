@@ -23,4 +23,9 @@ export class SeasonTotalPointRepository extends BaseRepository<SeasonTotalPoint>
       return row;
     });
   }
+
+  public async deleteBySeason(season: number): Promise<void> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    await transactionManager.query(`DELETE FROM public."seasonTotalPoint" WHERE season=${season};`);
+  }
 }

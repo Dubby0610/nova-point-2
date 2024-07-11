@@ -19,6 +19,7 @@ import { TvlPointLinkswapService } from "./points/tvlPointLinkswap.service";
 import { RedistributePointService } from "./points/redistributePoint.service";
 import { ReferralPointService } from "./points/referralPoints.service";
 import { SeasonTotalPointService } from "./points/seasonTotalPoint.service";
+import { ProjectTvlService } from "./points/projectTvl.service";
 import {
   BlockRepository,
   TokenRepository,
@@ -218,6 +219,7 @@ import { DirectPointService } from "./points/directPoint.service";
     SeasonTotalPointService,
     InvitesRepository,
     OtherPointRepository,
+    ProjectTvlService,
   ],
 })
 export class AppModule {}

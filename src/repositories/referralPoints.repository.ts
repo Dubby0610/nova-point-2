@@ -38,4 +38,9 @@ export class ReferralPointsRepository extends BaseRepository<ReferralPoints> {
       };
     });
   }
+
+  public async deleteBySeason(season: number): Promise<void> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    await transactionManager.query(`DELETE FROM public."referralPoints" WHERE season=${season};`);
+  }
 }
