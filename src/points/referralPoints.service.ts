@@ -5,6 +5,7 @@ import { ReferralPointsRepository, ReferralRepository, SeasonTotalPointRepositor
 import { ConfigService } from "@nestjs/config";
 import { ReferralPoints } from "src/entities/referralPoints.entity";
 import { SeasonTotalPointService } from "./seasonTotalPoint.service";
+import { LrtUnitOfWork } from "src/unitOfWork";
 
 export const REFERRAL_BOOSTER: number = 0.1;
 
@@ -17,6 +18,7 @@ export class ReferralPointService extends Worker {
     private readonly seasonTotalPointService: SeasonTotalPointService,
     private readonly seasonTotalPointRepository: SeasonTotalPointRepository,
     private readonly referralPointsRepository: ReferralPointsRepository,
+    private readonly lrtUnitwork: LrtUnitOfWork,
     private readonly configService: ConfigService
   ) {
     super();
@@ -99,11 +101,14 @@ export class ReferralPointService extends Worker {
     const referralPointFinal: ReferralPoints[] = Object.values(blockReferralPointReduceMap);
 
     try {
-      await this.referralPointsRepository.addManyOrUpdate(
-        referralPointFinal,
-        ["point"],
-        ["address", "pairAddress", "season"]
-      );
+      await this.lrtUnitwork.useTransaction(async () => {
+        await this.referralPointsRepository.deleteBySeason(season);
+        await this.referralPointsRepository.addManyOrUpdate(
+          referralPointFinal,
+          ["point"],
+          ["address", "pairAddress", "season"]
+        );
+      });
     } catch (error) {
       this.logger.error("Failed to save referral point to db", error.stack);
     }

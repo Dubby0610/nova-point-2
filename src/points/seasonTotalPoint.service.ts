@@ -14,6 +14,8 @@ import seasonConfig from "../config/season";
 import { OTHER_HASH_64, ZERO_HASH_64 } from "src/constants";
 import { SeasonTotalPoint } from "src/entities";
 import { OtherPointRepository } from "src/repositories/otherPoint.repository";
+import { ProjectTvlService } from "./projectTvl.service";
+import { LrtUnitOfWork } from "src/unitOfWork";
 
 interface seasonTotalPoint {
   userAddress: string;
@@ -33,6 +35,8 @@ export class SeasonTotalPointService extends Worker {
     private readonly invitesRepository: InvitesRepository,
     private readonly seasonTotalPointRepository: SeasonTotalPointRepository,
     private readonly otherPointRepository: OtherPointRepository,
+    private readonly projectTvlService: ProjectTvlService,
+    private readonly lrtUnitwork: LrtUnitOfWork,
     private readonly configService: ConfigService
   ) {
     super();
@@ -90,11 +94,14 @@ export class SeasonTotalPointService extends Worker {
       tmp.userName = usernameMap.get(item.userAddress) ?? "user-" + item.userAddress.slice(10);
       data.push(tmp);
     }
-    await this.seasonTotalPointRepository.addManyOrUpdate(
-      data,
-      ["point", "userName"],
-      ["userAddress", "pairAddress", "type", "season"]
-    );
+    await this.lrtUnitwork.useTransaction(async () => {
+      await this.seasonTotalPointRepository.deleteBySeason(season);
+      await this.seasonTotalPointRepository.addManyOrUpdate(
+        data,
+        ["point", "userName"],
+        ["userAddress", "pairAddress", "type", "season"]
+      );
+    });
   }
 
   async handleOtherPoint() {
@@ -146,13 +153,17 @@ export class SeasonTotalPointService extends Worker {
   private async getDirectHoldPoint(startBlockNumber: number, endBlockNumber: number): Promise<seasonTotalPoint[]> {
     const holdPointMap = new Map<string, number>();
     const result = await this.blockAddressPointRepository.getAllAddressTotalPoint(startBlockNumber, endBlockNumber);
+    const projectValutAddress = await this.projectTvlService.getPairAddressValut();
+    const projectValutAddressMap = new Map<string, boolean>(projectValutAddress.map((item) => [item, true]));
     return result.map((item) => {
-      return {
-        userAddress: item.address,
-        pairAddress: ZERO_HASH_64,
-        point: item.totalPoint,
-        type: "directHold",
-      };
+      if (!projectValutAddressMap.has(item.address)) {
+        return {
+          userAddress: item.address,
+          pairAddress: ZERO_HASH_64,
+          point: item.totalPoint,
+          type: "directHold",
+        };
+      }
     });
   }
 

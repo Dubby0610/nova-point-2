@@ -5,6 +5,8 @@ import { Worker } from "../common/worker";
 import { BalanceRepository, BlockTokenPriceRepository, ProjectRepository } from "../repositories";
 import { TokenService } from "../token/token.service";
 import { STABLE_COIN_TYPE } from "./baseData.service";
+import { Not } from "typeorm";
+import { AQUA_PAIRADDRESS_CONTRACT_ADDRESS, AQUA_VALUT_CONTRACT_ADDRESS } from "src/constants";
 
 @Injectable()
 export class ProjectTvlService extends Worker {
@@ -32,12 +34,7 @@ export class ProjectTvlService extends Worker {
 
   async handleTvl() {
     // get addresses of project from projectRespository
-    const projects = await this.projectRepository.find({
-      select: {
-        pairAddress: true,
-      },
-    });
-    const projectPairAddresses = projects.map((project) => project.pairAddress);
+    const projectPairAddresses = await this.getPairAddressValut();
     // get support tokens
     const supportTokens = this.tokenService.getAllSupportTokens();
     const supportTokenAddressToPriceId = new Map<string, string>();
@@ -69,13 +66,14 @@ export class ProjectTvlService extends Worker {
     }
     const projectTvlArr = [];
     for (const [address, tvl] of tvlMap) {
-      const project = projects.find((p) => p.pairAddress === address);
-      if (project) {
-        projectTvlArr.push({
-          pairAddress: address,
-          tvl: tvl.toString(),
-        });
+      let pairAddress = address;
+      if (address == AQUA_VALUT_CONTRACT_ADDRESS) {
+        pairAddress = AQUA_PAIRADDRESS_CONTRACT_ADDRESS;
       }
+      projectTvlArr.push({
+        pairAddress: pairAddress,
+        tvl: tvl.toString(),
+      });
     }
     // save tvl to db
     await this.projectRepository.addManyOrUpdate(projectTvlArr, ["tvl"], ["pairAddress"]);
@@ -97,5 +95,19 @@ export class ProjectTvlService extends Worker {
       tokenPrices.set(item.priceId, new BigNumber(item.usdPrice));
     }
     return tokenPrices;
+  }
+
+  async getPairAddressValut(): Promise<string[]> {
+    const projects = await this.projectRepository.find({
+      select: {
+        pairAddress: true,
+      },
+      where: {
+        name: Not("aqua"),
+      },
+    });
+    const projectPairAddresses = projects.map((project) => project.pairAddress);
+    projectPairAddresses.push(AQUA_VALUT_CONTRACT_ADDRESS);
+    return projectPairAddresses;
   }
 }

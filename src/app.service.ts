@@ -41,6 +41,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
     // second params is utc+8
     // await this.tvlPointService.handleHoldPoint(1395273, new Date(1715159940 * 1000).toISOString());
     // this.compensatePoints()
+    await this.seasonTotalPointService.handlePoint();
     await this.referralPointService.handleReferralPoint();
     await this.seasonTotalPointService.handlePoint();
     this.redistributePointService.runProcess();
