@@ -8,3 +8,7 @@ export const BLOCKS_REVERT_DETECTED_EVENT = "revert:detected";
 export const AQUA_VALUT_CONTRACT_ADDRESS = "0x4AC97E2727B0e92AE32F5796b97b7f98dc47F059".toLocaleLowerCase();
 
 export const AQUA_PAIRADDRESS_CONTRACT_ADDRESS = "0x069fde3a1439d39ba2eef51559ba7006003a4853".toLocaleLowerCase();
+
+export const WETH_ADDRESS = "0x8280a4e7d5b3b658ec4580d3bc30f5e50454f169".toLocaleLowerCase();
+
+export const MERGE_TOKEN_ADDRESS = "0x83fd59fd58c6a5e6ea449e5400d02803875e1104".toLocaleLowerCase();

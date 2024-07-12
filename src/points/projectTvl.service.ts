@@ -6,7 +6,12 @@ import { BalanceRepository, BlockTokenPriceRepository, ProjectRepository } from 
 import { TokenService } from "../token/token.service";
 import { STABLE_COIN_TYPE } from "./baseData.service";
 import { Not } from "typeorm";
-import { AQUA_PAIRADDRESS_CONTRACT_ADDRESS, AQUA_VALUT_CONTRACT_ADDRESS } from "src/constants";
+import {
+  AQUA_PAIRADDRESS_CONTRACT_ADDRESS,
+  AQUA_VALUT_CONTRACT_ADDRESS,
+  MERGE_TOKEN_ADDRESS,
+  WETH_ADDRESS,
+} from "src/constants";
 
 @Injectable()
 export class ProjectTvlService extends Worker {
@@ -111,7 +116,7 @@ export class ProjectTvlService extends Worker {
       },
     });
     const projectPairAddresses = projects.map((project) => project.pairAddress);
-    projectPairAddresses.push(AQUA_VALUT_CONTRACT_ADDRESS);
+    projectPairAddresses.push(AQUA_VALUT_CONTRACT_ADDRESS, WETH_ADDRESS, MERGE_TOKEN_ADDRESS);
     return projectPairAddresses;
   }
 }
