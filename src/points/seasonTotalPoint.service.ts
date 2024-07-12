@@ -151,20 +151,21 @@ export class SeasonTotalPointService extends Worker {
 
   // get all address's hold point
   private async getDirectHoldPoint(startBlockNumber: number, endBlockNumber: number): Promise<seasonTotalPoint[]> {
-    const holdPointMap = new Map<string, number>();
     const result = await this.blockAddressPointRepository.getAllAddressTotalPoint(startBlockNumber, endBlockNumber);
     const projectValutAddress = await this.projectTvlService.getPairAddressValut();
     const projectValutAddressMap = new Map<string, boolean>(projectValutAddress.map((item) => [item, true]));
-    return result.map((item) => {
+    const holdPointList = [];
+    for (const item of result) {
       if (!projectValutAddressMap.has(item.address)) {
-        return {
+        holdPointList.push({
           userAddress: item.address,
           pairAddress: ZERO_HASH_64,
           point: item.totalPoint,
           type: "directHold",
-        };
+        });
       }
-    });
+    }
+    return holdPointList;
   }
 
   // get all address's tvl point, tx num point, tx vol point, bridgeTxNum point
