@@ -3,7 +3,6 @@ node_modules
 
 .DS_Store
 *.csv
-*.log
 src/adapters/**/build
 src/adapters/**/data
 src/adapters/**/node_modules

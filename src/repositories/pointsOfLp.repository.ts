@@ -64,6 +64,24 @@ export class PointsOfLpRepository extends BaseRepository<PointsOfLp> {
     });
   }
 
+  /**
+   * 
+   * @param addresses user addresses
+   * @returns a Map which key is userAddress.toLowerCase()_pairAddress.toLowerCase()
+   */
+  public async getPointMapForAddresses(addresses: string[]) {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    const addressesBuff = addresses.map((item) => Buffer.from(item.substring(2), "hex"));
+    const result = await transactionManager.getRepository(PointsOfLp)
+      .createQueryBuilder("p")
+      .where("p.address = ANY(:addresses)", { addresses: addressesBuff })
+      .getMany();
+
+    return new Map(result.map((row) => {
+      return [`${row.address.toLowerCase()}-${row.pairAddress.toLowerCase()}`, row];
+    }));
+  }
+
   public createDefaultPoint(address: string, pairAddress: string): PointsOfLp {
     return {
       id: 0,

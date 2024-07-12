@@ -4,8 +4,8 @@ import { existsSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
 import { BlockRepository, RedistributeBalanceRepository, ProjectRepository } from "../repositories";
-import * as csv from "csv-parser";
-import * as fs from "fs";
+import csv from "csv-parser";
+import fs from "fs";
 import { Cron } from "@nestjs/schedule";
 import { getAddress } from "ethers/lib/utils";
 
@@ -27,6 +27,7 @@ export class RedistributeBalanceService extends Worker {
   private readonly logger: Logger;
   private readonly outputFileName = "/data/";
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
+  private readonly filePrefix = 'hourly'
 
   public constructor(
     private readonly redistributeBalanceRepository: RedistributeBalanceRepository,
@@ -59,9 +60,9 @@ export class RedistributeBalanceService extends Worker {
       const currentBlock = await this.blockRepository.getLastBlock({
         select: { number: true, timestamp: true },
       })
-      this.logger.log(`RedistributeBalanceService start from ${currentBlock.number}`)
+      this.logger.log(`RedistributeBalanceService start at ${currentBlock.number}`)
       await this.runCommandsInAllDirectories(currentBlock.number);
-      this.logger.log(`RedistributeBalanceService end from ${currentBlock.number}`)
+      this.logger.log(`RedistributeBalanceService end at ${currentBlock.number}`)
     }
 
   }
@@ -83,7 +84,7 @@ export class RedistributeBalanceService extends Worker {
   private async executeCommandInDirectory(dir: string, curBlockNumber: number): Promise<void> {
     await this.execCommand(`npm i && npm run compile `, join(this.adaptersPath, dir, 'execution'))
     this.logger.log(`Folder '${dir}' init successfully`);
-    const command = `node genHourlyData.js ${dir} ${curBlockNumber}`;
+    const command = `npm run adapter:tvl -- ${dir} ${this.filePrefix} ${curBlockNumber}`;
 
     try {
       await this.execCommand(command, this.adaptersPath);
@@ -111,9 +112,9 @@ export class RedistributeBalanceService extends Worker {
   private async saveTVLDataToDb(dir: string, blockNumber: number): Promise<void> {
     return new Promise((resolve) => {
       // read output.csv file and save data to db
-      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `hourly.${blockNumber}.csv`);
+      const outputPath = join(this.adaptersPath, dir, this.outputFileName + `${this.filePrefix}.${blockNumber}.csv`);
       if (!existsSync(outputPath)) {
-        this.logger.warn(`Folder '${dir}' does not contain hourly.${blockNumber}.csv file.`);
+        this.logger.warn(`Folder '${dir}' does not contain ${this.filePrefix}.${blockNumber}.csv file.`);
         resolve()
         return;
       }

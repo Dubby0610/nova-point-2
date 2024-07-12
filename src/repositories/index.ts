@@ -20,6 +20,8 @@ export * from "./points.repository";
 export * from "./blockAddressPoint.repository";
 export * from "./referral.repository";
 export * from "./referralPoints.repository";
+export * from "./tvlProcessing.repository";
+export * from "./txProcessing.repository";
 export * from "./seasonTotalPoint.repository";
 export * from "./invites.repository";
 export * from "./otherPoint.repository";
