@@ -16,7 +16,7 @@ export default [
   {
     season: 3, // season2-2
     startTime: "2024-07-15 21:00:00",
-    endTime: "2024-08-30 21:00:00",
+    endTime: "2024-08-31 21:00:00",
     startBlockNumber: 4087520,
     endBlockNumber: 999999999,
   },
