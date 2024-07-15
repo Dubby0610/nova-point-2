@@ -76,9 +76,12 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
       this.baseDataService.stop(),
       this.bridgeActiveService.stop(),
       this.bridgePointService.stop(),
+      this.genAdapterDataService.stop(),
+      this.calTvlPointService.stop(),
+      this.calTxPointService.stop(),
       this.seasonTotalPointService.stop(),
     ]);
   }
 
-  private async compensatePoints() { }
+  private async compensatePoints() {}
 }

@@ -140,13 +140,13 @@ export class SeasonTotalPointService extends Worker {
     endBlockNumber: number;
     season: number;
   } {
-    const now = new Date();
-    for (const season of seasonConfig) {
-      if (now >= new Date(season.startTime) && now < new Date(season.endTime)) {
-        return season;
-      }
-    }
-    return null;
+    // const now = new Date();
+    // for (const season of seasonConfig) {
+    //   if (now >= new Date(season.startTime) && now < new Date(season.endTime)) {
+    //     return season;
+    //   }
+    // }
+    return seasonConfig[seasonConfig.length - 1];
   }
 
   // get all address's hold point
