@@ -239,12 +239,12 @@ export class GenAdapterDataService extends Worker {
   private updateTvlProjects = async (rows: Awaited<ReturnType<typeof this.insertTVLDataToDb>>, projectName: string) => {
     const pairAddresses = rows.map(i => i.pairAddress);
     const uniquePairAddresses = [...new Set(pairAddresses)]
-    await this.projectRepository.addManyIgnoreConflicts(uniquePairAddresses.map(item => ({ pairAddress: item, dir: projectName })))
+    await this.projectRepository.addManyIgnoreConflicts(uniquePairAddresses.map(item => ({ pairAddress: item, name: projectName })))
   }
 
   private updateTxProjects = async (rows: Awaited<ReturnType<typeof this.insertTXDataToDb>>, projectName: string) => {
     const pairAddresses = rows.map(i => i.contractAddress);
     const uniquePairAddresses = pairAddresses
-    await this.projectRepository.addManyIgnoreConflicts(uniquePairAddresses.map(item => ({ pairAddress: item, dir: projectName })))
+    await this.projectRepository.addManyIgnoreConflicts(uniquePairAddresses.map(item => ({ pairAddress: item, name: projectName })))
   }
 }

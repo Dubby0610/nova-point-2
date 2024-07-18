@@ -37,7 +37,7 @@ const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
   const timestamp = await getTimestampAtBlock(blockNumber)
   const lids = await getAllLidsAtBlock(blockNumber)
   const tvlMap = new Map()
-
+  console.log(`novaswap process ${lids.length} items`)
   for (const lid of lids) {
     let success = false;
     while (!success) {
@@ -78,6 +78,6 @@ export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]
   return res
 };
 
-// getUserTVLData(3588784)
+// getUserTVLData(4199092)
 
 
