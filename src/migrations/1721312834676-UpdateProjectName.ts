@@ -25,7 +25,8 @@ export class UpdateProjectName1721312834676 implements MigrationInterface {
             'd6c2EE2AF8ddc3Cce14D2969fd2777731e02D219',
             'bC8b9E93D11106291Bc0B2a6b476E4B1525D251A',
             '02df80fC705D3E740EdEF000C59954ecb5B62Dc8',
-            'ee4d7caA9E7d4fe8350E9B534a145DA754E6018E'
+            'ee4d7caA9E7d4fe8350E9B534a145DA754E6018E',
+            '0bc8678D5F909626d3D3Ed990d10c5AA641D88b8'
         ];
 
         const formattedPools = pools.map(pool => `decode('${pool}', 'hex')`).join(', ');
