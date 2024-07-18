@@ -172,9 +172,9 @@ export class CalTxPointService extends Worker {
         const blockAddressPointArr = Array.from(blockAddressPointMap.values());
         const addressPointArr = Array.from(addressPointMap.values());
         await this.blockAddressPointOfLpRepository.addManyIgnoreConflicts(blockAddressPointArr);
-        this.logger.log(`Finish txNum blockAddressPointArr, length: ${blockAddressPointArr.length}`);
+        this.logger.log(`Finish txPoint blockAddressPointArr, length: ${blockAddressPointArr.length}`);
         await this.pointsOfLpRepository.addManyOrUpdate(addressPointArr, ["stakePoint"], ["address", "pairAddress"]);
-        this.logger.log(`Finish txNum addressPointArr, length: ${addressPointArr.length}`);
+        this.logger.log(`Finish txPoint addressPointArr, length: ${addressPointArr.length}`);
         this.txProcessingRepository.upsertStatus({ ...status, pointProcessed: true })
         resolve()
       })
