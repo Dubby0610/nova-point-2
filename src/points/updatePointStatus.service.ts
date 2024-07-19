@@ -32,10 +32,12 @@ export class UpdatePointStatusService {
     try {
       this.logger.log(`${UpdatePointStatusService.name} initialized`);
       const dirs = await this.getAllDirectories();
-
+      const currentBlock = await this.blockRepository.getLastBlock({
+        select: { number: true },
+      })
       await Promise.all(dirs.map(async (dir) => {
-        this.updateTvlProcessStatus(dir)
-        this.updateTxProcessStatus(dir)
+        this.updateTvlProcessStatus(dir, currentBlock.number)
+        this.updateTxProcessStatus(dir, currentBlock.number)
       }));
     } catch (error) {
       this.logger.error(`Error in runTask ${error.stack}`)
@@ -47,15 +49,12 @@ export class UpdatePointStatusService {
     return files.filter(dir => dir !== 'example');
   }
 
-  private async updateTvlProcessStatus(projectName: string) {
+  private async updateTvlProcessStatus(projectName: string, blockNumber: number) {
     try {
       if (!this.tvlPaths.includes(projectName)) return
-      const currentBlock = await this.blockRepository.getLastBlock({
-        select: { number: true },
-      })
       const record = new TvlProcessingStatus();
       record.projectName = projectName;
-      record.blockNumber = currentBlock.number;
+      record.blockNumber = blockNumber;
       record.adapterProcessed = false;
       record.pointProcessed = false;
       await this.tvlProcessingRepository.upsertStatus(record);
@@ -65,18 +64,15 @@ export class UpdatePointStatusService {
     }
   }
 
-  private async updateTxProcessStatus(projectName: string) {
+  private async updateTxProcessStatus(projectName: string, blockNumberEnd: number) {
     try {
       if (!this.txPaths.includes(projectName)) return
-      const currentBlock = await this.blockRepository.getLastBlock({
-        select: { number: true },
-      })
-      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber); // can be remove after re-deployment
+      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber);
       const processedStatus = await this.txProcessingRepository.findOneBy({ projectName })
       const record = new TxProcessingStatus();
       record.projectName = projectName;
       record.blockNumberStart = processedStatus ? processedStatus.blockNumberEnd + 1 : Number(prevBlockNumberInCache) + 1
-      record.blockNumberEnd = currentBlock.number
+      record.blockNumberEnd = blockNumberEnd
       record.adapterProcessed = false;
       record.pointProcessed = false;
       await this.txProcessingRepository.upsertStatus(record);
