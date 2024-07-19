@@ -34,7 +34,7 @@ export class UpdateNovaswapTvlProcessingStatus1721354490856 implements Migration
         await queryRunner.query(`
             UPDATE "tvlProcessingStatus"
             SET "adapterProcessed" = false, "pointProcessed" = false
-            WHERE "blockNumber" >= 3986073;
+            WHERE "blockNumber" >= 3986073 and "projectName" = 'novaswap';
         `);
     }
 
