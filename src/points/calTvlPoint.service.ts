@@ -45,7 +45,9 @@ export class CalTvlPointService extends Worker {
     try {
       this.logger.log(`${CalTvlPointService.name} initialized`);
       const pendingProcessed = await this.tvlProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
-      await Promise.all(pendingProcessed.map(processingStatus => this.handleHoldPoint(processingStatus)))
+      for (const processingStatus of pendingProcessed) {
+        await this.handleHoldPoint(processingStatus);
+      }
 
       await waitFor(() => !this.currentProcessPromise, 10000, 10000);
       if (!this.currentProcessPromise) {
