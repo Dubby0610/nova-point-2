@@ -42,8 +42,9 @@ export class CalTxPointService extends Worker {
     try {
       this.logger.log(`${CalTxPointService.name} start...`);
       const pendingProcessed = await this.txProcessingRepository.find({ where: { pointProcessed: false, adapterProcessed: true } })
-      await Promise.all(pendingProcessed.map(async status => { this.calculateTxNumPoint(status) }))
-
+      for (const status of pendingProcessed) {
+        await this.calculateTxNumPoint(status);
+      }
       await waitFor(() => !this.currentProcessPromise, 10000, 10000);
       if (!this.currentProcessPromise) {
         return;
