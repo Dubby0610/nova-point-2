@@ -15,7 +15,6 @@ export class UpdateNovaswapTvlProcessingStatus1721354490856 implements Migration
         const files = await promisesFs.readdir(adaptersPath);
         const allFiles = files.filter(dir => dir !== 'example');
         const config = genConfig()
-        console.log(config)
         const tvlPaths = Object.keys(config['projectTokenBooster'])
 
         await Promise.all(blocks.map(block => {
