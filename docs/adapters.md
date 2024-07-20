@@ -34,12 +34,12 @@ $$
    - DEX, PERPs, Lending, Bridge:
      The total trading/lending/bridging volume by the user based on the formula above.
    - GameFi, NFTFi, SocialFi:
-     The total trading volume of assets such as NFT and FT.  
-      The total spending in the game economy (eg. tokens spent in gameFi, in-game asset trading etc)
+     The total trading volume of assets such as NFTFi and SocialFi.  
+     The total spending in the game economy (eg. tokens spent in gameFi, in-game asset trading etc)
      In this sense, the total trading volume can signify total transaction volume in gameFi. - To prevent sybil attack, a multiplier of 1/x where x = 1000, 2000,..., N is used for each specific protocol. The multiplier is incorporated into the constant b.
 
 2. TVL<sub>u,t</sub> (Total Locked Value):
-   Total value of liquidity provided to DEX pools or PERPs or Lending , The TVL refers to the total value of different tokens owned by each user in a specific period of time.
+   Total value of liquidity provided to DEX pools or PERPs or Lending Protocol, The TVL refers to the total value of different tokens owned by each user in a specific period of time.
 
    These tokens are not sTokens or lTokens; rather, they represent the quantity of underlying tokens corresponding to these collateral certificates in the pool, which is USDC/ETH/WETH etc.
 
@@ -71,7 +71,7 @@ Imagine that user A deposits 1 ETH and 3000 USDC in a swap liquidity pool, and g
 
 As uniswap V3, as users can provide customized liquidity and get their unique LP NFT, we will calculate points for the balance owned by the user’s total NFTs.
 
-NOTE: Team can to specify the conditions for the percentage of user's LP share such as users' paticipation in a specific contract interaction. However, the formula to calculate user's token balance is always the user's percentage of LP share multiplies by the pool balance of the underlying token in the contract. ie `User's LP share percentage * Pool balance`
+NOTE: Team can to specify the conditions for the percentage of user's LP share such as users' participation in a specific contract interaction. However, the formula to calculate user's token balance is always the user's percentage of LP share multiplies by the pool balance of the underlying token in the contract. ie `User's LP share percentage * Pool balance`
 
 3. TxNum<sub>u,t</sub> signifies the total number of transactions
    - For Dex/Perps/Lending protocol, there is no limit to the tx volume.
@@ -82,16 +82,21 @@ NOTE: Team can to specify the conditions for the percentage of user's LP share s
 
 ### Sample Adapter
 
-Check this [example](./example/)，
+Check this [example](../src/adapters/example)，
 
 **Requirements:**
 
 Create your own adapter directory under the adapters folder, which consists of three parts.
 
-- **execution**: This directory houses the Node.js execution files for your adapter. It is a complete npm project, with a `package.json` to ensure correct installation of dependencies. The compilation output entry file is located in `dist/index.js`. It provides the necessary output functions `getUserTransactionData` and `getUserTVLData`. We will pass the block height as a parameter, execute your function, and write the results to a CSV file.
-- **subgraph**: We strongly recommend using a subgraph as the data source for Execution because it offers more transparent logic and data. We will review your code to ensure the data originates from the blockchain. If you choose to use a subgraph, please build it in this directory. Refer to the example, create your own subgraph, and you can use the npm script `npm run deploy-subgraph:dev -- -p <projectName>`to deploy your subgraph on dev environment.
+- **execution**: This directory houses the Node.js execution files for your adapter. It is a complete npm project, with a `package.json` to ensure correct installation of dependencies. The compilation output entry file is located in `dist/index.js`. It provides the necessary output functions `getUserTransactionData` and `getUserTVLData`. We will pass the a blockHeight as a parameter, execute your function, and write the results to a CSV file.
+- **subgraph**: We strongly recommend using a subgraph as the data source for **Execution** because it offers more transparent logic and data. We will review your code to ensure the data originates from the blockchain. If you choose to use a subgraph, please build it in this directory. Refer to the example, create your own subgraph, and you can use the npm script `npm run deploy-subgraph:dev -- -p <adapter-name> -name <subgraph-path>`to deploy your subgraph on dev environment.
 
-- **data**: You can refer to [example/data](./example/data). You don't need to create this folder as it will be included in .gitignore. We just want to explain what the output CSV file looks like. It will be located in the data directory. We will input block heights as needed and execute the getUserTransactionData and getUserTVLData functions you expose in the `execution/dist` folder, finally outputting the CSV to the data folder.
+```bash
+# change 'example' and 'example-points' to your relevant names
+npm run deploy-subgraph:dev -- -p example -name example-points
+```
+
+- **data**: You can refer to [example/data](../src/adapters/example/data). You don't need to create this data folder as it will be included in .gitignore. We just want to explain what the output CSV file looks like. It will be located in the data directory. We will input a block height as needed and execute the `getUserTransactionData` and `getUserTVLData` functions you expose in the `execution/dist` folder, finally outputting the CSV to the data folder.
 
 ## Installation & Setup
 
@@ -140,23 +145,18 @@ For DEX swaps and opening/closing trades on perpetuals, we calculate users' Volu
 | nonce           | A unique identifier for a transaction, primarily used to distinguish cases where a single transaction contains multiple swap or similar transactions | 23                                                                 | Yes              | Yes                |
 | symbol          | token symbol                                                                                                                                         | WETH                                                               | No               | No                 |
 
-#### Important Notes:
-
-1. contractAddress refers to the releveant pool address at which protocol stores the assets.
-2. tokenAddress refers to the address at which users stake the assets.
-
 ### TVL Points
 
 For TVL points calculation, you need to provide the balance portion quantity of different tokens locked by all users in the protocol pool at the corresponding block height.
 
-| Data Field   | Notes                                                                                                  | Example                                    | Required |
-| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------ | -------- |
-| timestamp    | block timestamp                                                                                        | 1370000000                                 | Yes      |
-| userAddress  | User account                                                                                           | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
-| tokenAddress | Underlying token address. eg: WETH address                                                             | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
-| poolAddress  | Each pool’s contract address                                                                           | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
-| balance      | Refer to [TVL_u](#tvl_u-example) & [Important Note](#important-notes), should be raw data, eg: 0.1 ETH | 100000000000000000                         | Yes      |
-| symbol       | token symbol                                                                                           | WETH                                       | No       |
+| Data Field   | Notes                                                                                | Example                                    | Required |
+| ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------ | -------- |
+| timestamp    | block timestamp                                                                      | 1370000000                                 | Yes      |
+| userAddress  | User account                                                                         | 0x7Ac6d25FD5E437cB7c57Aee77aC2d0A6Cb85936C | Yes      |
+| tokenAddress | Underlying token address. eg: WETH address                                           | 0x8280a4e7D5B3B658ec4580d3Bc30f5e50454F169 | Yes      |
+| poolAddress  | Each pool’s contract address where the underlying assets are locked or vault address | 0xE8a8f1D76625B03b787F6ED17bD746e0515F3aEf | Yes      |
+| balance      | Should be raw data, eg: 0.1 ETH                                                      | 100000000000000000                         | Yes      |
+| symbol       | token symbol                                                                         | WETH                                       | No       |
 
 ## Testing & Validation
 
@@ -169,10 +169,13 @@ You can validate whether the script can output a CSV file that meets the data re
 # @params endBlock: The ending block number. If you only generate TVL data and do not export the `getUserTransactionData` method, you can use any number.
 
 # for tvl data
+# npm run adapter:tx -- example tvl 350000
 npm run adapter:tvl -- <projectName> <filePrefix> <endBlock>
 
+
 # for tx data
-npm run adapter:tx -- <projectName> <filePrefix> <endBlock> <startBlock>
+# npm run adapter:tx -- example tx 320000 350000
+npm run adapter:tx -- <projectName> <filePrefix> <startBlock> <endBlock>
 ```
 
 We will conduct a sampling verification of your CSV results. Teams are required to provide detailed methods of verification, including the approach and information utilized in the verification process.
