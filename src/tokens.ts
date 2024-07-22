@@ -1357,4 +1357,24 @@ export default [
       },
     ],
   },
+  {
+    address: [
+    {
+      chain: "Ethereum",
+      l1Address: "0xfC385A1dF85660a7e041423DB512f779070FCede",
+      l2Address: "0xC967dabf591B1f4B86CFc74996EAD065867aF19E",
+    },
+  ],
+    symbol: "ZKL",
+    decimals: 18,
+    cgPriceId: "zklink",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 5,
+        timestamp: 0,
+      },
+    ],
+  }
 ];
