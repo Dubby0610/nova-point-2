@@ -15,6 +15,7 @@ import { hexTransformer } from "../transformers/hex.transformer";
 import { ConfigService } from "@nestjs/config";
 import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service";
 import addressMultipliers from "../config/addressMultipliers";
+import waitFor from "src/utils/waitFor";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 type BlockAddressTvl = {
@@ -72,6 +73,7 @@ export class DirectPointService extends Worker {
         number: currentBlockNumber,
       },
     });
+    await waitFor(() => false, 60 * 1000, 60 * 1000);
 
     const statisticStartTime = new Date();
     const earlyBirdMultiplier = this.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
@@ -198,7 +200,7 @@ export class DirectPointService extends Worker {
     for (const priceId of allPriceIds) {
       const blockTokenPrice = await this.blockTokenPriceRepository.getBlockTokenPrice(blockNumber, priceId);
       if (!blockTokenPrice) {
-        throw new Error(`Token ${priceId} price not found`);
+        throw new Error(`Token ${priceId} price not found at blocknumber:${blockNumber}`);
       }
       tokenPrices.set(priceId, new BigNumber(blockTokenPrice.usdPrice));
     }
