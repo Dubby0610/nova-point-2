@@ -8,6 +8,7 @@ import {
   InvitesRepository,
   SeasonTotalPointRepository,
   ReferralPointsRepository,
+  SupplementPointRepository,
 } from "../repositories";
 import { ConfigService } from "@nestjs/config";
 import seasonConfig from "../config/season";
@@ -35,6 +36,7 @@ export class SeasonTotalPointService extends Worker {
     private readonly invitesRepository: InvitesRepository,
     private readonly seasonTotalPointRepository: SeasonTotalPointRepository,
     private readonly otherPointRepository: OtherPointRepository,
+    private readonly supplementPointRepository: SupplementPointRepository,
     private readonly projectTvlService: ProjectTvlService,
     private readonly lrtUnitwork: LrtUnitOfWork,
     private readonly configService: ConfigService
@@ -202,7 +204,24 @@ export class SeasonTotalPointService extends Worker {
   private async getOtherPoint(startTime: string, endTime: string): Promise<seasonTotalPoint[]> {
     // get daily point
     const otherPointList = [];
-    const result = await this.otherPointRepository.getOtherPointByAddress(startTime, endTime);
+    let result: { address: string; totalPoint: number }[] = [];
+    const otherResult = await this.otherPointRepository.getOtherPointByAddress(startTime, endTime);
+    const supplementResult = await this.supplementPointRepository.getSupplementPointByAddress(startTime, endTime);
+    if (supplementResult.length > 0) {
+      otherResult.push(...supplementResult);
+      const _result = otherResult.reduce((acc, curr) => {
+        const point = Number(curr.totalPoint);
+        if (acc[curr.address]) {
+          acc[curr.address].totalPoint += point;
+        } else {
+          acc[curr.address] = { address: curr.address, totalPoint: point };
+        }
+        return acc;
+      }, {});
+      result = Object.values(_result);
+    } else {
+      result = otherResult;
+    }
     for (const item of result) {
       otherPointList.push({
         userAddress: item.address,
