@@ -25,3 +25,4 @@ export * from "./txProcessing.repository";
 export * from "./seasonTotalPoint.repository";
 export * from "./invites.repository";
 export * from "./otherPoint.repository";
+export * from "./supplementPoint.repository";
