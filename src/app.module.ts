@@ -44,6 +44,7 @@ import {
   SeasonTotalPointRepository,
   OtherPointRepository,
   SupplementPointRepository,
+  DirectHoldProcessingStatusRepository,
 } from "./repositories";
 import {
   Block,
@@ -71,7 +72,8 @@ import {
   Invites,
   SeasonTotalPoint,
   OtherPoint,
-  supplementPoint,
+  SupplementPoint,
+  DirectHoldProcessingStatus,
 } from "./entities";
 import { typeOrmReferModuleOptions, typeOrmLrtModuleOptions, typeOrmExplorerModuleOptions } from "./typeorm.config";
 import { RetryDelayProvider } from "./retryDelay.provider";
@@ -156,7 +158,8 @@ import { CalTxPointService } from "./points/calTxPoint.service";
         TvlProcessingStatus,
         TxProcessingStatus,
         SeasonTotalPoint,
-        supplementPoint,
+        SupplementPoint,
+        DirectHoldProcessingStatus,
       ],
       "lrt"
     ),
@@ -232,6 +235,7 @@ import { CalTxPointService } from "./points/calTxPoint.service";
     OtherPointRepository,
     ProjectTvlService,
     SupplementPointRepository,
+    DirectHoldProcessingStatusRepository,
   ],
 })
 export class AppModule {}
