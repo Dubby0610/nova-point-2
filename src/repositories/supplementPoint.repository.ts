@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { BaseRepository } from "./base.repository";
-import { supplementPoint } from "../entities";
+import { SupplementPoint } from "../entities";
 
 @Injectable()
-export class SupplementPointRepository extends BaseRepository<supplementPoint> {
+export class SupplementPointRepository extends BaseRepository<SupplementPoint> {
   public constructor(unitOfWork: UnitOfWork) {
-    super(supplementPoint, unitOfWork);
+    super(SupplementPoint, unitOfWork);
   }
 
   public async getSupplementPointByAddress(

@@ -8,7 +8,7 @@ export enum SupplementPointType {
 
 @Entity({ name: "supplementPoint" })
 @Index("idx_supplementPoint_1", ["address", "batchString", "type"])
-export class supplementPoint extends BaseEntity {
+export class SupplementPoint extends BaseEntity {
   @Column({ type: "bytea", transformer: hexTransformer })
   public address: string;
 

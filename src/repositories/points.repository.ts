@@ -1,23 +1,25 @@
 import { Injectable } from "@nestjs/common";
 import { LrtUnitOfWork as UnitOfWork } from "../unitOfWork";
 import { Point } from "../entities";
+import { In } from "typeorm";
+import { BaseRepository } from "./base.repository";
 
 @Injectable()
-export class PointsRepository {
-  public constructor(private readonly unitOfWork: UnitOfWork) {}
-
-  public async getPointByAddress(address: string): Promise<Point> {
-    const transactionManager = this.unitOfWork.getTransactionManager();
-    return await transactionManager.findOne<Point>(Point, {
-      where: { address },
-    });
+export class PointsRepository extends BaseRepository<Point> {
+  public constructor(unitOfWork: UnitOfWork) {
+    super(Point, unitOfWork);
   }
 
-  public createDefaultPoint(address: string): Point {
+  public async getPoints(): Promise<Point[]> {
+    const transactionManager = this.unitOfWork.getTransactionManager();
+    return await transactionManager.find<Point>(Point);
+  }
+
+  public createDefaultPoint(address: string, stakePoint: number = 0): Point {
     return {
       id: 0,
       address,
-      stakePoint: 0,
+      stakePoint,
       refPoint: 0,
     };
   }

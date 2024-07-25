@@ -8,14 +8,16 @@ import {
   BlockTokenPriceRepository,
   BlockAddressPointRepository,
   AddressFirstDepositRepository,
+  DirectHoldProcessingStatusRepository,
 } from "../repositories";
 import { TokenMultiplier, TokenService } from "../token/token.service";
 import BigNumber from "bignumber.js";
 import { hexTransformer } from "../transformers/hex.transformer";
 import { ConfigService } from "@nestjs/config";
-import { getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service";
+import { BaseDataService, getETHPrice, getTokenPrice, STABLE_COIN_TYPE } from "./baseData.service";
 import addressMultipliers from "../config/addressMultipliers";
 import waitFor from "src/utils/waitFor";
+import { LrtUnitOfWork } from "src/unitOfWork";
 
 export const LOYALTY_BOOSTER_FACTOR: BigNumber = new BigNumber(0.005);
 type BlockAddressTvl = {
@@ -39,6 +41,9 @@ export class DirectPointService extends Worker {
     private readonly balanceRepository: BalanceRepository,
     private readonly blockRepository: BlockRepository,
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
+    private readonly directHoldProcessingStatusRepository: DirectHoldProcessingStatusRepository,
+    private readonly baseDataService: BaseDataService,
+    private readonly unitOfWork: LrtUnitOfWork,
     private readonly configService: ConfigService
   ) {
     super();
@@ -54,15 +59,7 @@ export class DirectPointService extends Worker {
   }
 
   @Cron("0 2,10,18 * * *")
-  protected async runProcess(): Promise<void> {
-    try {
-      await this.handleHoldPoint();
-    } catch (error) {
-      this.logger.error("Failed to calculate hold point", error.stack);
-    }
-  }
-
-  async handleHoldPoint() {
+  public async saveBlockNumber(): Promise<void> {
     const currentBlockNumber = await this.balanceRepository.getLatesBlockNumber();
     if (!currentBlockNumber) {
       this.logger.log(`Wait for the next hold point statistical block`);
@@ -73,7 +70,44 @@ export class DirectPointService extends Worker {
         number: currentBlockNumber,
       },
     });
-    await waitFor(() => false, 60 * 1000, 60 * 1000);
+    if (!currentStatisticalBlock) {
+      this.logger.error(`No block found for block number: ${currentBlockNumber}`);
+      return;
+    }
+    await this.baseDataService.updateTokenPrice(currentStatisticalBlock);
+    await this.directHoldProcessingStatusRepository.upsertStatus({
+      blockNumber: currentBlockNumber,
+      pointProcessed: false,
+    });
+  }
+
+  public async runProcess(): Promise<void> {
+    const blockNumbers = await this.directHoldProcessingStatusRepository.getUnprocessedBlockNumber();
+    if (blockNumbers.length === 0) {
+      this.logger.log(`No block to process`);
+      return;
+    }
+    for (const blockNumber of blockNumbers) {
+      try {
+        await this.handleHoldPoint(blockNumber.blockNumber);
+      } catch (error) {
+        this.logger.error("Failed to calculate hold point", error.stack);
+      }
+    }
+    await waitFor(() => false, 1000, 1000);
+  }
+
+  async handleHoldPoint(currentBlockNumber: number) {
+    const addressHoldPoints: {
+      address: string;
+      holdPoint: number;
+      blockNumber: number;
+    }[] = [];
+    const currentStatisticalBlock = await this.blockRepository.getLastBlock({
+      where: {
+        number: currentBlockNumber,
+      },
+    });
 
     const statisticStartTime = new Date();
     const earlyBirdMultiplier = this.getEarlyBirdMultiplier(currentStatisticalBlock.timestamp);
@@ -81,15 +115,9 @@ export class DirectPointService extends Worker {
     const tokenPriceMap = await this.getTokenPriceMap(currentStatisticalBlock.number);
     const blockTs = currentStatisticalBlock.timestamp.getTime();
     const addressTvlMap = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
-    for (const address of addressTvlMap.keys()) {
-      const fromBlockAddressPoint = await this.blockAddressPointRepository.getBlockAddressPoint(
-        currentStatisticalBlock.number,
-        address
-      );
-      if (!!fromBlockAddressPoint && fromBlockAddressPoint.holdPoint > 0) {
-        this.logger.log(`Address hold point calculated: ${address}`);
-        continue;
-      }
+    const addresses = Array.from(addressTvlMap.keys());
+    this.logger.log(`Start loop address, address count: ${addresses.length}`);
+    for (const address of addresses) {
       const addressTvl = addressTvlMap.get(address);
       const addressMultiplier = this.getAddressMultiplier(address, blockTs);
 
@@ -110,8 +138,14 @@ export class DirectPointService extends Worker {
         .multipliedBy(groupBooster)
         .multipliedBy(addressMultiplier)
         .multipliedBy(loyaltyBooster);
-      await this.updateHoldPoint(currentStatisticalBlock.number, address, newHoldPoint);
+      addressHoldPoints.push({
+        address,
+        holdPoint: newHoldPoint.toNumber(),
+        blockNumber: currentStatisticalBlock.number,
+      });
     }
+    this.logger.log(`Finishloop address`);
+    await this.updateHoldPoint(addressHoldPoints, currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
     this.logger.log(
@@ -129,12 +163,13 @@ export class DirectPointService extends Worker {
     const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
     const addressBufferList = await this.balanceRepository.getAllAddressesByBlock(blockNumber);
     this.logger.log(`The address list length: ${addressBufferList.length}`);
-    for (const addressBuffer of addressBufferList) {
+    // for (const addressBuffer of addressBufferList) {
+    for (const addressBuffer of addressBufferList.slice(0, 100)) {
       const address = hexTransformer.from(addressBuffer);
       const addressTvl = await this.calculateAddressTvl(address, blockNumber, tokenPriceMap, blockTs);
-      if (addressTvl.tvl.gt(new BigNumber(0))) {
-        //this.logger.log(`Address ${address}: [tvl: ${addressTvl.tvl}, holdBasePoint: ${addressTvl.holdBasePoint}]`);
-      }
+      // if (addressTvl.tvl.gt(new BigNumber(0))) {
+      //   this.logger.log(`Address ${address}: [tvl: ${addressTvl.tvl}, holdBasePoint: ${addressTvl.holdBasePoint}]`);
+      // }
       addressTvlMap.set(address, addressTvl);
     }
     return addressTvlMap;
@@ -207,21 +242,51 @@ export class DirectPointService extends Worker {
     return tokenPrices;
   }
 
-  async updateHoldPoint(blockNumber: number, from: string, holdPoint: BigNumber) {
-    // update point of user
-    let fromBlockAddressPoint = await this.blockAddressPointRepository.getBlockAddressPoint(blockNumber, from);
-    if (!fromBlockAddressPoint) {
-      fromBlockAddressPoint = this.blockAddressPointRepository.createDefaultBlockAddressPoint(blockNumber, from);
+  async updateHoldPoint(
+    addressHoldPoints: { address: string; holdPoint: number; blockNumber: number }[],
+    blockNumber: number
+  ) {
+    const blockAddressPointsMap = new Map<string, number>();
+    const blockAddressPoints = [];
+    const addresses = [];
+    const newAddressPoints = [];
+    for (const item of addressHoldPoints) {
+      blockAddressPointsMap.set(item.address, item.holdPoint);
+      addresses.push(item.address);
+      blockAddressPoints.push({
+        blockNumber: item.blockNumber,
+        address: item.address,
+        depositPoint: 0,
+        refPoint: 0,
+        holdPoint: item.holdPoint,
+      });
+      newAddressPoints.push(this.pointsRepository.createDefaultPoint(item.address, item.holdPoint));
     }
-    let fromAddressPoint = await this.pointsRepository.getPointByAddress(from);
-    if (!fromAddressPoint) {
-      fromAddressPoint = this.pointsRepository.createDefaultPoint(from);
+    const addressPoints = await this.pointsRepository.getPoints();
+    const addressPointsMap = new Map<string, number>();
+    for (const item of addressPoints) {
+      addressPointsMap.set(item.address, item.stakePoint);
     }
-    fromBlockAddressPoint.holdPoint = holdPoint.toNumber();
-    fromAddressPoint.stakePoint = Number(fromAddressPoint.stakePoint) + holdPoint.toNumber();
-    this.logger.log(`Address ${from} get hold point: ${holdPoint}`);
-    // update point of referrer
-    await this.blockAddressPointRepository.upsertUserAndReferrerPoint(fromBlockAddressPoint, fromAddressPoint);
+    for (const item of newAddressPoints) {
+      const holdPoint = addressPointsMap.get(item.address);
+      if (!holdPoint) {
+        continue;
+      }
+      item.stakePoint = Number(item.stakePoint) + Number(holdPoint);
+    }
+    return new Promise<void>((resolve) => {
+      this.unitOfWork.useTransaction(async () => {
+        this.logger.log(`Start insert directHolding point into db for block: ${blockNumber}`);
+        await this.blockAddressPointRepository.addManyIgnoreConflicts(blockAddressPoints);
+        this.logger.log(`Finish directHolding point for block: ${blockNumber}, length: ${blockAddressPoints.length}`);
+        await this.pointsRepository.addManyOrUpdate(newAddressPoints, ["stakePoint"], ["address"]);
+        this.logger.log(`Finish directHolding point for block: ${blockNumber}, length: ${newAddressPoints.length}`);
+
+        await this.directHoldProcessingStatusRepository.upsertStatus({ blockNumber, pointProcessed: true });
+        this.logger.log(`Finish directHolding point statistic for block: ${blockNumber}`);
+        resolve();
+      });
+    });
   }
 
   isWithdrawStartPhase(blockTs: number): boolean {
