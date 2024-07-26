@@ -83,18 +83,20 @@ export class DirectPointService extends Worker {
 
   public async runProcess(): Promise<void> {
     const blockNumbers = await this.directHoldProcessingStatusRepository.getUnprocessedBlockNumber();
-    if (blockNumbers.length === 0) {
-      this.logger.log(`No block to process`);
-      return;
-    }
-    for (const blockNumber of blockNumbers) {
-      try {
-        await this.handleHoldPoint(blockNumber.blockNumber);
-      } catch (error) {
-        this.logger.error("Failed to calculate hold point", error.stack);
+    if (blockNumbers.length > 0) {
+      for (const blockNumber of blockNumbers) {
+        try {
+          await this.handleHoldPoint(blockNumber.blockNumber);
+        } catch (error) {
+          this.logger.error("Failed to calculate hold point", error.stack);
+        }
+      }
+      await waitFor(() => !this.currentProcessPromise, 10000, 10000);
+      if (!this.currentProcessPromise) {
+        return;
       }
     }
-    await waitFor(() => false, 1000, 1000);
+    return this.runProcess();
   }
 
   async handleHoldPoint(currentBlockNumber: number) {
