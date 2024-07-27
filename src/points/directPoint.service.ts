@@ -165,8 +165,7 @@ export class DirectPointService extends Worker {
     const addressTvlMap: Map<string, BlockAddressTvl> = new Map();
     const addressBufferList = await this.balanceRepository.getAllAddressesByBlock(blockNumber);
     this.logger.log(`The address list length: ${addressBufferList.length}`);
-    // for (const addressBuffer of addressBufferList) {
-    for (const addressBuffer of addressBufferList.slice(0, 100)) {
+    for (const addressBuffer of addressBufferList) {
       const address = hexTransformer.from(addressBuffer);
       const addressTvl = await this.calculateAddressTvl(address, blockNumber, tokenPriceMap, blockTs);
       // if (addressTvl.tvl.gt(new BigNumber(0))) {
