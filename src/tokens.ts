@@ -1,7 +1,27 @@
-// Version 20240620-1200
-// Add zkSync zk
+// Version 20240719-1200
+// Add ZKL
 
 export default [
+  {
+    address: [
+      {
+        chain: "Ethereum",
+        l1Address: "0xfC385A1dF85660a7e041423DB512f779070FCede",
+        l2Address: "0xC967dabf591B1f4B86CFc74996EAD065867aF19E",
+      },
+    ],
+    symbol: "ZKL",
+    decimals: 18,
+    cgPriceId: "zklink",
+    type: "Native",
+    yieldType: ["NOVA Points"],
+    multipliers: [
+      {
+        multiplier: 5,
+        timestamp: 0,
+      },
+    ],
+  },
   {
     address: [
       {
@@ -78,6 +98,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
       },
     ],
   },
@@ -182,6 +206,10 @@ export default [
         multiplier: 2,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
+      },
     ],
   },
   {
@@ -265,6 +293,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
       },
     ],
   },
@@ -696,6 +728,10 @@ export default [
         multiplier: 1,
         timestamp: 1717516800,
       },
+      {
+        multiplier: 0,
+        timestamp: 1720087200,
+      },
     ],
   },
   {
@@ -729,6 +765,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 1716825600,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
       },
     ],
   },
@@ -992,6 +1032,10 @@ export default [
         multiplier: 2,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
+      },
     ],
   },
   {
@@ -1011,6 +1055,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
       },
     ],
   },
@@ -1032,6 +1080,10 @@ export default [
         multiplier: 2,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
+      },
     ],
   },
   {
@@ -1052,6 +1104,10 @@ export default [
         multiplier: 2,
         timestamp: 0,
       },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
+      },
     ],
   },
   {
@@ -1071,6 +1127,10 @@ export default [
       {
         multiplier: 1,
         timestamp: 0,
+      },
+      {
+        multiplier: 0,
+        timestamp: 1720087200,
       },
     ],
   },
@@ -1106,6 +1166,10 @@ export default [
       {
         multiplier: 2,
         timestamp: 0,
+      },
+      {
+        multiplier: 1,
+        timestamp: 1720713600,
       },
     ],
   },
@@ -1198,6 +1262,10 @@ export default [
       {
         multiplier: 1,
         timestamp: 0,
+      },
+      {
+        multiplier: 0,
+        timestamp: 1720713600,
       },
     ],
   },
@@ -1357,24 +1425,4 @@ export default [
       },
     ],
   },
-  {
-    address: [
-    {
-      chain: "Ethereum",
-      l1Address: "0xfC385A1dF85660a7e041423DB512f779070FCede",
-      l2Address: "0xC967dabf591B1f4B86CFc74996EAD065867aF19E",
-    },
-  ],
-    symbol: "ZKL",
-    decimals: 18,
-    cgPriceId: "zklink",
-    type: "Native",
-    yieldType: ["NOVA Points"],
-    multipliers: [
-      {
-        multiplier: 5,
-        timestamp: 0,
-      },
-    ],
-  }
 ];
