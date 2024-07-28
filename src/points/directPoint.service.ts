@@ -118,7 +118,9 @@ export class DirectPointService extends Worker {
     const blockTs = currentStatisticalBlock.timestamp.getTime();
     const addressTvlMap = await this.getAddressTvlMap(currentStatisticalBlock.number, blockTs, tokenPriceMap);
     const addresses = Array.from(addressTvlMap.keys());
-    this.logger.log(`Start loop address, address count: ${addresses.length}`);
+    this.logger.log(
+      `Start loop address, blockNumber:${currentStatisticalBlock.number}, address count: ${addresses.length}`
+    );
     for (const address of addresses) {
       const addressTvl = addressTvlMap.get(address);
       const addressMultiplier = this.getAddressMultiplier(address, blockTs);
@@ -146,7 +148,7 @@ export class DirectPointService extends Worker {
         blockNumber: currentStatisticalBlock.number,
       });
     }
-    this.logger.log(`Finishloop address`);
+    this.logger.log(`Finishloop address, blockNumber:${currentStatisticalBlock.number}`);
     await this.updateHoldPoint(addressHoldPoints, currentStatisticalBlock.number);
     const statisticEndTime = new Date();
     const statisticElapsedTime = statisticEndTime.getTime() - statisticStartTime.getTime();
