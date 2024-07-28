@@ -2,6 +2,7 @@ import { ethers, JsonRpcProvider } from "ethers";
 import positionManagerABI from '../abi/nonfungiblePositionManager.json'
 import poolFactoryABI from '../abi/poolFactory.json'
 import poolABI from '../abi/pool.json'
+import gasVault from '../abi/gasVault.json'
 import { PositionMath } from "../utils/positionMath";
 import { fetchGraphQLData } from "./fetch";
 import { UserTVLData } from "./types";
@@ -9,8 +10,11 @@ import { UserTVLData } from "./types";
 const provider = new JsonRpcProvider("https://rpc.zklink.io");
 const positionManagerAddress = '0xcd81E4B6D1Ac4C2C3647eA3F91AAd22Af86A4E26';
 const poolFactoryAddress = '0x9f94c91b178F5bc9fCcA3e5428b09A3d01CE5AC6';
+const steerGapVaultAddress = '0x57174e55abFaa7d858F8a4C395967FFaF990190A';
 const poolFactoryContract = new ethers.Contract(poolFactoryAddress, poolFactoryABI, provider);
 const positionManager = new ethers.Contract(positionManagerAddress, positionManagerABI, provider);
+const steerGasVault = new ethers.Contract(steerGapVaultAddress, gasVault, provider);
+
 export const BATCH_SIZE = 50;
 
 export const getAllLidsAtBlock = async (blockNumber: number): Promise<bigint[]> => {
@@ -43,7 +47,7 @@ export const getPositionDetailsAtBlock = async (tokenId: bigint, blockNumber: nu
   const liquidity = position.liquidity;
   const tokensOwed0 = position.tokensOwed0;
   const tokensOwed1 = position.tokensOwed1;
-  const poolAddress = await poolFactoryContract.getPool(token0, token1, fee);
+  const poolAddress = await poolFactoryContract.getPool(token0, token1, fee, { blockTag: blockNumber });
 
   return { tokenId, ownerAddress, liquidity, token0, token1, tickLower, tickUpper, tokensOwed0, tokensOwed1, poolAddress };
 }
@@ -104,7 +108,14 @@ export const getSteerProtocolVault = async (blockNumber: number): Promise<UserTV
   }
   `
   const data = await fetchGraphQLData('https://api.goldsky.com/api/public/project_clohj3ta78ok12nzs5m8yag0b/subgraphs/steer-protocol-zklink-nova/1.0.1/gn', query);
-  const res = data.depositors.map(depositData => {
+
+  const allVaults = await Promise.all(data.depositors.map(
+    i => steerGasVault.gasAvailableForTransaction(i.vault.pool, { blockTag: blockNumber })
+      .then(() => i.vault.pool)
+      .catch(error => { console.log(error) })
+  ))
+
+  const res = data.depositors.filter(item => allVaults.includes(item.vault.pool)).map(depositData => {
     const { account, shares, vault } = depositData
     const { pool, token0, token1, totalAmount0, totalAmount1, totalLPTokensIssued } = vault
     const data0 = {
