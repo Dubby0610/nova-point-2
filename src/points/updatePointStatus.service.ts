@@ -10,7 +10,6 @@ import { TxProcessingStatus, TvlProcessingStatus } from "src/entities";
 export class UpdatePointStatusService {
   private readonly logger: Logger;
   private readonly adaptersPath = join(__dirname, "../../src/adapters");
-  private readonly adapterTxSyncBlockNumber = 'transactionDataBlockNumber';
   private readonly tvlPaths: string[]
   private readonly txPaths: string[]
 
@@ -67,11 +66,10 @@ export class UpdatePointStatusService {
   private async updateTxProcessStatus(projectName: string, blockNumberEnd: number) {
     try {
       if (!this.txPaths.includes(projectName)) return
-      const prevBlockNumberInCache = await this.cacheRepository.getValue(this.adapterTxSyncBlockNumber);
       const processedStatus = await this.txProcessingRepository.findOneBy({ projectName })
       const record = new TxProcessingStatus();
       record.projectName = projectName;
-      record.blockNumberStart = processedStatus ? processedStatus.blockNumberEnd + 1 : Number(prevBlockNumberInCache) + 1
+      record.blockNumberStart = processedStatus ? processedStatus.blockNumberEnd + 1 : blockNumberEnd - 10000
       record.blockNumberEnd = blockNumberEnd
       record.adapterProcessed = false;
       record.pointProcessed = false;
