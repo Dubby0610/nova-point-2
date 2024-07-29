@@ -95,6 +95,7 @@ export const getSteerProtocolVault = async (blockNumber: number): Promise<UserTV
       depositCaller
       createdTimestamp
       vault {
+        id
         pool
         token0
         token1
@@ -109,13 +110,14 @@ export const getSteerProtocolVault = async (blockNumber: number): Promise<UserTV
   `
   const data = await fetchGraphQLData('https://api.goldsky.com/api/public/project_clohj3ta78ok12nzs5m8yag0b/subgraphs/steer-protocol-zklink-nova/1.0.1/gn', query);
 
-  const allVaults = await Promise.all(data.depositors.map(
-    i => steerGasVault.gasAvailableForTransaction(i.vault.pool, { blockTag: blockNumber })
-      .then(() => i.vault.pool)
-      .catch(error => { console.log(error) })
-  ))
+  const allVaults = await Promise.all(
+    Array.from(new Set(data.depositors.map(i => i.vault.id)))
+      .map(vault => steerGasVault.gasAvailableForTransaction(vault, { blockTag: blockNumber })
+        .then(() => vault)
+        .catch(error => { console.log(vault, error) })
+      ))
 
-  const res = data.depositors.filter(item => allVaults.includes(item.vault.pool)).map(depositData => {
+  const res = data.depositors.filter(item => allVaults.includes(item.vault.id)).map(depositData => {
     const { account, shares, vault } = depositData
     const { pool, token0, token1, totalAmount0, totalAmount1, totalLPTokensIssued } = vault
     const data0 = {
