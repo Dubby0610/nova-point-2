@@ -8,6 +8,7 @@ export default {
   },
   txNum: {
     allspark: 1 / 1,
-    rubic: 1 / 1
+    rubic: 1 / 1,
+    skyrangers: 1 / 5
   },
 };
