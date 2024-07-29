@@ -1,7 +1,4 @@
-export interface BlockData {
-    blockNumber: number;
-    blockTimestamp: number;
-}
+
 
 export type UserTVLData = {
     userAddress: string,
@@ -12,42 +9,24 @@ export type UserTVLData = {
     timestamp: number
 }
 
-export type UserTxData = {
-    timestamp: number
-    userAddress: string
-    contractAddress: string
-    tokenAddress: string
-    decimals: number
-    price: number
-    quantity: bigint
-    txHash: string
-    nonce: string
-    blockNumber: number
-}
-
-export type UserSupplied = Omit<UserTVLData, 'balance' | 'timestamp'> & {
-    supplied: bigint
-    pool: string
-}
-
-export interface Pool {
-    id: string
-    totalSupplied: string
-    balance: string
-    blockNumber: string
-}
 
 export type Response = {
-    userPositions: Array<{
+    depositors: Array<{
         id: string,
-        balance: string,
-        positions: Array<{
-            id: string;
-            pool: string;
-            poolName: string;
-            token: string;
-            supplied: string;
-        }>
+        account: string,
+        shares: string,
+        updatedTimestamp: string,
+        depositCaller: string,
+        createdTimestamp: string,
+        vault: {
+            pool: string,
+            token0: string,
+            token1: string,
+            totalLPTokensIssued: string,
+            totalAmount0: string,
+            totalAmount1: string,
+            totalValueLockedToken0: string,
+            totalValueLockedToken1: string
+        }
     }>
-    pools: Array<Pool>
 }
