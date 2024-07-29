@@ -19,6 +19,7 @@ export type Response = {
         depositCaller: string,
         createdTimestamp: string,
         vault: {
+            id: string,
             pool: string,
             token0: string,
             token1: string,

@@ -74,7 +74,7 @@ export const processSteerVault = async (data: UserTVLData[], blockNumber: number
       balance: items.reduce((sum, item) => sum + item.balance, BigInt(0)),
       timestamp: items[0].timestamp
     }))
-    .value();
+    .value().filter(i => i.balance > 0n);
 }
 
 export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]> => {
