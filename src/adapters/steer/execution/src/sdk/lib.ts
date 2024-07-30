@@ -49,7 +49,7 @@ export const getSteerProtocolVault = async (blockNumber: number): Promise<UserTV
 
   const res = data.depositors.filter(item => allVaults.includes(item.vault.id)).map(depositData => {
     const { account, shares, vault } = depositData
-    const { id, pool, token0, token1, totalAmount0, totalAmount1, totalLPTokensIssued } = vault
+    const { id, token0, token1, totalAmount0, totalAmount1, totalLPTokensIssued } = vault
     const data0 = {
       userAddress: account,
       poolAddress: id,
@@ -60,7 +60,7 @@ export const getSteerProtocolVault = async (blockNumber: number): Promise<UserTV
     }
     const data1 = {
       userAddress: account,
-      poolAddress: pool,
+      poolAddress: id,
       tokenAddress: token1,
       blockNumber: blockNumber,
       balance: BigInt(totalAmount1) > 0 ? BigInt(shares) * BigInt(totalAmount1) / BigInt(totalLPTokensIssued) : BigInt(0),
