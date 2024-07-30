@@ -4,7 +4,6 @@ import {
   getAmountsForLiquidity,
   getOneSideBoosterByToken,
   getPositionDetailsAtBlock,
-  getSteerProtocolVault,
   getTimestampAtBlock,
 } from './sdk/lib';
 import _ from 'lodash'
@@ -62,9 +61,8 @@ const getUserPositionsAtBlock = async (blockNumber: number): Promise<any> => {
   return positionList;
 };
 
-export const processSteerVault = async (data: UserTVLData[], blockNumber: number) => {
-  const steerVaultPosition = await getSteerProtocolVault(blockNumber)
-  return _.chain(data.concat(steerVaultPosition))
+export const groupData = async (data: UserTVLData[]) => {
+  return _.chain(data)
     .groupBy(item => `${item.userAddress.toLowerCase()}-${item.tokenAddress.toLowerCase()}-${item.poolAddress.toLowerCase()}`)
     .map((items) => ({
       userAddress: items[0].userAddress,
@@ -79,7 +77,7 @@ export const processSteerVault = async (data: UserTVLData[], blockNumber: number
 
 export const getUserTVLData = async (blockNumber: number): Promise<UserTVLData[]> => {
   const rawNovaSwapPosition = await getUserPositionsAtBlock(blockNumber)
-  const res = await processSteerVault(rawNovaSwapPosition, blockNumber)
+  const res = await groupData(rawNovaSwapPosition)
   return res
 };
 
