@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { promises as promisesFs, existsSync } from "fs";
 import { join } from "path";
 import { spawn } from "child_process";
@@ -65,7 +65,6 @@ export class GenAdapterDataService extends Worker {
       const dirs = await this.getAllDirectories();
       const dirPromises = dirs.map(async (dir) => {
         try {
-          await this.initDirectory(dir);
           const results = await Promise.allSettled([this.pipeTvlData(dir), this.pipeTxData(dir)]);
           results.forEach(result => {
             if (result.status === 'rejected') {
@@ -93,10 +92,14 @@ export class GenAdapterDataService extends Worker {
     return files.filter(dir => dir.isDirectory() && dir.name !== 'example').map((dirent) => dirent.name);;
   }
 
-  private async initDirectory(dir: string): Promise<void> {
-    this.logger.log(`initDirectory start ${dir}`);
-    await this.runCommand(`npm i && npm run compile`, join(this.adaptersPath, dir, 'execution'));
-    this.logger.log(`initDirectory finished ${dir}`);
+  public async initAllDirectory(): Promise<void> {
+    const dirs = await this.getAllDirectories();
+    const dirPromises = dirs.map(async (dir) => {
+      this.logger.log(`initDirectory start ${dir}`);
+      await this.runCommand(`npm i && npm run compile`, join(this.adaptersPath, dir, 'execution'));
+      this.logger.log(`initDirectory finished ${dir}`);
+    })
+    await Promise.all(dirPromises);
   }
 
   private async runCommand(command: string, cwd: string): Promise<void> {
@@ -105,6 +108,8 @@ export class GenAdapterDataService extends Worker {
       const child = spawn(cmd, args, { cwd, shell: true });
 
       let stderr = '';
+
+      child.stdout.on('data', (_) => {});
 
       child.stderr.on('data', (data) => {
         stderr += data.toString();
@@ -158,8 +163,10 @@ export class GenAdapterDataService extends Worker {
   private async pipeTvlData(dir: string) {
     if (!this.tvlPaths.includes(dir)) return
 
-    this.logger.log(`Start pipeTvlData ${dir} tvl data`)
     const pendingProcess = await this.tvlProcessingRepository.find({ where: { adapterProcessed: false, projectName: dir } });
+    if(pendingProcess.length === 0) return
+
+    this.logger.log(`Start pipeTvlData ${dir} tvl data`)
     await Promise.all(pendingProcess.map(async status => {
       await this.processTvlData(dir, status.blockNumber)
       await this.tvlProcessingRepository.upsertStatus({ ...status, adapterProcessed: true })
@@ -194,8 +201,10 @@ export class GenAdapterDataService extends Worker {
   private async pipeTxData(dir: string) {
     if (!this.txPaths.includes(dir)) return
 
-    this.logger.log(`Start pipeTxData ${dir} tx data`)
     const pendingProcess = await this.txProcessingRepository.find({ where: { adapterProcessed: false, projectName: dir } });
+    if(pendingProcess.length === 0) return
+
+    this.logger.log(`Start pipeTxData ${dir} tx data`)
     await Promise.all(pendingProcess.map(async status => {
       await this.processTxData(dir, status.blockNumberStart, status.blockNumberEnd)
       await this.txProcessingRepository.upsertStatus({ ...status, adapterProcessed: true })

@@ -36,6 +36,7 @@ export class AppService implements OnModuleInit, OnModuleDestroy {
   }
 
   public async onModuleInit() {
+    await this.genAdapterDataService.initAllDirectory()
     // example:
     // await this.adapterService.runProcess();
     // second params is utc+8

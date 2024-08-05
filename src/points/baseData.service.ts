@@ -59,7 +59,6 @@ export class BaseDataService extends Worker {
     private readonly addressFirstDepositRepository: AddressFirstDepositRepository,
     private readonly tokenOffChainDataProvider: TokenOffChainDataProvider,
     private readonly cacheRepository: CacheRepository,
-    private readonly configService: ConfigService
   ) {
     super();
     this.logger = new Logger(BaseDataService.name);
