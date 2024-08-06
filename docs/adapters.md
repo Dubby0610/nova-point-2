@@ -169,8 +169,8 @@ You can validate whether the script can output a CSV file that meets the data re
 # @params endBlock: The ending block number. If you only generate TVL data and do not export the `getUserTransactionData` method, you can use any number.
 
 # for tvl data
-# npm run adapter:tx -- example tvl 350000
-npm run adapter:tvl -- <projectName> <filePrefix> <endBlock>
+# npm run adapter:tvl -- example tvl 350000
+npm run adapter:tvl -- <projectName> <filePrefix> <curBlock>
 
 
 # for tx data
