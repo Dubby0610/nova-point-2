@@ -23,6 +23,7 @@ const curBlockNumber: string | undefined = args[3];
 
 if (!folderName) {
   console.error("Folder name not provided. Please provide the folder name as 1st argument.");
+  // console.error("Folder name not provided. Please provide the folder name as 1st argument.");
   process.exit(1);
 }
 
